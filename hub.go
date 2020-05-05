@@ -48,6 +48,7 @@ func (h *Hub) run(w *World) {
 			}
 
 			leaveMessage := generateLeavePacket(client.id)
+			removeCharacter(w, client.id)
 
 			for id := range h.clients {
 				select {

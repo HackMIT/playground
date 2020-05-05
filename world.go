@@ -50,6 +50,10 @@ func generateLeavePacket(id uuid.UUID) []byte {
 	return raw
 }
 
+func removeCharacter(w *World, id uuid.UUID) {
+	delete(w.characters, id)
+}
+
 func processMessage(w *World, m *SocketMessage) {
 	res := BasePacket{}
 
