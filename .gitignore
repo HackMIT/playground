@@ -1,0 +1,6 @@
+# misc
+.DS_Store
+*.swp
+
+# binary
+playground

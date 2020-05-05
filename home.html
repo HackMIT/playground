@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Chat Example</title>
+<script type="text/javascript">
+window.onload = function () {
+    var conn;
+
+    var characters = {};
+
+    class Character {
+        constructor(name, x = 0.5, y = 0.5) {
+            this.x = x;
+            this.y = y;
+            this.name = name;
+
+            this.elem = document.createElement("div");
+            this.elem.className = "character";
+            this.move(x, y);
+
+            this.elem.innerHTML = name;
+            document.getElementsByTagName("body")[0].appendChild(this.elem);
+        }
+
+        move(x, y) {
+            this.elem.style.left = x * 100 + "%";
+            this.elem.style.top = y * 100 + "%";
+        }
+    }
+
+    // When clicking on the page, send a move message to the server
+    document.addEventListener("click", function (e) {
+        if (!conn) {
+            return false;
+        }
+
+        let x = e.pageX / window.innerWidth;
+        let y = e.pageY / window.innerHeight;
+
+        conn.send(JSON.stringify({
+            x: x,
+            y: y,
+            type: "move"
+        }));
+    });
+
+    if (window["WebSocket"]) {
+        conn = new WebSocket("ws://" + document.location.host + "/ws");
+        conn.onopen = function (evt) {
+            // Connected to remote
+        };
+        conn.onclose = function (evt) {
+            // Disconnected from remote
+        };
+        conn.onmessage = function (evt) {
+            var messages = evt.data.split('\n');
+
+            for (var i = 0; i < messages.length; i++) {
+                var data = JSON.parse(messages[i]);
+
+                if (data.type === "init") {
+                    for (let [key, value] of Object.entries(data.characters)) {
+                        characters[key] = new Character(value.name, value.x, value.y);
+                    }
+
+                    conn.send(JSON.stringify({
+                        name: "jack",
+                        type: "join"
+                    }));
+                } else if (data.type === "move") {
+                    characters[data.id].move(data.x, data.y);
+                } else if (data.type === "join") {
+                    characters[data.id] = new Character(data.name);
+                }
+            }
+        };
+    } else {
+        var item = document.createElement("div");
+        item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
+        appendLog(item);
+    }
+};
+</script>
+<style type="text/css">
+* {
+    padding: 0;
+    margin: 0;
+}
+
+html, body {
+    overflow: hidden;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+    background: white;
+}
+
+.character {
+    background: red;
+    border-radius: 10px;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    transition: 0.5s ease all;
+}
+</style>
+</head>
+<body>
+</body>
+</html>
