@@ -45,3 +45,10 @@ type MovePacket struct {
 	// The client's y position (0-1)
 	Y float32 `json:"y"`
 }
+
+type LeavePacket struct {
+	Type string `json:"type"`
+
+	// The id of the client who's leaving
+	Id string `json:"id"`
+}

@@ -18,13 +18,17 @@ window.onload = function () {
             this.elem.className = "character";
             this.move(x, y);
 
-            this.elem.innerHTML = name;
+            this.elem.innerHTML = "<span>" + name + "</span>";
             document.getElementsByTagName("body")[0].appendChild(this.elem);
         }
 
         move(x, y) {
             this.elem.style.left = x * 100 + "%";
             this.elem.style.top = y * 100 + "%";
+        }
+
+        remove() {
+            this.elem.remove();
         }
     }
 
@@ -45,6 +49,8 @@ window.onload = function () {
     });
 
     if (window["WebSocket"]) {
+        let name = prompt("What's your name?");
+
         conn = new WebSocket("ws://" + document.location.host + "/ws");
         conn.onopen = function (evt) {
             // Connected to remote
@@ -64,13 +70,16 @@ window.onload = function () {
                     }
 
                     conn.send(JSON.stringify({
-                        name: "jack",
+                        name: name,
                         type: "join"
                     }));
                 } else if (data.type === "move") {
                     characters[data.id].move(data.x, data.y);
                 } else if (data.type === "join") {
                     characters[data.id] = new Character(data.name);
+                } else if (data.type === "leave") {
+                    characters[data.id].remove();
+                    characters.delete(data.id);
                 }
             }
         };
@@ -99,12 +108,21 @@ body {
 
 .character {
     background: red;
-    border-radius: 10px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 40px;
+    height: 40px;
     transform: translate(-50%, -50%);
     transition: 0.5s ease all;
+}
+
+.character span {
+    color: white;
+    font-family: -apple-system, -system-ui, Helvetica, sans-serif;
+    font-size: 12px;
 }
 </style>
 </head>

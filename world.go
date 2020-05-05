@@ -42,6 +42,14 @@ func generateInitPacket(w *World) []byte {
 	return raw
 }
 
+func generateLeavePacket(id uuid.UUID) []byte {
+	msg := &LeavePacket{
+		Type: "leave",
+		Id: id.String()}
+	raw, _ := json.Marshal(msg)
+	return raw
+}
+
 func processMessage(w *World, m *SocketMessage) {
 	res := BasePacket{}
 

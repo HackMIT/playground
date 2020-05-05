@@ -46,6 +46,17 @@ func (h *Hub) run(w *World) {
 				delete(h.clients, client.id)
 				close(client.send)
 			}
+
+			leaveMessage := generateLeavePacket(client.id)
+
+			for id := range h.clients {
+				select {
+				case h.clients[id].send <- leaveMessage:
+				default:
+					close(h.clients[id].send)
+					delete(h.clients, id)
+				}
+			}
 		case message := <-h.broadcast:
 			processMessage(w, message)
 			for id := range h.clients {
