@@ -60,6 +60,10 @@ func processMessage(w *World, m *SocketMessage) {
 
 		// Save the character that just joined
 		w.characters[m.sender.id] = newCharacter(m.sender.id, res.Name)
+
+		res.Id = m.sender.id.String()
+		raw, _ := json.Marshal(res)
+		m.msg = raw
 	case "move":
 		res := MovePacket{}
 
@@ -70,5 +74,9 @@ func processMessage(w *World, m *SocketMessage) {
 		// Update this character's position
 		w.characters[m.sender.id].X = res.X
 		w.characters[m.sender.id].Y = res.Y
+
+		res.Id = m.sender.id.String()
+		raw, _ := json.Marshal(res)
+		m.msg = raw
 	}
 }

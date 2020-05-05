@@ -25,6 +25,9 @@ type InitPacket struct {
 type JoinPacket struct {
 	Type string `json:"type"`
 
+	// The id of the client who's joining
+	Id string `json:"id"`
+
 	// The client's username
 	Name string `json:"name"`
 }
@@ -32,6 +35,9 @@ type JoinPacket struct {
 // Sent by clients when they move around
 type MovePacket struct {
 	Type string `json:"type"`
+
+	// The id of the  client who is moving
+	Id string `json:"id"`
 
 	// The client's x position (0-1)
 	X float32 `json:"x"`
