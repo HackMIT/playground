@@ -10,26 +10,6 @@ import (
 
 var addr = flag.String("addr", ":8080", "http service address")
 
-func serveHome(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.URL)
-	// if r.URL.Path != "/" {
-	// 	http.Error(w, "Not found", http.StatusNotFound)
-	// 	return
-	// }
-	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	path := r.URL.String()[1:]
-
-	if (path == "") {
-		path = "home.html"
-	}
-
-	http.ServeFile(w, r, path)
-}
-
 func main() {
 	flag.Parse()
 	db := redis.NewClient(&redis.Options{
@@ -49,7 +29,6 @@ func main() {
 	hub := newHub()
 	world := newWorld()
 	go hub.run(world)
-	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(hub, w, r)
 	})
