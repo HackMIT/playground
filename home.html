@@ -23,8 +23,19 @@ window.onload = function () {
         }
 
         move(x, y) {
+            let oldXpx = this.x * window.innerWidth;
+            let oldYpx = this.y * window.innerHeight;
+            let newXpx = x * window.innerWidth;
+            let newYpx = y * window.innerHeight;
+            let speed = 300; // pixels per second
+
+            let duration = Math.sqrt(Math.pow(oldXpx - newXpx, 2) + Math.pow(oldYpx - newYpx, 2)) / speed;
+            this.elem.style.transitionDuration = duration + "s";
+
             this.elem.style.left = x * 100 + "%";
             this.elem.style.top = y * 100 + "%";
+            this.x = x;
+            this.y = y;
         }
 
         remove() {
@@ -118,7 +129,10 @@ body {
     width: 80px;
     height: 100px;
     transform: translate(-50%, -100%);
-    transition: 0.5s ease all;
+    transition-property: all;
+    /* slight speed-up at beginning and slow-down at end */
+    /* use cubic-bezier.com to experiment with other timing functions */
+    transition-timing-function: cubic-bezier(0.15, 0, 0.85, 1);
 }
 
 .character span {
