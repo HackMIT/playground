@@ -1,6 +1,7 @@
-package main
+package world
 
 import (
+	"encoding/json"
 	"github.com/google/uuid"
 )
 
@@ -26,7 +27,7 @@ type Hub struct {
 	unregister chan *Client
 }
 
-func newHub() *Hub {
+func NewHub() *Hub {
 	return &Hub{
 		broadcast:  make(chan *SocketMessage),
 		register:   make(chan *Client),
@@ -35,24 +36,28 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) run(w *World) {
+func (h *Hub) Run(w *World) {
 	for {
 		select {
 		case client := <-h.register:
 			h.clients[client.id] = client
-			client.send <- generateInitPacket(w)
+
+			data, _ := json.Marshal(newInitPacket(w))
+			client.send <- data
 		case client := <-h.unregister:
 			if client := h.clients[client.id]; client.connected {
 				delete(h.clients, client.id)
 				close(client.send)
 			}
 
-			leaveMessage := generateLeavePacket(client.id)
+			leaveMessage := newLeavePacket(client.id)
+			leaveMessageData, _ := json.Marshal(leaveMessage)
+
 			removeCharacter(w, client.id)
 
 			for id := range h.clients {
 				select {
-				case h.clients[id].send <- leaveMessage:
+				case h.clients[id].send <- leaveMessageData:
 				default:
 					close(h.clients[id].send)
 					delete(h.clients, id)

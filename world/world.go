@@ -1,4 +1,4 @@
-package main
+package world
 
 import (
 	"encoding/json"
@@ -6,48 +6,16 @@ import (
 	"github.com/google/uuid"
 )
 
-// Character is the digital representation of a client
-type Character struct {
-	id string `json:"id"`
-	Name string `json:"name"`
-	X float32 `json:"x"`
-	Y float32 `json:"y"`
-}
-
-func newCharacter(id uuid.UUID, name string) *Character {
-	return &Character{
-		id: id.String(),
-		Name: name,
-		X: 0.5,
-		Y: 0.5,
-	}
-}
 
 // World maintains the characters present in the room
 type World struct {
 	characters map[uuid.UUID]*Character
 }
 
-func newWorld() *World {
+func NewWorld() *World {
 	return &World{
 		characters: make(map[uuid.UUID]*Character),
 	}
-}
-
-func generateInitPacket(w *World) []byte {
-	msg := &InitPacket{
-		Type: "init",
-		Characters: w.characters}
-	raw, _ := json.Marshal(msg)
-	return raw
-}
-
-func generateLeavePacket(id uuid.UUID) []byte {
-	msg := &LeavePacket{
-		Type: "leave",
-		Id: id.String()}
-	raw, _ := json.Marshal(msg)
-	return raw
 }
 
 func removeCharacter(w *World, id uuid.UUID) {

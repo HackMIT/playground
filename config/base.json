@@ -1,0 +1,5 @@
+{
+	"server": {
+		"addr": "localhost:8080"
+	}
+}

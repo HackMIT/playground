@@ -1,4 +1,4 @@
-package main
+package world
 
 import (
 	"github.com/google/uuid"
@@ -14,16 +14,23 @@ type BasePacket struct {
 // Sent by server to clients upon connecting. Contains information about the
 // world that they load into
 type InitPacket struct {
-	Type string `json:"type"`
+	BasePacket
 
 	// Map of characters that are already in the room
 	Characters map[uuid.UUID]*Character `json:"characters"`
 }
 
+func newInitPacket(w *World) InitPacket {
+	return InitPacket{
+		BasePacket: BasePacket{Type: "init"},
+		Characters: w.characters,
+	}
+}
+
 // Sent by clients after receiving the init packet. Identifies them to the
 // server, and in turn other clients
 type JoinPacket struct {
-	Type string `json:"type"`
+	BasePacket
 
 	// The id of the client who's joining
 	Id string `json:"id"`
@@ -34,7 +41,7 @@ type JoinPacket struct {
 
 // Sent by clients when they move around
 type MovePacket struct {
-	Type string `json:"type"`
+	BasePacket
 
 	// The id of the  client who is moving
 	Id string `json:"id"`
@@ -47,8 +54,15 @@ type MovePacket struct {
 }
 
 type LeavePacket struct {
-	Type string `json:"type"`
+	BasePacket
 
 	// The id of the client who's leaving
 	Id string `json:"id"`
+}
+
+func newLeavePacket(id uuid.UUID) LeavePacket {
+	return LeavePacket{
+		BasePacket: BasePacket{Type: "leave"},
+		Id: id.String(),
+	}
 }
