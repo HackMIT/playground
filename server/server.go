@@ -17,6 +17,9 @@ func Init() {
 		world.ServeWs(hub, w, r)
 	})
 
+	r := newRouter()
+	http.Handle("/", r)
+
 	config := config.GetConfig()
 
 	fmt.Println("Serving at", config.GetString("server.addr"))
