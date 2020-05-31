@@ -2,24 +2,13 @@ package socket
 
 import (
 	"encoding/json"
+	"log"
+
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
+
 	"github.com/google/uuid"
 )
-
-// SocketMessage stores the message sent over WS and the client who sent it
-type SocketMessage struct {
-	msg []byte
-	sender *Client
-}
-
-func (m SocketMessage) MarshalBinary() ([]byte, error) {
-	return json.Marshal(m)
-}
-
-func (m SocketMessage) UnmarshalBinary(data []byte) error {
-	return json.Unmarshal(data, m)
-}
 
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
@@ -37,34 +26,39 @@ type Hub struct {
 	unregister chan *Client
 }
 
-func NewHub() *Hub {
-	return &Hub{
-		broadcast:  make(chan *SocketMessage),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
-		clients:    make(map[uuid.UUID]*Client),
-	}
+func (h *Hub) Init() *Hub {
+	h.broadcast = make(chan *SocketMessage)
+	h.register = make(chan *Client)
+	h.unregister = make(chan *Client)
+	h.clients = map[uuid.UUID]*Client{}
+	return h
 }
 
+// Listens for messages from websocket clients
 func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
 			h.clients[client.id] = client
 
-			data, _ := json.Marshal(newInitPacket())
+			// When a client connects, send them an init packet
+			initPacket := new(InitPacket).Init("home")
+			data, _ := json.Marshal(initPacket)
 			client.send <- data
 		case client := <-h.unregister:
+			// When a client disconnects, remove them from our clients map
 			if client := h.clients[client.id]; client.connected {
 				delete(h.clients, client.id)
 				close(client.send)
 			}
+			// Process incoming messages from clients
 		case message := <-h.broadcast:
 			processMessage(message)
 		}
 	}
 }
 
+// Sends a message to all of our clients
 func (h *Hub) Send(room string, msg []byte) {
 	for id := range h.clients {
 		// TODO: Make sure room matches -- or figure out how to iterate
@@ -72,61 +66,65 @@ func (h *Hub) Send(room string, msg []byte) {
 		select {
 		case h.clients[id].send <- msg:
 		default:
+			// If the send failed, disconnect the client
 			close(h.clients[id].send)
 			delete(h.clients, id)
 		}
 	}
 }
 
+// Processes an incoming message
 func processMessage(m *SocketMessage) {
 	res := BasePacket{}
 
 	if err := json.Unmarshal(m.msg, &res); err != nil {
-		// TODO: Better error handling
-		panic(err)
+		// TODO: Log to Sentry or something -- this should never happen
+		log.Println("ERROR: Received invalid JSON message from", m.sender.id.String(), "->", m.msg)
+		return
 	}
 
 	switch res.Type {
 	case "join":
+		// Parse join packet
 		res := JoinPacket{}
-
-		if err := json.Unmarshal(m.msg, &res); err != nil {
-			panic(err)
-		}
-
+		json.Unmarshal(m.msg, &res)
 		res.Id = m.sender.id.String()
 
-		character := models.NewCharacter(m.sender.id, res.Name)
+		// Add character to room in Redis
+		character := new(models.Character).Init(m.sender.id, res.Name)
 
-		_, err := db.Rh.JSONSet("rooms:home", "characters[\"" + m.sender.id.String() + "\"]", character)
+		key := "characters[\"" + res.Id + "\"]"
+		_, err := db.GetRejsonHandler().JSONSet("room:home", key, character)
 
 		if err != nil {
-			panic(err)
+			log.Fatal("ERROR: Failure sending join packet to Redis")
+			return
 		}
 
-		_, publishErr := db.Instance.Publish("room", res).Result()
-
-		if publishErr != nil {
-			panic(publishErr)
-		}
+		// An error here is unlikely since we just connected to Redis above
+		db.GetInstance().Publish("room", res).Result()
 	case "move":
+		// Parse move packet
 		res := MovePacket{}
-
-		if err := json.Unmarshal(m.msg, &res); err != nil {
-			panic(err)
-		}
-
+		json.Unmarshal(m.msg, &res)
 		res.Id = m.sender.id.String()
 
+		// Update character's position in the room
 		// TODO: go-rejson doesn't currently support transactions, but
 		// these should really be done together
-		db.Rh.JSONSet("rooms:home", "characters[\"" + m.sender.id.String() + "\"][\"x\"]", res.X)
-		db.Rh.JSONSet("rooms:home", "characters[\"" + m.sender.id.String() + "\"][\"y\"]", res.Y)
+		xKey := "characters[\"" + res.Id + "\"][\"x\"]"
+		_, err := db.GetRejsonHandler().JSONSet("room:home", xKey, res.X)
 
-		_, publishErr := db.Instance.Publish("room", res).Result()
-
-		if publishErr != nil {
-			panic(publishErr)
+		if err != nil {
+			log.Fatal("ERROR: Failure sending move packet to Redis")
+			return
 		}
+
+		// An error here is unlikely since we just connected to Redis
+		yKey := "characters[\"" + res.Id + "\"][\"y\"]"
+		db.GetRejsonHandler().JSONSet("room:home", yKey, res.Y)
+
+		// Publish move event to other ingest servers
+		db.GetInstance().Publish("room", res).Result()
 	}
 }

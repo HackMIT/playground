@@ -3,36 +3,47 @@ package db
 import (
 	"github.com/nitishm/go-rejson"
 	"github.com/go-redis/redis"
+
+	"github.com/techx/playground/config"
 )
 
 var (
-	Instance *redis.Client
-	Rh *rejson.Handler
+	instance *redis.Client
+	rh *rejson.Handler
 )
 
 func Init() {
-	Rh = rejson.NewReJSONHandler()
+	config := config.GetConfig()
+	rh = rejson.NewReJSONHandler()
 
-	Instance = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-		Password: "",
-		DB: 0,
+	instance = redis.NewClient(&redis.Options{
+		Addr: config.GetString("db.addr"),
+		Password: config.GetString("db.password"),
+		DB: config.GetInt("db.db"),
 	})
 
-	Rh.SetGoRedisClient(Instance)
+	rh.SetGoRedisClient(instance)
+}
+
+func GetInstance() *redis.Client {
+	return instance
+}
+
+func GetRejsonHandler() *rejson.Handler {
+	return rh
 }
 
 func ListenForUpdates(callback func(msg []byte)) {
-	// Listen for updates
-	// TODO: Think about subscribing to channels corresponding with other
+	// TODO (#1): Think about subscribing to channels corresponding with other
 	// ingest servers, but don't subscribe to our own, and send out events
 	// from this server when they are first published
-	psc := Instance.Subscribe("room")
+	psc := instance.Subscribe("room")
 
 	for {
 		msg, err := psc.ReceiveMessage()
 
 		if err != nil {
+			// Stop server if we disconnect from Redis
 			panic(err)
 		}
 

@@ -10,9 +10,11 @@ import (
 func newRouter() *echo.Echo {
 	e := echo.New()
 
+	// Define middlewares
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	// Rooms controller
 	room := new(controllers.RoomController)
 	e.GET("/rooms", room.GetRooms)
 	e.POST("/rooms", room.CreateRoom)

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/techx/playground/config"
 	"github.com/google/uuid"
 )
 
@@ -8,15 +9,17 @@ import (
 type Character struct {
 	Id   string  `json:"id"`
 	Name string  `json:"name"`
-	X    float32 `json:"x"`
-	Y    float32 `json:"y"`
+	X    float64 `json:"x"`
+	Y    float64 `json:"y"`
 }
 
-func NewCharacter(id uuid.UUID, name string) *Character {
-	return &Character{
-		Id: id.String(),
-		Name: name,
-		X: 0.5,
-		Y: 0.5,
-	}
+func (c *Character) Init(id uuid.UUID, name string) *Character {
+	config := config.GetConfig()
+
+	c.Id = id.String()
+	c.Name = name
+	c.X = config.GetFloat64("character.start_x_pos")
+	c.Y = config.GetFloat64("character.start_y_pos")
+
+	return c
 }

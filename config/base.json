@@ -1,5 +1,14 @@
 {
+	"character": {
+		"start_x_pos": 0.5,
+		"start_y_pos": 0.5
+	},
+	"db": {
+		"addr": "localhost:6379",
+		"password": "",
+		"db": 0
+	},
 	"server": {
-		"addr": "localhost:8080"
+		"addr": ":8080"
 	}
 }

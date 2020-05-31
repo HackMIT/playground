@@ -25,17 +25,17 @@ type InitPacket struct {
 	Characters map[uuid.UUID]*models.Character `json:"characters"`
 }
 
-func newInitPacket() InitPacket {
-	// TODO: Init packet... for which room?
-	roomData, _ := db.Rh.JSONGet("rooms:home", ".")
+func (p *InitPacket) Init(roomSlug string) *InitPacket {
+	// Fetch characters from redis
+	data, _ := db.GetRejsonHandler().JSONGet("room:" + roomSlug, "characters")
 
-	var room models.Room
-	json.Unmarshal([]byte(roomData.([]uint8)), &room)
+	var characters map[uuid.UUID]*models.Character
+	json.Unmarshal(data.([]byte), &characters)
 
-	return InitPacket{
-		BasePacket: BasePacket{Type: "init"},
-		Characters: room.Characters,
-	}
+	// Set data and return
+	p.BasePacket = BasePacket{Type: "init"}
+	p.Characters = characters
+	return p
 }
 
 // Sent by clients after receiving the init packet. Identifies them to the
@@ -80,6 +80,7 @@ func (p MovePacket) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, p)
 }
 
+// Sent by ingests when a client disconnects
 type LeavePacket struct {
 	BasePacket
 
@@ -87,9 +88,8 @@ type LeavePacket struct {
 	Id string `json:"id"`
 }
 
-func newLeavePacket(id uuid.UUID) LeavePacket {
-	return LeavePacket{
-		BasePacket: BasePacket{Type: "leave"},
-		Id: id.String(),
-	}
+func (p *LeavePacket) Init(id uuid.UUID) *LeavePacket {
+	p.BasePacket = BasePacket{Type: "leave"}
+	p.Id = id.String()
+	return p
 }

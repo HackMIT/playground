@@ -12,41 +12,42 @@ import (
 
 type RoomController struct {}
 
-type CreateRoomBody struct {
-	Slug string `json:"slug"`
-	Background string `json:"background"`
-}
-
+// POST /rooms - creates a new room
 func (r RoomController) CreateRoom(c echo.Context) error {
-	json := new(CreateRoomBody)
+	// Create new room model, parse JSON body
+	room := new(models.Room).Init()
 
-	if err := c.Bind(json); err != nil {
+	if err := c.Bind(room); err != nil {
 		panic(err)
 	}
 
-	room := models.NewRoom("background.png", json.Slug)
-	roomJSON, err := db.Rh.JSONSet("rooms:" + json.Slug, ".", room)
+	// Add new room to Redis
+	_, err := db.GetRejsonHandler().JSONSet("room:" + room.Slug, ".", room)
 
 	if err != nil {
-		panic(err)
+		return echo.NewHTTPError(http.StatusInternalServerError,
+		                         "database error")
 	}
 
-	return c.JSON(http.StatusOK, roomJSON)
+	return c.JSON(http.StatusOK, room)
 }
 
 func (r RoomController) GetRooms(c echo.Context) error {
-	// TODO: Error handling
-	roomNames, _ := db.Instance.Keys("rooms:*").Result()
+	// Get all of the room names from Redis
+	roomNames, err := db.GetInstance().Keys("room:*").Result()
 
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError,
+		                         "database error")
+	}
+
+	// Load each room into this array
 	rooms := make([]models.Room, len(roomNames))
 
 	for i, name := range roomNames {
-		roomData, _ := db.Rh.JSONGet(name, ".")
-
-		var room models.Room
-		json.Unmarshal([]byte(roomData.([]uint8)), &room)
-
-		rooms[i] = room
+		// Error here is unlikely because we already fetched from the DB
+		roomData, _ := db.GetRejsonHandler().JSONGet(name, ".")
+		json.Unmarshal(roomData.([]byte), &rooms[i])
 	}
 
 	return c.JSON(http.StatusOK, rooms)

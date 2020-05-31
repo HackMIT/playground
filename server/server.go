@@ -11,9 +11,12 @@ import (
 )
 
 func Init() {
-	hub := socket.NewHub()
+	hub := new(socket.Hub).Init()
 
+	// Wait for socket messages
 	go hub.Run()
+
+	// Listen for events from other ingest servers
 	go db.ListenForUpdates(func(data []byte) {
 		var msg map[string]interface{}
 		json.Unmarshal(data, &msg)
@@ -24,17 +27,21 @@ func Init() {
 		}
 	})
 
+	// Websocket connection endpoint
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		socket.ServeWs(hub, w, r)
 	})
 
+	// REST endpoints
 	r := newRouter()
 	http.Handle("/", r)
 
 	config := config.GetConfig()
+	addr := config.GetString("server.addr")
 
-	fmt.Println("Serving at", config.GetString("server.addr"))
-	err := http.ListenAndServe(config.GetString("server.addr"), nil)
+	// Start the server
+	fmt.Println("Serving at", addr)
+	err := http.ListenAndServe(addr, nil)
 
 	if err != nil {
 		panic(err)

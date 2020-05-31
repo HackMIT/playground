@@ -135,18 +135,21 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return true
 	}
 
+	// Creates a websocket connection from the HTTP connection
 	conn, err := upgrader.Upgrade(w, r, nil)
+
 	if err != nil {
-		log.Println(err)
+		log.Println("ERROR: Unable to upgrade connection to WS")
 		return
 	}
 
+	// Create a new client with a unique ID
 	uuid, _ := uuid.NewUUID()
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), id: uuid}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
+	// new goroutines
 	go client.writePump()
 	go client.readPump()
 }
