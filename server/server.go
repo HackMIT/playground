@@ -7,11 +7,11 @@ import (
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
-	"github.com/techx/playground/world"
+	"github.com/techx/playground/socket"
 )
 
 func Init() {
-	hub := world.NewHub()
+	hub := socket.NewHub()
 
 	go hub.Run()
 	go db.ListenForUpdates(func(data []byte) {
@@ -19,15 +19,13 @@ func Init() {
 		json.Unmarshal(data, &msg)
 
 		switch msg["type"] {
-		case "join":
-			hub.Send("home", data)
-		case "move":
+		case "join", "move":
 			hub.Send("home", data)
 		}
 	})
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		world.ServeWs(hub, w, r)
+		socket.ServeWs(hub, w, r)
 	})
 
 	r := newRouter()

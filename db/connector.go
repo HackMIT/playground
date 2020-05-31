@@ -30,22 +30,17 @@ func ListenForUpdates(callback func(msg []byte)) {
 	psc := Instance.Subscribe("room")
 
 	for {
-		iface, err := psc.Receive()
+		msg, err := psc.ReceiveMessage()
 
 		if err != nil {
 			panic(err)
 		}
 
-		switch msg := iface.(type) {
-		case *redis.Subscription:
-			println("subscribed successfully")
-		case *redis.Message:
-			if msg.Channel != "room" {
-				// Right now we only receive room updates
-				continue
-			}
-
-			callback([]byte(msg.Payload))
+		if msg.Channel != "room" {
+			// Right now we only receive room updates
+			continue
 		}
+
+		callback([]byte(msg.Payload))
 	}
 }

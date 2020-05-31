@@ -2,36 +2,39 @@ package controllers
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
+
+	"github.com/labstack/echo/v4"
 )
+
+type RoomController struct {}
 
 type CreateRoomBody struct {
 	Slug string `json:"slug"`
 	Background string `json:"background"`
 }
 
-func CreateRoom(w http.ResponseWriter, r *http.Request) {
-	var body CreateRoomBody
-	data, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(data, &body)
+func (r RoomController) CreateRoom(c echo.Context) error {
+	json := new(CreateRoomBody)
 
-	room := models.NewRoom("background.png", body.Slug)
+	if err := c.Bind(json); err != nil {
+		panic(err)
+	}
 
-	_, err := db.Rh.JSONSet("rooms:" + body.Slug, ".", room)
+	room := models.NewRoom("background.png", json.Slug)
+	roomJSON, err := db.Rh.JSONSet("rooms:" + json.Slug, ".", room)
 
 	if err != nil {
 		panic(err)
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	return c.JSON(http.StatusOK, roomJSON)
 }
 
-func GetRooms(w http.ResponseWriter, r *http.Request) {
+func (r RoomController) GetRooms(c echo.Context) error {
 	// TODO: Error handling
 	roomNames, _ := db.Instance.Keys("rooms:*").Result()
 
@@ -46,9 +49,5 @@ func GetRooms(w http.ResponseWriter, r *http.Request) {
 		rooms[i] = room
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	roomsStr, _ := json.Marshal(rooms)
-	io.WriteString(w, string(roomsStr))
+	return c.JSON(http.StatusOK, rooms)
 }
