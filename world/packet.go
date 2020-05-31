@@ -1,7 +1,11 @@
 package world
 
 import (
+	"encoding/json"
+
+	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
+
 	"github.com/google/uuid"
 )
 
@@ -21,10 +25,16 @@ type InitPacket struct {
 	Characters map[uuid.UUID]*models.Character `json:"characters"`
 }
 
-func newInitPacket(w *World) InitPacket {
+func newInitPacket() InitPacket {
+	// TODO: Init packet... for which room?
+	roomData, _ := db.Rh.JSONGet("rooms:home", ".")
+
+	var room models.Room
+	json.Unmarshal([]byte(roomData.([]uint8)), &room)
+
 	return InitPacket{
 		BasePacket: BasePacket{Type: "init"},
-		Characters: w.characters,
+		Characters: room.Characters,
 	}
 }
 
@@ -40,6 +50,14 @@ type JoinPacket struct {
 	Name string `json:"name"`
 }
 
+func (p JoinPacket) MarshalBinary() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p JoinPacket) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, p)
+}
+
 // Sent by clients when they move around
 type MovePacket struct {
 	BasePacket
@@ -52,6 +70,14 @@ type MovePacket struct {
 
 	// The client's y position (0-1)
 	Y float32 `json:"y"`
+}
+
+func (p MovePacket) MarshalBinary() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p MovePacket) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, p)
 }
 
 type LeavePacket struct {

@@ -21,3 +21,31 @@ func Init() {
 
 	Rh.SetGoRedisClient(Instance)
 }
+
+func ListenForUpdates(callback func(msg []byte)) {
+	// Listen for updates
+	// TODO: Think about subscribing to channels corresponding with other
+	// ingest servers, but don't subscribe to our own, and send out events
+	// from this server when they are first published
+	psc := Instance.Subscribe("room")
+
+	for {
+		iface, err := psc.Receive()
+
+		if err != nil {
+			panic(err)
+		}
+
+		switch msg := iface.(type) {
+		case *redis.Subscription:
+			println("subscribed successfully")
+		case *redis.Message:
+			if msg.Channel != "room" {
+				// Right now we only receive room updates
+				continue
+			}
+
+			callback([]byte(msg.Payload))
+		}
+	}
+}

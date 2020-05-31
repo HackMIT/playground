@@ -11,6 +11,14 @@ type SocketMessage struct {
 	sender *Client
 }
 
+func (m SocketMessage) MarshalBinary() ([]byte, error) {
+	return json.Marshal(m)
+}
+
+func (m SocketMessage) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, m)
+}
+
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
@@ -36,43 +44,34 @@ func NewHub() *Hub {
 	}
 }
 
-func (h *Hub) Run(w *World) {
+func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
 			h.clients[client.id] = client
 
-			data, _ := json.Marshal(newInitPacket(w))
+			data, _ := json.Marshal(newInitPacket())
 			client.send <- data
 		case client := <-h.unregister:
 			if client := h.clients[client.id]; client.connected {
 				delete(h.clients, client.id)
 				close(client.send)
 			}
-
-			leaveMessage := newLeavePacket(client.id)
-			leaveMessageData, _ := json.Marshal(leaveMessage)
-
-			removeCharacter(w, client.id)
-
-			for id := range h.clients {
-				select {
-				case h.clients[id].send <- leaveMessageData:
-				default:
-					close(h.clients[id].send)
-					delete(h.clients, id)
-				}
-			}
 		case message := <-h.broadcast:
-			processMessage(w, message)
-			for id := range h.clients {
-				select {
-				case h.clients[id].send <- message.msg:
-				default:
-					close(h.clients[id].send)
-					delete(h.clients, id)
-				}
-			}
+			processMessage(message)
+		}
+	}
+}
+
+func (h *Hub) Send(room string, msg []byte) {
+	for id := range h.clients {
+		// TODO: Make sure room matches -- or figure out how to iterate
+		// over clients without including those in different rooms
+		select {
+		case h.clients[id].send <- msg:
+		default:
+			close(h.clients[id].send)
+			delete(h.clients, id)
 		}
 	}
 }
