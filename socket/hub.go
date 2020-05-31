@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"encoding"
 	"encoding/json"
 	"log"
 
@@ -43,7 +44,7 @@ func (h *Hub) Run() {
 
 			// When a client connects, send them an init packet
 			initPacket := new(InitPacket).Init("home")
-			data, _ := json.Marshal(initPacket)
+			data, _ := initPacket.MarshalBinary()
 			client.send <- data
 		case client := <-h.unregister:
 			// When a client disconnects, remove them from our clients map
@@ -59,7 +60,12 @@ func (h *Hub) Run() {
 }
 
 // Sends a message to all of our clients
-func (h *Hub) Send(room string, msg []byte) {
+func (h *Hub) Send(room string, msg encoding.BinaryMarshaler) {
+	data, _ := msg.MarshalBinary()
+	h.SendBytes(room, data)
+}
+
+func (h *Hub) SendBytes(room string, msg []byte) {
 	for id := range h.clients {
 		// TODO: Make sure room matches -- or figure out how to iterate
 		// over clients without including those in different rooms

@@ -23,7 +23,7 @@ func Init() {
 
 		switch msg["type"] {
 		case "join", "move":
-			hub.Send("home", data)
+			hub.SendBytes("home", data)
 		}
 	})
 

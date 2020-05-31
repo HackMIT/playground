@@ -38,6 +38,14 @@ func (p *InitPacket) Init(roomSlug string) *InitPacket {
 	return p
 }
 
+func (p InitPacket) MarshalBinary() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p InitPacket) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, p)
+}
+
 // Sent by clients after receiving the init packet. Identifies them to the
 // server, and in turn other clients
 type JoinPacket struct {
