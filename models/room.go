@@ -5,7 +5,18 @@ import (
 )
 
 type Room struct {
-	Background string `json:"background" mapstructure:"background"`
+	Background string `json:"background"`
+	Characters []Character `json:"characters"`
+	Hallways []Hallway `json:"hallways"`
+	Slug string `json:"slug"`
+}
+
+func NewRoom(background string, slug string) *Room {
+	return &Room{
+		Background: background,
+		Hallways: []Hallway{},
+		Slug: slug,
+	}
 }
 
 func (r Room) MarshalBinary() ([]byte, error) {

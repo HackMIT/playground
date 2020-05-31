@@ -8,8 +8,6 @@ import (
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
-
-	"github.com/mitchellh/mapstructure"
 )
 
 type CreateRoomBody struct {
@@ -22,9 +20,9 @@ func CreateRoom(w http.ResponseWriter, r *http.Request) {
 	data, _ := ioutil.ReadAll(r.Body)
 	json.Unmarshal(data, &body)
 
-	_, err := db.Instance.HMSet("rooms:" + body.Slug, map[string]interface{}{
-		"background": body.Background,
-	}).Result()
+	room := models.NewRoom("background.png", body.Slug)
+
+	_, err := db.Rh.JSONSet("rooms:" + body.Slug, ".", room)
 
 	if err != nil {
 		panic(err)
@@ -37,17 +35,15 @@ func GetRooms(w http.ResponseWriter, r *http.Request) {
 	// TODO: Error handling
 	roomNames, _ := db.Instance.Keys("rooms:*").Result()
 
-	rooms := make(map[string]models.Room)
+	rooms := make([]models.Room, len(roomNames))
 
-	for _, name := range roomNames {
-		roomData, _ := db.Instance.HGetAll(name).Result()
+	for i, name := range roomNames {
+		roomData, _ := db.Rh.JSONGet(name, ".")
 
 		var room models.Room
-		mapstructure.Decode(roomData, &room)
+		json.Unmarshal([]byte(roomData.([]uint8)), &room)
 
-		// Remove rooms: prefix (rooms:home -> home)
-		roomName := name[6:]
-		rooms[roomName] = room
+		rooms[i] = room
 	}
 
 	w.Header().Set("Content-Type", "application/json")

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/techx/playground/config"
+	"github.com/techx/playground/db"
 	"github.com/techx/playground/server"
 )
 
@@ -20,5 +21,6 @@ func main() {
 	flag.Parse()
 
 	config.Init(*environment)
+	db.Init()
 	server.Init()
 }

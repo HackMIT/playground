@@ -1,6 +1,7 @@
 package world
 
 import (
+	"github.com/techx/playground/models"
 	"github.com/google/uuid"
 )
 
@@ -17,7 +18,7 @@ type InitPacket struct {
 	BasePacket
 
 	// Map of characters that are already in the room
-	Characters map[uuid.UUID]*Character `json:"characters"`
+	Characters map[uuid.UUID]*models.Character `json:"characters"`
 }
 
 func newInitPacket(w *World) InitPacket {

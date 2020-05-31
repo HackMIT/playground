@@ -1,11 +1,12 @@
 module github.com/techx/playground
 
 require (
-	github.com/go-redis/redis/v7 v7.3.0
+	github.com/go-redis/redis v6.15.8+incompatible
+	github.com/gomodule/redigo v1.8.1 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/websocket v1.4.2
-	github.com/mitchellh/mapstructure v1.1.2
+	github.com/nitishm/go-rejson v2.0.0+incompatible
 	github.com/spf13/viper v1.7.0
 )
 

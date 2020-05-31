@@ -3,18 +3,20 @@ package world
 import (
 	"encoding/json"
 
+	"github.com/techx/playground/models"
+
 	"github.com/google/uuid"
 )
 
 
 // World maintains the characters present in the room
 type World struct {
-	characters map[uuid.UUID]*Character
+	characters map[uuid.UUID]*models.Character
 }
 
 func NewWorld() *World {
 	return &World{
-		characters: make(map[uuid.UUID]*Character),
+		characters: make(map[uuid.UUID]*models.Character),
 	}
 }
 
@@ -39,7 +41,7 @@ func processMessage(w *World, m *SocketMessage) {
 		}
 
 		// Save the character that just joined
-		w.characters[m.sender.id] = newCharacter(m.sender.id, res.Name)
+		w.characters[m.sender.id] = models.NewCharacter(m.sender.id, res.Name)
 
 		res.Id = m.sender.id.String()
 		raw, _ := json.Marshal(res)

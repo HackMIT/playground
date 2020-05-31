@@ -1,11 +1,23 @@
 package db
 
 import (
-	"github.com/go-redis/redis/v7"
+	"github.com/nitishm/go-rejson"
+	"github.com/go-redis/redis"
 )
 
-var Instance = redis.NewClient(&redis.Options{
-	Addr: "localhost:6379",
-	Password: "",
-	DB: 0,
-})
+var (
+	Instance *redis.Client
+	Rh *rejson.Handler
+)
+
+func Init() {
+	Rh = rejson.NewReJSONHandler()
+
+	Instance = redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+		Password: "",
+		DB: 0,
+	})
+
+	Rh.SetGoRedisClient(Instance)
+}
