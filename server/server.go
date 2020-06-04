@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
-	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/socket"
 )
 
-func Init() {
+func Init(port int) {
 	hub := new(socket.Hub).Init()
 
 	// Wait for socket messages
@@ -22,10 +22,13 @@ func Init() {
 		json.Unmarshal(data, &msg)
 
 		switch msg["type"] {
-		case "join", "move":
+		case "join", "move", "change":
 			hub.SendBytes("home", data)
 		}
 	})
+
+	// Check if we're the leader and do things if so
+	go db.MonitorLeader()
 
 	// Websocket connection endpoint
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -36,8 +39,7 @@ func Init() {
 	r := newRouter(hub)
 	http.Handle("/", r)
 
-	config := config.GetConfig()
-	addr := config.GetString("server.addr")
+	addr := ":" + strconv.Itoa(port)
 
 	// Start the server
 	fmt.Println("Serving at", addr)

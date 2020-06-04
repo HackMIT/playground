@@ -11,6 +11,7 @@ type Character struct {
 	Name string  `json:"name"`
 	X    float64 `json:"x"`
 	Y    float64 `json:"y"`
+	Room string  `json:"room"`
 }
 
 func (c *Character) Init(id uuid.UUID, name string) *Character {
@@ -20,6 +21,7 @@ func (c *Character) Init(id uuid.UUID, name string) *Character {
 	c.Name = name
 	c.X = config.GetFloat64("character.start_x_pos")
 	c.Y = config.GetFloat64("character.start_y_pos")
+	c.Room = "home"
 
 	return c
 }

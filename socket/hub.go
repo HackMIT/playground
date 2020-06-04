@@ -4,6 +4,8 @@ import (
 	"encoding"
 	"encoding/json"
 	"log"
+	"math"
+	"time"
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
@@ -41,11 +43,6 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			h.clients[client.id] = client
-
-			// When a client connects, send them an init packet
-			initPacket := new(InitPacket).Init("home")
-			data, _ := initPacket.MarshalBinary()
-			client.send <- data
 		case client := <-h.unregister:
 			// When a client disconnects, remove them from our clients map
 			if client := h.clients[client.id]; client.connected {
@@ -96,16 +93,27 @@ func processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 		res.Id = m.sender.id.String()
 
-		// Add character to room in Redis
-		character := new(models.Character).Init(m.sender.id, res.Name)
-
-		key := "characters[\"" + res.Id + "\"]"
-		_, err := db.GetRejsonHandler().JSONSet("room:home", key, character)
+		// When a client joins, check their room and send them the relevant
+		// init packet
+		var character *models.Character
+		characterData, err := db.GetRejsonHandler().JSONGet("character: " + res.Id, ".")
 
 		if err != nil {
-			log.Fatal("ERROR: Failure sending join packet to Redis")
-			return
+			// This character doesn't exist in our database, create new one
+			character = new(models.Character).Init(m.sender.id, res.Name)
+			db.GetRejsonHandler().JSONSet("character:" + res.Id, ".", character)
+
+			// Add to room:home at (0.5, 0.5)
+			key := "characters[\"" + res.Id + "\"]"
+			db.GetRejsonHandler().JSONSet("room:home", key, character)
+		} else {
+			json.Unmarshal(characterData.([]byte), &character)
 		}
+
+		// Send them the relevant init packet
+		initPacket := new(InitPacket).Init(character.Room)
+		data, _ := initPacket.MarshalBinary()
+		m.sender.send <- data
 
 		// An error here is unlikely since we just connected to Redis above
 		db.GetInstance().Publish("room", res).Result()
@@ -115,11 +123,17 @@ func processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 		res.Id = m.sender.id.String()
 
-		// Update character's position in the room
 		// TODO: go-rejson doesn't currently support transactions, but
-		// these should really be done together
+		// these should really all be done together
+
+		// Get character's current room
+		var character models.Character
+		characterData, _ := db.GetRejsonHandler().JSONGet("character:" + res.Id, ".")
+		json.Unmarshal(characterData.([]byte), &character)
+
+		// Update character's position in the room
 		xKey := "characters[\"" + res.Id + "\"][\"x\"]"
-		_, err := db.GetRejsonHandler().JSONSet("room:home", xKey, res.X)
+		_, err := db.GetRejsonHandler().JSONSet("room:" + character.Room, xKey, res.X)
 
 		if err != nil {
 			log.Fatal("ERROR: Failure sending move packet to Redis")
@@ -128,9 +142,41 @@ func processMessage(m *SocketMessage) {
 
 		// An error here is unlikely since we just connected to Redis
 		yKey := "characters[\"" + res.Id + "\"][\"y\"]"
-		db.GetRejsonHandler().JSONSet("room:home", yKey, res.Y)
+		db.GetRejsonHandler().JSONSet("room:" + character.Room, yKey, res.Y)
 
 		// Publish move event to other ingest servers
 		db.GetInstance().Publish("room", res).Result()
+
+		// Check if this character moved to a hallway
+		var room models.Room
+		roomData, _ := db.GetRejsonHandler().JSONGet("room:" + character.Room, ".")
+		json.Unmarshal(roomData.([]byte), &room)
+
+		for _, hallway := range room.Hallways {
+			distance := math.Sqrt(math.Pow(hallway.X - res.X, 2.0) + math.Pow(hallway.Y - res.Y, 2.0))
+			if distance > hallway.Radius {
+				continue
+			}
+
+			// After delay, move character to different room
+			// TODO: This should depend on speed, not be constant 2s
+			time.AfterFunc(2 * time.Second, func() {
+				changeRoomPacket := new(ChangeRoomPacket).Init(res.Id, character.Room, hallway.To)
+				db.GetInstance().Publish("room", changeRoomPacket)
+
+				// Update this character's room
+				db.GetRejsonHandler().JSONSet("character:" + res.Id, "room", hallway.To)
+
+				// Remove this character from the previous room
+				db.GetRejsonHandler().JSONDel("room:" + character.Room, "characters[\"" + res.Id + "\"]")
+
+				// Add them to their new room
+				db.GetRejsonHandler().JSONSet("room:" + hallway.To, "characters[\"" + res.Id + "\"]", character)
+			})
+
+			// Make sure we only enter one hallway, in case there are
+			// overlapping ones
+			break
+		}
 	}
 }
