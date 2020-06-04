@@ -74,10 +74,10 @@ type MovePacket struct {
 	Id string `json:"id"`
 
 	// The client's x position (0-1)
-	X float32 `json:"x"`
+	X float64 `json:"x"`
 
 	// The client's y position (0-1)
-	Y float32 `json:"y"`
+	Y float64 `json:"y"`
 }
 
 func (p MovePacket) MarshalBinary() ([]byte, error) {
@@ -100,4 +100,34 @@ func (p *LeavePacket) Init(id uuid.UUID) *LeavePacket {
 	p.BasePacket = BasePacket{Type: "leave"}
 	p.Id = id.String()
 	return p
+}
+
+// Sent by ingests when a client changes rooms
+type ChangeRoomPacket struct {
+	BasePacket
+
+	// The id of the client who's moving
+	Id string `json:"id"`
+
+	// The room they're moving from
+	From string `json:"from"`
+
+	// The room they're moving to
+	To string `json:"to"`
+}
+
+func (p *ChangeRoomPacket) Init(id string, from string, to string) *ChangeRoomPacket {
+	p.BasePacket = BasePacket{Type: "change"}
+	p.Id = id
+	p.From = from
+	p.To = to
+	return p
+}
+
+func (p ChangeRoomPacket) MarshalBinary() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p ChangeRoomPacket) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, p)
 }
