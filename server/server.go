@@ -33,7 +33,7 @@ func Init() {
 	})
 
 	// REST endpoints
-	r := newRouter()
+	r := newRouter(hub)
 	http.Handle("/", r)
 
 	config := config.GetConfig()

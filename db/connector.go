@@ -23,6 +23,8 @@ func Init() {
 	})
 
 	rh.SetGoRedisClient(instance)
+
+	rh.JSONSet("songs", ".", []string{})
 }
 
 func GetInstance() *redis.Client {
