@@ -5,8 +5,6 @@ import (
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
-
-	"github.com/google/uuid"
 )
 
 // The base packet that can be sent between clients and server. These are all
@@ -22,14 +20,14 @@ type InitPacket struct {
 	BasePacket
 
 	// Map of characters that are already in the room
-	Characters map[uuid.UUID]*models.Character `json:"characters"`
+	Characters map[string]*models.Character `json:"characters"`
 }
 
 func (p *InitPacket) Init(roomSlug string) *InitPacket {
 	// Fetch characters from redis
 	data, _ := db.GetRejsonHandler().JSONGet("room:" + roomSlug, "characters")
 
-	var characters map[uuid.UUID]*models.Character
+	var characters map[string]*models.Character
 	json.Unmarshal(data.([]byte), &characters)
 
 	// Set data and return
@@ -56,6 +54,12 @@ type JoinPacket struct {
 
 	// The client's username
 	Name string `json:"name"`
+
+	// The client's x position (0-1)
+	X float64 `json:"x"`
+
+	// The client's y position (0-1)
+	Y float64 `json:"y"`
 }
 
 func (p JoinPacket) MarshalBinary() ([]byte, error) {
@@ -96,10 +100,18 @@ type LeavePacket struct {
 	Id string `json:"id"`
 }
 
-func (p *LeavePacket) Init(id uuid.UUID) *LeavePacket {
+func (p *LeavePacket) Init(id string) *LeavePacket {
 	p.BasePacket = BasePacket{Type: "leave"}
-	p.Id = id.String()
+	p.Id = id
 	return p
+}
+
+func (p LeavePacket) MarshalBinary() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p LeavePacket) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, p)
 }
 
 // Sent by ingests when a client changes rooms

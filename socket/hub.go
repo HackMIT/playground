@@ -9,15 +9,13 @@ import (
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
-
-	"github.com/google/uuid"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
 	// Registered clients.
-	clients map[uuid.UUID]*Client
+	clients map[string]*Client
 
 	// Inbound messages from the clients.
 	broadcast chan *SocketMessage
@@ -33,7 +31,7 @@ func (h *Hub) Init() *Hub {
 	h.broadcast = make(chan *SocketMessage)
 	h.register = make(chan *Client)
 	h.unregister = make(chan *Client)
-	h.clients = map[uuid.UUID]*Client{}
+	h.clients = map[string]*Client{}
 	return h
 }
 
@@ -49,9 +47,19 @@ func (h *Hub) Run() {
 				delete(h.clients, client.id)
 				close(client.send)
 			}
-			// Process incoming messages from clients
+
+			// Remove this client from the room
+			res, _ := db.GetRejsonHandler().JSONGet("character:" + client.id, "room")
+			roomBytes := res.([]byte)
+			room := string(roomBytes[1:len(roomBytes) - 1])
+			db.GetRejsonHandler().JSONDel("room:" + room, "characters[\"" + client.id + "\"]")
+
+			// Notify others that this client left
+			packet := new(LeavePacket).Init(client.id)
+			h.Send(room, packet)
 		case message := <-h.broadcast:
-			processMessage(message)
+			// Process incoming messages from clients
+			h.processMessage(message)
 		}
 	}
 }
@@ -77,12 +85,12 @@ func (h *Hub) SendBytes(room string, msg []byte) {
 }
 
 // Processes an incoming message
-func processMessage(m *SocketMessage) {
+func (h *Hub) processMessage(m *SocketMessage) {
 	res := BasePacket{}
 
 	if err := json.Unmarshal(m.msg, &res); err != nil {
 		// TODO: Log to Sentry or something -- this should never happen
-		log.Println("ERROR: Received invalid JSON message from", m.sender.id.String(), "->", m.msg)
+		log.Println("ERROR: Received invalid JSON message from", m.sender.id, "->", m.msg)
 		return
 	}
 
@@ -91,23 +99,42 @@ func processMessage(m *SocketMessage) {
 		// Parse join packet
 		res := JoinPacket{}
 		json.Unmarshal(m.msg, &res)
-		res.Id = m.sender.id.String()
+
+		// TODO: Replace this with some quill ID that uniquely identifies client
+		delete(h.clients, m.sender.id)
+		m.sender.id = res.Name
+		h.clients[m.sender.id] = m.sender
+
+		res.Id = m.sender.id
 
 		// When a client joins, check their room and send them the relevant
 		// init packet
 		var character *models.Character
-		characterData, err := db.GetRejsonHandler().JSONGet("character: " + res.Id, ".")
+		characterData, err := db.GetRejsonHandler().JSONGet("character:" + m.sender.id, ".")
 
 		if err != nil {
 			// This character doesn't exist in our database, create new one
 			character = new(models.Character).Init(m.sender.id, res.Name)
-			db.GetRejsonHandler().JSONSet("character:" + res.Id, ".", character)
+			db.GetRejsonHandler().JSONSet("character:" + m.sender.id, ".", character)
 
 			// Add to room:home at (0.5, 0.5)
-			key := "characters[\"" + res.Id + "\"]"
+			key := "characters[\"" + m.sender.id + "\"]"
 			db.GetRejsonHandler().JSONSet("room:home", key, character)
+
+			// Set default position
+			res.X = 0.5
+			res.Y = 0.5
 		} else {
+			// Load character data
 			json.Unmarshal(characterData.([]byte), &character)
+
+			// Add to whatever room they were at
+			key := "characters[\"" + m.sender.id + "\"]"
+			db.GetRejsonHandler().JSONSet("room:" + character.Room, key, character)
+
+			// Set position
+			res.X = character.X
+			res.Y = character.Y
 		}
 
 		// Send them the relevant init packet
@@ -121,7 +148,7 @@ func processMessage(m *SocketMessage) {
 		// Parse move packet
 		res := MovePacket{}
 		json.Unmarshal(m.msg, &res)
-		res.Id = m.sender.id.String()
+		res.Id = m.sender.id
 
 		// TODO: go-rejson doesn't currently support transactions, but
 		// these should really all be done together
@@ -136,6 +163,7 @@ func processMessage(m *SocketMessage) {
 		_, err := db.GetRejsonHandler().JSONSet("room:" + character.Room, xKey, res.X)
 
 		if err != nil {
+			log.Println(err)
 			log.Fatal("ERROR: Failure sending move packet to Redis")
 			return
 		}
@@ -143,6 +171,10 @@ func processMessage(m *SocketMessage) {
 		// An error here is unlikely since we just connected to Redis
 		yKey := "characters[\"" + res.Id + "\"][\"y\"]"
 		db.GetRejsonHandler().JSONSet("room:" + character.Room, yKey, res.Y)
+
+		// Update character's position on their model
+		db.GetRejsonHandler().JSONSet("character:" + character.Id, "x", res.X)
+		db.GetRejsonHandler().JSONSet("character:" + character.Id, "y", res.Y)
 
 		// Publish move event to other ingest servers
 		db.GetInstance().Publish("room", res).Result()
