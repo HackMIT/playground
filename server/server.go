@@ -27,6 +27,7 @@ func Init(port int) {
 		}
 	})
 
+	// Check if we're the leader and do things if so
 	go db.MonitorLeader()
 
 	// Websocket connection endpoint

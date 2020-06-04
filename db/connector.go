@@ -63,15 +63,20 @@ func ListenForUpdates(callback func(msg []byte)) {
 
 func MonitorLeader() {
 	for range time.NewTicker(time.Second).C {
+		// Get list of clients connected to Redis
 		clients, _ := instance.ClientList().Result()
+
+		// The leader is the first client -- the oldest connection
 		leader := strings.Split(clients, "\n")[0]
 		leaderParts := strings.Split(leader, " ")
 		leaderID, _ := strconv.Atoi(strings.Split(leaderParts[0], "=")[1])
 		ingestID, _ := instance.ClientID().Result()
 
 		// Add one because rejson creates a second client
-		if leaderID + 1 == int(ingestID) {
-			fmt.Println("i am the leader")
+		if leaderID + 1 != int(ingestID) {
+			continue
 		}
+
+		// TODO: (#2) Take care of song ended packets here
 	}
 }
