@@ -54,7 +54,7 @@ func (h *Hub) Run() {
 			}
 			// Process incoming messages from clients
 		case message := <-h.broadcast:
-			processMessage(message)
+			h.processMessage(message)
 		}
 	}
 }
@@ -80,7 +80,7 @@ func (h *Hub) SendBytes(room string, msg []byte) {
 }
 
 // Processes an incoming message
-func processMessage(m *SocketMessage) {
+func (h *Hub) processMessage(m *SocketMessage) {
 	res := BasePacket{}
 
 	if err := json.Unmarshal(m.msg, &res); err != nil {
@@ -108,7 +108,8 @@ func processMessage(m *SocketMessage) {
 		}
 
 		// An error here is unlikely since we just connected to Redis above
-		db.GetInstance().Publish("room", res).Result()
+		db.GetInstance().Publish(db.GetIngestID(), res).Result()
+		h.Send("home", res)
 	case "move":
 		// Parse move packet
 		res := MovePacket{}
@@ -131,6 +132,7 @@ func processMessage(m *SocketMessage) {
 		db.GetRejsonHandler().JSONSet("room:home", yKey, res.Y)
 
 		// Publish move event to other ingest servers
-		db.GetInstance().Publish("room", res).Result()
+		db.GetInstance().Publish(db.GetIngestID(), res).Result()
+		h.Send("home", res)
 	}
 }

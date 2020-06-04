@@ -21,12 +21,14 @@ func Init() {
 		var msg map[string]interface{}
 		json.Unmarshal(data, &msg)
 
+		fmt.Println("received packet")
+
 		switch msg["type"] {
 		case "join", "move":
 			hub.SendBytes("home", data)
 		}
 	})
-
+	
 	// Websocket connection endpoint
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		socket.ServeWs(hub, w, r)
