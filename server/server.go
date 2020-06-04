@@ -27,6 +27,8 @@ func Init(port int) {
 		}
 	})
 
+	go db.MonitorLeader()
+
 	// Websocket connection endpoint
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		socket.ServeWs(hub, w, r)

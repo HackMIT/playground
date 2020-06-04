@@ -1,6 +1,11 @@
 package db
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/nitishm/go-rejson"
 	"github.com/go-redis/redis"
 
@@ -53,5 +58,20 @@ func ListenForUpdates(callback func(msg []byte)) {
 		}
 
 		callback([]byte(msg.Payload))
+	}
+}
+
+func MonitorLeader() {
+	for range time.NewTicker(time.Second).C {
+		clients, _ := instance.ClientList().Result()
+		leader := strings.Split(clients, "\n")[0]
+		leaderParts := strings.Split(leader, " ")
+		leaderID, _ := strconv.Atoi(strings.Split(leaderParts[0], "=")[1])
+		ingestID, _ := instance.ClientID().Result()
+
+		// Add one because rejson creates a second client
+		if leaderID + 1 == int(ingestID) {
+			fmt.Println("i am the leader")
+		}
 	}
 }
