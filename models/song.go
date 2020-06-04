@@ -5,10 +5,9 @@ import (
 )
 
 type Song struct {
-	Artist string `json:"artist"`
 	Duration int `json:"duration"`
-	Name string `json:"name"`
 	ThumbnailURL string `json:"thumbnailurl"`
+	Title string `json:"title"`
 	VidCode string `json:"vidcode"`
 }
 
