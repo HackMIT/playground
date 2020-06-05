@@ -1,6 +1,8 @@
 package db
 
 import (
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -9,6 +11,7 @@ import (
 	"github.com/go-redis/redis"
 
 	"github.com/techx/playground/config"
+	"github.com/techx/playground/models"
 )
 
 var (
@@ -29,6 +32,7 @@ func Init() {
 	rh.SetGoRedisClient(instance)
 
 	rh.JSONSet("songs", ".", []string{})
+	rh.JSONSet("queuestatus", ".", models.QueueStatus{SongEnd: time.Now()})
 }
 
 func GetInstance() *redis.Client {
@@ -66,7 +70,7 @@ func MonitorLeader() {
 	for range time.NewTicker(time.Second).C {
 		// Get list of clients connected to Redis
 		clients, _ := instance.ClientList().Result()
-
+		
 		// The leader is the first client -- the oldest connection
 		leader := strings.Split(clients, "\n")[0]
 		leaderParts := strings.Split(leader, " ")
@@ -78,6 +82,28 @@ func MonitorLeader() {
 			continue
 		}
 
-		// TODO: (#2) Take care of song ended packets here
+		// Get song queue status
+		queueStatusData, _ := rh.JSONGet("queuestatus", ".")
+		var queueStatus models.QueueStatus
+		json.Unmarshal(queueStatusData.([]byte), &queueStatus)
+		songEnd := queueStatus.SongEnd
+		fmt.Println("Song end", songEnd)
+		fmt.Println("Current song", queueStatus.CurrentSong)
+
+		// If current song ended, start next song (if there is one)
+		if songEnd.Before(time.Now()) {
+			queueLengthData, _ := rh.JSONArrLen("songs", ".")
+			queueLength := queueLengthData.(int64)
+			fmt.Println("Queue length", queueLength)
+			if queueLength > 0 {
+				// Pop the next song off the queue
+				songData, _ := rh.JSONArrPop("songs", ".", 0)
+				var song models.Song
+				json.Unmarshal(songData.([]byte), &song)
+				// Update queue status to reflect new song
+				newStatus := models.QueueStatus{song, time.Now().Add(time.Second * time.Duration(song.Duration))}
+				rh.JSONSet("queuestatus", ".", newStatus)
+			}
+		}
 	}
 }
