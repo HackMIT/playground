@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -11,6 +10,8 @@ import (
 
 	"github.com/techx/playground/config"
 )
+
+const ingestClientName string = "ingest"
 
 var (
 	instance *redis.Client
@@ -62,18 +63,45 @@ func ListenForUpdates(callback func(msg []byte)) {
 }
 
 func MonitorLeader() {
+	// Set our name so we can identify this client as an ingest
+	cmd := redis.NewStringCmd("client", "setname", ingestClientName)
+	instance.Process(cmd)
+
 	for range time.NewTicker(time.Second).C {
 		// Get list of clients connected to Redis
-		clients, _ := instance.ClientList().Result()
+		clientsRes, _ := instance.ClientList().Result()
 
 		// The leader is the first client -- the oldest connection
-		leader := strings.Split(clients, "\n")[0]
-		leaderParts := strings.Split(leader, " ")
-		leaderID, _ := strconv.Atoi(strings.Split(leaderParts[0], "=")[1])
+		clients := strings.Split(clientsRes, "\n")
+
+		var leaderID int
+
+		for _, client := range clients {
+			clientParts := strings.Split(client, " ")
+
+			if len(clientParts) < 4 {
+				// Probably a newline, invalid client
+				continue
+			}
+
+			clientName := strings.Split(clientParts[3], "=")[1]
+
+			if clientName != ingestClientName {
+				// This redis client is something else, probably redis-cli
+				continue
+			}
+
+			leaderID, _ = strconv.Atoi(strings.Split(clientParts[0], "=")[1])
+
+			// We found the leader, break
+			break
+		}
+
+		// Get current ingest ID
 		ingestID, _ := instance.ClientID().Result()
 
-		// Add one because rejson creates a second client
-		if leaderID + 1 != int(ingestID) {
+		// If we're not the leader, don't do any leader actions
+		if leaderID != int(ingestID) {
 			continue
 		}
 
