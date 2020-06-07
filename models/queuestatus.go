@@ -6,7 +6,6 @@ import (
 )
 
 type QueueStatus struct {
-	CurrentSong Song `json:"currentsong"`
 	SongEnd time.Time `json:"songend"`
 }
 

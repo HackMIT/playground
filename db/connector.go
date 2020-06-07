@@ -2,7 +2,6 @@ package db
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -116,21 +115,18 @@ func MonitorLeader() {
 		var queueStatus models.QueueStatus
 		json.Unmarshal(queueStatusData.([]byte), &queueStatus)
 		songEnd := queueStatus.SongEnd
-		fmt.Println("Song end", songEnd)
-		fmt.Println("Current song", queueStatus.CurrentSong)
 
 		// If current song ended, start next song (if there is one)
 		if songEnd.Before(time.Now()) {
 			queueLengthData, _ := rh.JSONArrLen("songs", ".")
 			queueLength := queueLengthData.(int64)
-			fmt.Println("Queue length", queueLength)
 			if queueLength > 0 {
 				// Pop the next song off the queue
 				songData, _ := rh.JSONArrPop("songs", ".", 0)
 				var song models.Song
 				json.Unmarshal(songData.([]byte), &song)
 				// Update queue status to reflect new song
-				newStatus := models.QueueStatus{song, time.Now().Add(time.Second * time.Duration(song.Duration))}
+				newStatus := models.QueueStatus{time.Now().Add(time.Second * time.Duration(song.Duration))}
 				rh.JSONSet("queuestatus", ".", newStatus)
 			}
 		}

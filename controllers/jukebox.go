@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,17 +13,28 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"google.golang.org/api/googleapi/transport"
-    "google.golang.org/api/youtube/v3"
+	"google.golang.org/api/youtube/v3"
 )
 
 const developerKey = "AIzaSyBbKVxrxksLlxJYno6ZG_TzHvIpXU2O3eM"
 
 type JukeboxController struct {
 	hub *socket.Hub
+	client *http.Client
+	service *youtube.Service
 }
 
 func (j *JukeboxController) Init(h *socket.Hub) *JukeboxController {
 	j.hub = h
+	// Create YouTube client
+	j.client = &http.Client{
+		Transport: &transport.APIKey{Key: developerKey},
+	}
+	var err error
+	j.service, err = youtube.New(j.client)
+	if err != nil {
+		log.Fatalf("Error creating new YouTube client: %v", err)
+	}
 	return j
 }
 
@@ -34,24 +44,15 @@ func (j JukeboxController) QueueSong(c echo.Context) error {
 	song := new(models.Song).Init()
 
 	if err := c.Bind(song); err != nil {
-		panic(err)
-	}
-
-	// Create YouTube client
-	client := &http.Client{
-		Transport: &transport.APIKey{Key: developerKey},
-	}
-	service, err := youtube.New(client)
-	if err != nil {
-		log.Fatalf("Error creating new YouTube client: %v", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request")
 	}
 
 	// Make the YouTube API call
-	call := service.Videos.List("snippet,contentDetails").
+	call := j.service.Videos.List("snippet,contentDetails").
 			Id(song.VidCode)
 	response, err := call.Do()
 	if err != nil {
-		panic(err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to fetch YouTube data")
 	}
 
 	// Should only have one video
@@ -65,7 +66,7 @@ func (j JukeboxController) QueueSong(c echo.Context) error {
 		seconds, err := strconv.Atoi(duration[minIndex + 1:secIndex])
 		// Error parsing duration string
 		if err != nil {
-			panic(err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "failed to parse video duration")
 		}
 		song.Duration = (minutes * 60) + seconds
 		song.Title = video.Snippet.Title
@@ -75,7 +76,6 @@ func (j JukeboxController) QueueSong(c echo.Context) error {
 	_, err = db.GetRejsonHandler().JSONArrAppend("songs", ".", song)
 
 	if err != nil {
-		fmt.Println(err)
 		return echo.NewHTTPError(http.StatusInternalServerError,
 		                         "database error")
 	}
