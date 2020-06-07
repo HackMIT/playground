@@ -49,10 +49,10 @@ func (h *Hub) Run() {
 			}
 
 			// Remove this client from the room
-			res, _ := db.GetRejsonHandler().JSONGet("character:" + client.id, "room")
+			res, _ := db.GetRejsonHandler().JSONGet("character:" + client.name, "room")
 			roomBytes := res.([]byte)
 			room := string(roomBytes[1:len(roomBytes) - 1])
-			db.GetRejsonHandler().JSONDel("room:" + room, "characters[\"" + client.id + "\"]")
+			db.GetRejsonHandler().JSONDel("room:" + room, "characters[\"" + client.name + "\"]")
 
 			// Notify others that this client left
 			packet := new(LeavePacket).Init(client.id)
@@ -101,24 +101,26 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 
 		// TODO: Replace this with some quill ID that uniquely identifies client
-		delete(h.clients, m.sender.id)
-		m.sender.id = res.Name
-		h.clients[m.sender.id] = m.sender
-
+		m.sender.name = res.Name
 		res.Id = m.sender.id
 
 		// When a client joins, check their room and send them the relevant
 		// init packet
 		var character *models.Character
-		characterData, err := db.GetRejsonHandler().JSONGet("character:" + m.sender.id, ".")
+		characterData, err := db.GetRejsonHandler().JSONGet("character:" + m.sender.name, ".")
+
+		var initPacket *InitPacket
 
 		if err != nil {
 			// This character doesn't exist in our database, create new one
-			character = new(models.Character).Init(m.sender.id, res.Name)
-			db.GetRejsonHandler().JSONSet("character:" + m.sender.id, ".", character)
+			character = new(models.Character).Init(m.sender.name, res.Name)
+			initPacket = new(InitPacket).Init(character.Room)
+
+			// Add character to database
+			db.GetRejsonHandler().JSONSet("character:" + m.sender.name, ".", character)
 
 			// Add to room:home at (0.5, 0.5)
-			key := "characters[\"" + m.sender.id + "\"]"
+			key := "characters[\"" + m.sender.name + "\"]"
 			db.GetRejsonHandler().JSONSet("room:home", key, character)
 
 			// Set default position
@@ -127,9 +129,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		} else {
 			// Load character data
 			json.Unmarshal(characterData.([]byte), &character)
+			initPacket = new(InitPacket).Init(character.Room)
 
 			// Add to whatever room they were at
-			key := "characters[\"" + m.sender.id + "\"]"
+			key := "characters[\"" + m.sender.name + "\"]"
 			db.GetRejsonHandler().JSONSet("room:" + character.Room, key, character)
 
 			// Set position
@@ -138,7 +141,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		// Send them the relevant init packet
-		initPacket := new(InitPacket).Init(character.Room)
 		data, _ := initPacket.MarshalBinary()
 		m.sender.send <- data
 
@@ -155,11 +157,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Get character's current room
 		var character models.Character
-		characterData, _ := db.GetRejsonHandler().JSONGet("character:" + res.Id, ".")
+		characterData, _ := db.GetRejsonHandler().JSONGet("character:" + m.sender.name, ".")
 		json.Unmarshal(characterData.([]byte), &character)
 
 		// Update character's position in the room
-		xKey := "characters[\"" + res.Id + "\"][\"x\"]"
+		xKey := "characters[\"" + m.sender.name + "\"][\"x\"]"
 		_, err := db.GetRejsonHandler().JSONSet("room:" + character.Room, xKey, res.X)
 
 		if err != nil {
@@ -169,7 +171,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		// An error here is unlikely since we just connected to Redis
-		yKey := "characters[\"" + res.Id + "\"][\"y\"]"
+		yKey := "characters[\"" + m.sender.name + "\"][\"y\"]"
 		db.GetRejsonHandler().JSONSet("room:" + character.Room, yKey, res.Y)
 
 		// Update character's position on their model
@@ -193,17 +195,17 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			// After delay, move character to different room
 			// TODO: This should depend on speed, not be constant 2s
 			time.AfterFunc(2 * time.Second, func() {
-				changeRoomPacket := new(ChangeRoomPacket).Init(res.Id, character.Room, hallway.To)
+				changeRoomPacket := new(ChangeRoomPacket).Init(m.sender.name, character.Room, hallway.To)
 				db.GetInstance().Publish("room", changeRoomPacket)
 
 				// Update this character's room
-				db.GetRejsonHandler().JSONSet("character:" + res.Id, "room", hallway.To)
+				db.GetRejsonHandler().JSONSet("character:" + m.sender.name, "room", hallway.To)
 
 				// Remove this character from the previous room
-				db.GetRejsonHandler().JSONDel("room:" + character.Room, "characters[\"" + res.Id + "\"]")
+				db.GetRejsonHandler().JSONDel("room:" + character.Room, "characters[\"" + m.sender.name + "\"]")
 
 				// Add them to their new room
-				db.GetRejsonHandler().JSONSet("room:" + hallway.To, "characters[\"" + res.Id + "\"]", character)
+				db.GetRejsonHandler().JSONSet("room:" + hallway.To, "characters[\"" + m.sender.name + "\"]", character)
 			})
 
 			// Make sure we only enter one hallway, in case there are

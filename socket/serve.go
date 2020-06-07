@@ -47,6 +47,8 @@ type Client struct {
 	// ID uniquely identifying this client
 	id string
 
+	name string
+
 	// True if this client is still connected to WS
 	connected bool
 
