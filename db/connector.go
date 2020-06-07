@@ -152,8 +152,5 @@ func MonitorLeader() {
 		}
 
 		// TODO: (#2) Take care of song ended packets here
-
-		// TODO: Remove clients who were connected to ingest servers that are no
-		// longer online from their rooms
 	}
 }

@@ -11,10 +11,13 @@ type MovePacket struct {
 	// The id of the  client who is moving
 	Id string `json:"id"`
 
-	// The client's x position (0-1)
+	// The room that the client is moving in
+	Room string `json:"room"`
+
+	// The client's new x position (0-1)
 	X float64 `json:"x"`
 
-	// The client's y position (0-1)
+	// The client's new y position (0-1)
 	Y float64 `json:"y"`
 }
 

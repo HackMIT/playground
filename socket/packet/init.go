@@ -12,20 +12,20 @@ import (
 type InitPacket struct {
 	BasePacket
 
-	// Map of characters that are already in the room
-	Characters map[string]*models.Character `json:"characters"`
+	// The room that the client is about to join
+	Room *models.Room `json:"room"`
 }
 
 func (p *InitPacket) Init(roomSlug string) *InitPacket {
 	// Fetch characters from redis
-	data, _ := db.GetRejsonHandler().JSONGet("room:" + roomSlug, "characters")
+	res, _ := db.GetRejsonHandler().JSONGet("room:" + roomSlug, ".")
 
-	var characters map[string]*models.Character
-	json.Unmarshal(data.([]byte), &characters)
+	var room *models.Room
+	json.Unmarshal(res.([]byte), &room)
 
 	// Set data and return
 	p.BasePacket = BasePacket{Type: "init"}
-	p.Characters = characters
+	p.Room = room
 	return p
 }
 

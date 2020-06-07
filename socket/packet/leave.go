@@ -10,11 +10,19 @@ type LeavePacket struct {
 
 	// The id of the client who's leaving
 	Id string `json:"id"`
+
+	// The name of the client who's leaving
+	Name string `json:"name"`
+
+	// The room that the client is leaving
+	Room string `json:"room"`
 }
 
-func (p *LeavePacket) Init(id string) *LeavePacket {
+func (p *LeavePacket) Init(id string, name string, room string) *LeavePacket {
 	p.BasePacket = BasePacket{Type: "leave"}
 	p.Id = id
+	p.Name = name
+	p.Room = room
 	return p
 }
 
