@@ -1,12 +1,14 @@
 package db
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/techx/playground/config"
+	"github.com/techx/playground/models"
 
 	mapset "github.com/deckarep/golang-set"
 	"github.com/nitishm/go-rejson"
@@ -36,6 +38,10 @@ func Init() {
 	// Save our ingest ID
 	ingestRes, _ := instance.ClientID().Result()
 	ingestID = int(ingestRes)
+
+	// Initialize jukebox
+	rh.JSONSet("songs", ".", []string{})
+	rh.JSONSet("queuestatus", ".", models.QueueStatus{SongEnd: time.Now()})
 }
 
 func GetIngestID() int {
@@ -151,6 +157,25 @@ func MonitorLeader() {
 			instance.SRem("ingests", id)
 		}
 
-		// TODO: (#2) Take care of song ended packets here
+		// Get song queue status
+		queueStatusData, _ := rh.JSONGet("queuestatus", ".")
+		var queueStatus models.QueueStatus
+		json.Unmarshal(queueStatusData.([]byte), &queueStatus)
+		songEnd := queueStatus.SongEnd
+
+		// If current song ended, start next song (if there is one)
+		if songEnd.Before(time.Now()) {
+			queueLengthData, _ := rh.JSONArrLen("songs", ".")
+			queueLength := queueLengthData.(int64)
+			if queueLength > 0 {
+				// Pop the next song off the queue
+				songData, _ := rh.JSONArrPop("songs", ".", 0)
+				var song models.Song
+				json.Unmarshal(songData.([]byte), &song)
+				// Update queue status to reflect new song
+				newStatus := models.QueueStatus{time.Now().Add(time.Second * time.Duration(song.Duration))}
+				rh.JSONSet("queuestatus", ".", newStatus)
+			}
+		}
 	}
 }
