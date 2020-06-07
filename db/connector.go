@@ -73,6 +73,10 @@ func ListenForUpdates(callback func(msg []byte)) {
 }
 
 func MonitorLeader() {
+	// Set our name so we can identify this client as an ingest
+	cmd := redis.NewStringCmd("client", "setname", ingestClientName)
+	instance.Process(cmd)
+
 	for range time.NewTicker(time.Second).C {
 		// Get list of clients connected to Redis
 		clientsRes, _ := instance.ClientList().Result()
