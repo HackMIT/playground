@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"log"
 	"math"
+	"strconv"
 	"time"
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
+	"github.com/techx/playground/socket/packet"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -55,7 +57,7 @@ func (h *Hub) Run() {
 			db.GetRejsonHandler().JSONDel("room:" + room, "characters[\"" + client.name + "\"]")
 
 			// Notify others that this client left
-			packet := new(LeavePacket).Init(client.id)
+			packet := new(packet.LeavePacket).Init(client.id)
 			h.Send(room, packet)
 		case message := <-h.broadcast:
 			// Process incoming messages from clients
@@ -84,9 +86,20 @@ func (h *Hub) SendBytes(room string, msg []byte) {
 	}
 }
 
+// Processes an incoming message from Redis
+func (h *Hub) ProcessRedisMessage(msg []byte) {
+	var res packet.BasePacket
+	json.Unmarshal(msg, &res)
+
+	switch res.Type {
+	case "join", "move", "change":
+		h.SendBytes("home", msg)
+	}
+}
+
 // Processes an incoming message
 func (h *Hub) processMessage(m *SocketMessage) {
-	res := BasePacket{}
+	res := packet.BasePacket{}
 
 	if err := json.Unmarshal(m.msg, &res); err != nil {
 		// TODO: Log to Sentry or something -- this should never happen
@@ -97,7 +110,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 	switch res.Type {
 	case "join":
 		// Parse join packet
-		res := JoinPacket{}
+		res := packet.JoinPacket{}
 		json.Unmarshal(m.msg, &res)
 
 		// TODO: Replace this with some quill ID that uniquely identifies client
@@ -109,12 +122,12 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		var character *models.Character
 		characterData, err := db.GetRejsonHandler().JSONGet("character:" + m.sender.name, ".")
 
-		var initPacket *InitPacket
+		var initPacket *packet.InitPacket
 
 		if err != nil {
 			// This character doesn't exist in our database, create new one
 			character = new(models.Character).Init(m.sender.name, res.Name)
-			initPacket = new(InitPacket).Init(character.Room)
+			initPacket = new(packet.InitPacket).Init(character.Room)
 
 			// Add character to database
 			character.Ingest = db.GetIngestID()
@@ -130,7 +143,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		} else {
 			// Load character data
 			json.Unmarshal(characterData.([]byte), &character)
-			initPacket = new(InitPacket).Init(character.Room)
+			initPacket = new(packet.InitPacket).Init(character.Room)
 
 			// Add to whatever room they were at
 			character.Ingest = db.GetIngestID()
@@ -146,11 +159,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		data, _ := initPacket.MarshalBinary()
 		m.sender.send <- data
 
+		// Add this character's id to this ingest in Redis
+		db.GetInstance().SAdd("ingest:" + strconv.Itoa(character.Ingest) + ":characters", m.sender.name)
+
 		// An error here is unlikely since we just connected to Redis above
 		db.GetInstance().Publish("room", res).Result()
 	case "move":
 		// Parse move packet
-		res := MovePacket{}
+		res := packet.MovePacket{}
 		json.Unmarshal(m.msg, &res)
 		res.Id = m.sender.id
 
@@ -189,7 +205,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		json.Unmarshal(roomData.([]byte), &room)
 
 		for _, hallway := range room.Hallways {
-			distance := math.Sqrt(math.Pow(hallway.X - res.X, 2.0) + math.Pow(hallway.Y - res.Y, 2.0))
+			distance := math.Sqrt(math.Pow(hallway.X - res.X, 2) + math.Pow(hallway.Y - res.Y, 2))
 			if distance > hallway.Radius {
 				continue
 			}
@@ -197,7 +213,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			// After delay, move character to different room
 			// TODO: This should depend on speed, not be constant 2s
 			time.AfterFunc(2 * time.Second, func() {
-				changeRoomPacket := new(ChangeRoomPacket).Init(m.sender.name, character.Room, hallway.To)
+				changeRoomPacket := new(packet.ChangeRoomPacket).Init(m.sender.name, character.Room, hallway.To)
 				db.GetInstance().Publish("room", changeRoomPacket)
 
 				// Update this character's room

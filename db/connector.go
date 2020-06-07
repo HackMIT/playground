@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -54,6 +55,7 @@ func ListenForUpdates(callback func(msg []byte)) {
 	// ingest servers, but don't subscribe to our own, and send out events
 	// from this server when they are first published
 	psc := instance.Subscribe("room")
+	instance.SAdd("ingests", ingestID)
 
 	for {
 		msg, err := psc.ReceiveMessage()
@@ -87,7 +89,7 @@ func MonitorLeader() {
 		var leaderID int
 		foundLeader := false
 
-		ingestIDs := mapset.NewSet()
+		connectedIngestIDs := mapset.NewSet()
 
 		for _, client := range clients {
 			clientParts := strings.Split(client, " ")
@@ -104,21 +106,49 @@ func MonitorLeader() {
 				continue
 			}
 
-			ingestID, _ = strconv.Atoi(strings.Split(clientParts[0], "=")[1])
-			ingestIDs.Add(ingestID)
+			clientID := strings.Split(clientParts[0], "=")[1]
+			connectedIngestIDs.Add(clientID)
 
 			// Only save the leader ID for the first ingest server
 			if foundLeader {
 				continue
 			}
 
-			leaderID = ingestID
+			leaderID, _ = strconv.Atoi(clientID)
 			foundLeader = true
 		}
 
 		// If we're not the leader, don't do any leader actions
 		if leaderID != ingestID {
 			continue
+		}
+
+		//////////////////////////////////////////////
+		// ALL CODE BELOW IS ONLY RUN ON THE LEADER //
+		//////////////////////////////////////////////
+
+		// Take care of ingest servers that got disconnected
+		savedIngestIDs, _ := instance.SMembers("ingests").Result()
+
+		for _, id := range savedIngestIDs {
+			if connectedIngestIDs.Contains(id) {
+				// This ingest is currently connected to Redis
+				continue
+			}
+
+			// Remove characters connected to this ingest from their rooms
+			characters, _ := instance.SMembers("ingest:" + id + ":characters").Result()
+
+			for _, characterName := range characters {
+				res, _ := rh.JSONGet("character:" + characterName, "room")
+				room := string(res.([]byte)[1:len(res.([]byte))-1])
+
+				fmt.Println("removing...")
+				rh.JSONDel("room:" + room, "characters[\"" + characterName + "\"]")
+			}
+
+			// Ingest has been taken care of, remove from set
+			instance.SRem("ingests", id)
 		}
 
 		// TODO: (#2) Take care of song ended packets here
