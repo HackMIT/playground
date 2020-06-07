@@ -45,10 +45,15 @@ type Client struct {
 	send chan []byte
 
 	// ID uniquely identifying this client
-	id uuid.UUID
+	id string
+
+	name string
 
 	// True if this client is still connected to WS
 	connected bool
+
+	// True if this client is not authenticated
+	anonymous bool
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -144,8 +149,14 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a new client with a unique ID
-	uuid, _ := uuid.NewUUID()
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), id: uuid}
+	clientID, _ := uuid.NewUUID()
+	client := &Client{
+		hub: hub,
+		conn: conn,
+		send: make(chan []byte, 256),
+		id: clientID.String(),
+		anonymous: true,
+	}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in

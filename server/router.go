@@ -18,6 +18,7 @@ func newRouter() *echo.Echo {
 	room := new(controllers.RoomController)
 	e.GET("/rooms", room.GetRooms)
 	e.POST("/rooms", room.CreateRoom)
+	e.POST("/rooms/:id/hallways", room.CreateHallway)
 
 	return e
 }

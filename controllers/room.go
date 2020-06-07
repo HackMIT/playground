@@ -52,3 +52,28 @@ func (r RoomController) GetRooms(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, rooms)
 }
+
+// POST /rooms/<room_id>/hallways - creates a new hallway
+func (r RoomController) CreateHallway(c echo.Context) error {
+	// Create new hallway model, parse JSON body
+	roomId := c.Param("id")
+	hallway := new(models.Hallway)
+
+	if err := c.Bind(hallway); err != nil {
+		panic(err)
+	}
+
+	// Don't allow a hallway to the same room
+	if hallway.To == roomId {
+		return echo.NewHTTPError(http.StatusBadRequest, "no recursive hallways allowed")
+	}
+
+	// Add new hallway to Redis
+	_, err := db.GetRejsonHandler().JSONArrAppend("room:" + roomId, "hallways", hallway)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, "room '" + roomId + "' not found")
+	}
+
+	return c.JSON(http.StatusOK, hallway)
+}

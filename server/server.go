@@ -22,7 +22,7 @@ func Init(port int) {
 		json.Unmarshal(data, &msg)
 
 		switch msg["type"] {
-		case "join", "move":
+		case "join", "move", "change":
 			hub.SendBytes("home", data)
 		}
 	})
