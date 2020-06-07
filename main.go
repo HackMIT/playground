@@ -15,7 +15,7 @@ func main() {
 	port := flag.Int("p", 8080, "")
 
 	flag.Usage = func() {
-		fmt.Println("Usage: server -e {mode}")
+		fmt.Println("Usage: server -e {mode} -p {port}")
 		os.Exit(1)
 	}
 

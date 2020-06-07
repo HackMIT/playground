@@ -2,20 +2,23 @@ package db
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/nitishm/go-rejson"
-	"github.com/go-redis/redis"
-
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/models"
+
+	mapset "github.com/deckarep/golang-set"
+	"github.com/nitishm/go-rejson"
+	"github.com/go-redis/redis"
 )
 
 const ingestClientName string = "ingest"
 
 var (
+	ingestID int
 	instance *redis.Client
 	rh *rejson.Handler
 )
@@ -32,8 +35,17 @@ func Init() {
 
 	rh.SetGoRedisClient(instance)
 
+	// Save our ingest ID
+	ingestRes, _ := instance.ClientID().Result()
+	ingestID = int(ingestRes)
+
+	// Initialize jukebox
 	rh.JSONSet("songs", ".", []string{})
 	rh.JSONSet("queuestatus", ".", models.QueueStatus{SongEnd: time.Now()})
+}
+
+func GetIngestID() int {
+	return ingestID
 }
 
 func GetInstance() *redis.Client {
@@ -49,6 +61,7 @@ func ListenForUpdates(callback func(msg []byte)) {
 	// ingest servers, but don't subscribe to our own, and send out events
 	// from this server when they are first published
 	psc := instance.Subscribe("room")
+	instance.SAdd("ingests", ingestID)
 
 	for {
 		msg, err := psc.ReceiveMessage()
@@ -80,6 +93,9 @@ func MonitorLeader() {
 		clients := strings.Split(clientsRes, "\n")
 
 		var leaderID int
+		foundLeader := false
+
+		connectedIngestIDs := mapset.NewSet()
 
 		for _, client := range clients {
 			clientParts := strings.Split(client, " ")
@@ -96,18 +112,49 @@ func MonitorLeader() {
 				continue
 			}
 
-			leaderID, _ = strconv.Atoi(strings.Split(clientParts[0], "=")[1])
+			clientID := strings.Split(clientParts[0], "=")[1]
+			connectedIngestIDs.Add(clientID)
 
-			// We found the leader, break
-			break
+			// Only save the leader ID for the first ingest server
+			if foundLeader {
+				continue
+			}
+
+			leaderID, _ = strconv.Atoi(clientID)
+			foundLeader = true
 		}
 
-		// Get current ingest ID
-		ingestID, _ := instance.ClientID().Result()
-
 		// If we're not the leader, don't do any leader actions
-		if leaderID != int(ingestID) {
+		if leaderID != ingestID {
 			continue
+		}
+
+		//////////////////////////////////////////////
+		// ALL CODE BELOW IS ONLY RUN ON THE LEADER //
+		//////////////////////////////////////////////
+
+		// Take care of ingest servers that got disconnected
+		savedIngestIDs, _ := instance.SMembers("ingests").Result()
+
+		for _, id := range savedIngestIDs {
+			if connectedIngestIDs.Contains(id) {
+				// This ingest is currently connected to Redis
+				continue
+			}
+
+			// Remove characters connected to this ingest from their rooms
+			characters, _ := instance.SMembers("ingest:" + id + ":characters").Result()
+
+			for _, characterName := range characters {
+				res, _ := rh.JSONGet("character:" + characterName, "room")
+				room := string(res.([]byte)[1:len(res.([]byte))-1])
+
+				fmt.Println("removing...")
+				rh.JSONDel("room:" + room, "characters[\"" + characterName + "\"]")
+			}
+
+			// Ingest has been taken care of, remove from set
+			instance.SRem("ingests", id)
 		}
 
 		// Get song queue status

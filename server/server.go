@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -17,15 +16,7 @@ func Init(port int) {
 	go hub.Run()
 
 	// Listen for events from other ingest servers
-	go db.ListenForUpdates(func(data []byte) {
-		var msg map[string]interface{}
-		json.Unmarshal(data, &msg)
-
-		switch msg["type"] {
-		case "join", "move", "change":
-			hub.SendBytes("home", data)
-		}
-	})
+	go db.ListenForUpdates(hub.ProcessRedisMessage)
 
 	// Check if we're the leader and do things if so
 	go db.MonitorLeader()

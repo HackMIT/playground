@@ -18,7 +18,7 @@ func (r RoomController) CreateRoom(c echo.Context) error {
 	room := new(models.Room).Init()
 
 	if err := c.Bind(room); err != nil {
-		panic(err)
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid json")
 	}
 
 	// Add new room to Redis

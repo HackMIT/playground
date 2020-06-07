@@ -9,6 +9,7 @@ import (
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
 	"github.com/techx/playground/socket"
+	"github.com/techx/playground/socket/packet"
 
 	"github.com/labstack/echo/v4"
 
@@ -50,6 +51,7 @@ func (j JukeboxController) QueueSong(c echo.Context) error {
 	// Make the YouTube API call
 	call := j.service.Videos.List("snippet,contentDetails").
 			Id(song.VidCode)
+
 	response, err := call.Do()
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to fetch YouTube data")
@@ -61,13 +63,16 @@ func (j JukeboxController) QueueSong(c echo.Context) error {
 		duration := video.ContentDetails.Duration
 		minIndex := strings.Index(duration, "M")
 		secIndex := strings.Index(duration, "S")
+
 		// Convert duration to seconds
 		minutes, err := strconv.Atoi(duration[2:minIndex])
 		seconds, err := strconv.Atoi(duration[minIndex + 1:secIndex])
+
 		// Error parsing duration string
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to parse video duration")
 		}
+
 		song.Duration = (minutes * 60) + seconds
 		song.Title = video.Snippet.Title
 		song.ThumbnailURL = video.Snippet.Thumbnails.Default.Url
@@ -80,7 +85,7 @@ func (j JukeboxController) QueueSong(c echo.Context) error {
 		                         "database error")
 	}
 
-	packet := new(socket.SongPacket).Init(song)
+	packet := new(packet.SongPacket).Init(song)
 	j.hub.Send("home", packet)
 
 	return c.JSON(http.StatusOK, song)
