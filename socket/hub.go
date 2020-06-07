@@ -117,6 +117,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			initPacket = new(InitPacket).Init(character.Room)
 
 			// Add character to database
+			character.Ingest = db.GetIngestID()
 			db.GetRejsonHandler().JSONSet("character:" + m.sender.name, ".", character)
 
 			// Add to room:home at (0.5, 0.5)
@@ -132,6 +133,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			initPacket = new(InitPacket).Init(character.Room)
 
 			// Add to whatever room they were at
+			character.Ingest = db.GetIngestID()
 			key := "characters[\"" + m.sender.name + "\"]"
 			db.GetRejsonHandler().JSONSet("room:" + character.Room, key, character)
 

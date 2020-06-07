@@ -5,13 +5,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/techx/playground/config"
+
+	mapset "github.com/deckarep/golang-set"
 	"github.com/nitishm/go-rejson"
 	"github.com/go-redis/redis"
-
-	"github.com/techx/playground/config"
 )
 
+const ingestClientName string = "ingest"
+
 var (
+	ingestID int
 	instance *redis.Client
 	rh *rejson.Handler
 )
@@ -27,6 +31,14 @@ func Init() {
 	})
 
 	rh.SetGoRedisClient(instance)
+
+	// Save our ingest ID
+	ingestRes, _ := instance.ClientID().Result()
+	ingestID = int(ingestRes)
+}
+
+func GetIngestID() int {
+	return ingestID
 }
 
 func GetInstance() *redis.Client {
@@ -63,19 +75,51 @@ func ListenForUpdates(callback func(msg []byte)) {
 func MonitorLeader() {
 	for range time.NewTicker(time.Second).C {
 		// Get list of clients connected to Redis
-		clients, _ := instance.ClientList().Result()
+		clientsRes, _ := instance.ClientList().Result()
 
 		// The leader is the first client -- the oldest connection
-		leader := strings.Split(clients, "\n")[0]
-		leaderParts := strings.Split(leader, " ")
-		leaderID, _ := strconv.Atoi(strings.Split(leaderParts[0], "=")[1])
-		ingestID, _ := instance.ClientID().Result()
+		clients := strings.Split(clientsRes, "\n")
 
-		// Add one because rejson creates a second client
-		if leaderID + 1 != int(ingestID) {
+		var leaderID int
+		foundLeader := false
+
+		ingestIDs := mapset.NewSet()
+
+		for _, client := range clients {
+			clientParts := strings.Split(client, " ")
+
+			if len(clientParts) < 4 {
+				// Probably a newline, invalid client
+				continue
+			}
+
+			clientName := strings.Split(clientParts[3], "=")[1]
+
+			if clientName != ingestClientName {
+				// This redis client is something else, probably redis-cli
+				continue
+			}
+
+			ingestID, _ = strconv.Atoi(strings.Split(clientParts[0], "=")[1])
+			ingestIDs.Add(ingestID)
+
+			// Only save the leader ID for the first ingest server
+			if foundLeader {
+				continue
+			}
+
+			leaderID = ingestID
+			foundLeader = true
+		}
+
+		// If we're not the leader, don't do any leader actions
+		if leaderID != ingestID {
 			continue
 		}
 
 		// TODO: (#2) Take care of song ended packets here
+
+		// TODO: Remove clients who were connected to ingest servers that are no
+		// longer online from their rooms
 	}
 }

@@ -6,11 +6,12 @@ import (
 
 // Character is the digital representation of a client
 type Character struct {
-	Id   string  `json:"id"`
-	Name string  `json:"name"`
-	X    float64 `json:"x"`
-	Y    float64 `json:"y"`
-	Room string  `json:"room"`
+	Id     string  `json:"id"`
+	Name   string  `json:"name"`
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
+	Room   string  `json:"room"`
+	Ingest int     `json:"ingest"`
 }
 
 func (c *Character) Init(id string, name string) *Character {
