@@ -26,8 +26,13 @@ func Init() {
 		switch msg["type"] {
 		case "join", "move":
 			hub.SendBytes("home", data)
-		}
+		case "new_ingest":
+			hub.ProcessNewIngest(data)
+		}	
 	})
+
+	// Notify others ingests of joining
+	hub.NotifyNewIngest()
 	
 	// Websocket connection endpoint
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {

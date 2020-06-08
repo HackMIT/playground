@@ -44,16 +44,15 @@ func GetRejsonHandler() *rejson.Handler {
 }
 
 func ListenForUpdates(callback func(msg []byte)) {
-	// TODO (#1): Think about subscribing to channels corresponding with other
-	// ingest servers, but don't subscribe to our own, and send out events
-	// from this server when they are first published
 	ingests, err := instance.SMembers("ingests").Result()
 
 	if err != nil {
 		panic(err)
 	}
 
-	// subscribe to existing ingests
+	// subscribe to existing ingests, send id to master
+	// psc := instance.Subscribe([]string{"master" , ingests} ...)
+	ingests = append(ingests, "master")
 	psc := instance.Subscribe(ingests...)
 	instance.SAdd("ingests", ingestID)
 
