@@ -1,6 +1,8 @@
 package db
 
 import (
+	"fmt"
+
 	"github.com/techx/playground/config"
 
 	"github.com/nitishm/go-rejson"
@@ -54,6 +56,7 @@ func ListenForUpdates(callback func(msg []byte)) {
 	// psc := instance.Subscribe([]string{"master" , ingests} ...)
 	ingests = append(ingests, "master")
 	psc := instance.Subscribe(ingests...)
+	fmt.Println(ingests)
 	instance.SAdd("ingests", ingestID)
 
 	for {

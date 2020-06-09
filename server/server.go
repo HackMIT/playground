@@ -21,17 +21,17 @@ func Init() {
 		var msg map[string]interface{}
 		json.Unmarshal(data, &msg)
 
-		fmt.Println("received packet")
+		fmt.Println("received something in server")
 
 		switch msg["type"] {
 		case "join", "move":
 			hub.SendBytes("home", data)
-		case "new_ingest":
-			hub.ProcessNewIngest(data)
+		default:
+			hub.ProcessNewIngest(msg)
 		}	
 	})
 
-	// Notify others ingests of joining
+	// Notify others ingests of joining this runs
 	hub.NotifyNewIngest()
 	
 	// Websocket connection endpoint

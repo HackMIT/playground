@@ -4,6 +4,7 @@ import (
 	"encoding"
 	"encoding/json"
 	"log"
+	"fmt"
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
@@ -77,6 +78,24 @@ func (h *Hub) SendBytes(room string, msg []byte) {
 			delete(h.clients, id)
 		}
 	}
+}
+
+// Subscribes to a new ingest
+func (h *Hub) ProcessNewIngest(msg map[string]interface {}) {
+	fmt.Println("received notice of a new ingest")
+	fmt.Println(msg["id"]) // i get the ID
+	// something like this not sure
+	// bleh := [0]string{}
+	// db.GetInstance().Subscribe(bleh...)
+}
+
+// Publish to master that a new ingest was created
+func (h *Hub) NotifyNewIngest()(m *SocketMessage) {
+	res := NewIngestPacket{}
+	// json.Unmarshal(m.msg, &res)
+	res.IngestId = db.GetIngestID()
+	db.GetInstance().Publish("master", res).Result()
+	return
 }
 
 // Processes an incoming message

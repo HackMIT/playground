@@ -112,7 +112,15 @@ type NewIngestPacket struct {
 
 func (p *NewIngestPacket) Init(id string) *NewIngestPacket {
 	p.BasePacket = BasePacket{Type: "new_ingest"}
-	p.IngestId = id
+	p.IngestId = "bruh"
 	return p
+}
+
+func (p NewIngestPacket) MarshalBinary() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p NewIngestPacket) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, p)
 }
 
