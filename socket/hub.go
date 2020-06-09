@@ -181,6 +181,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.MovePacket{}
 		json.Unmarshal(m.msg, &res)
 		res.Id = m.sender.id
+		res.Name = m.sender.name
 
 		// TODO: go-rejson doesn't currently support transactions, but
 		// these should really all be done together
@@ -240,7 +241,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Publish event to other ingest servers
 		db.Publish(res)
-		h.Send(res.From, res)
-		h.Send(res.To, res)
+
+		resData, _ := res.MarshalBinary()
+		h.ProcessRedisMessage(resData)
 	}
 }
