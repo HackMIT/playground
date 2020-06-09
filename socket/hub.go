@@ -89,15 +89,6 @@ func (h *Hub) ProcessNewIngest(msg map[string]interface {}) {
 	// db.GetInstance().Subscribe(bleh...)
 }
 
-// Publish to master that a new ingest was created
-func (h *Hub) NotifyNewIngest()(m *SocketMessage) {
-	res := NewIngestPacket{}
-	// json.Unmarshal(m.msg, &res)
-	res.IngestId = db.GetIngestID()
-	db.GetInstance().Publish("master", res).Result()
-	return
-}
-
 // Processes an incoming message
 func (h *Hub) processMessage(m *SocketMessage) {
 	res := BasePacket{}

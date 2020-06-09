@@ -101,26 +101,3 @@ func (p *LeavePacket) Init(id uuid.UUID) *LeavePacket {
 	p.Id = id.String()
 	return p
 }
-
-// Sent by ingest when it first joins
-type NewIngestPacket struct {
-	BasePacket
-
-	// id of the new ingest
-	IngestId string `json:"id"`
-}
-
-func (p *NewIngestPacket) Init(id string) *NewIngestPacket {
-	p.BasePacket = BasePacket{Type: "new_ingest"}
-	p.IngestId = "bruh"
-	return p
-}
-
-func (p NewIngestPacket) MarshalBinary() ([]byte, error) {
-	return json.Marshal(p)
-}
-
-func (p NewIngestPacket) UnmarshalBinary(data []byte) error {
-	return json.Unmarshal(data, p)
-}
-

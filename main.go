@@ -12,9 +12,10 @@ import (
 
 func main() {
 	environment := flag.String("e", "dev", "")
+	port := flag.Int("p", 8080, "")
 
 	flag.Usage = func() {
-		fmt.Println("Usage: server -e {mode}")
+		fmt.Println("Usage: server -e {mode} -p {port}")
 		os.Exit(1)
 	}
 
@@ -22,5 +23,5 @@ func main() {
 
 	config.Init(*environment)
 	db.Init()
-	server.Init()
+	server.Init(*port)
 }

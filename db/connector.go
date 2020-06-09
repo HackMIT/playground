@@ -1,8 +1,6 @@
 package db
 
 import (
-	"fmt"
-
 	"github.com/techx/playground/config"
 
 	"github.com/nitishm/go-rejson"
@@ -13,6 +11,7 @@ import (
 var (
 	ingestID string
 	instance *redis.Client
+	psc *redis.PubSub
 	rh *rejson.Handler
 )
 
@@ -52,11 +51,11 @@ func ListenForUpdates(callback func(msg []byte)) {
 		panic(err)
 	}
 
+	// Let other ingest servers know about this one
+	instance.Publish("ingest", ingestID)
+
 	// subscribe to existing ingests, send id to master
-	// psc := instance.Subscribe([]string{"master" , ingests} ...)
-	ingests = append(ingests, "master")
-	psc := instance.Subscribe(ingests...)
-	fmt.Println(ingests)
+	psc = instance.Subscribe(append(ingests, "ingest")...)
 	instance.SAdd("ingests", ingestID)
 
 	for {
@@ -67,11 +66,11 @@ func ListenForUpdates(callback func(msg []byte)) {
 			panic(err)
 		}
 
-		// if msg.Channel != "room" {
-		// 	// Right now we only receive room updates
-		// 	continue
-		// }
-
-		callback([]byte(msg.Payload))
+		if msg.Channel == "ingest" {
+			// If this is a new ingest server, subscribe to it
+			psc.Subscribe(msg.Payload)
+		} else {
+			callback([]byte(msg.Payload))
+		}
 	}
 }
