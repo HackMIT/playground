@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -32,23 +31,6 @@ var (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-}
-
-// Client is a middleman between the websocket connection and the hub.
-type Client struct {
-	hub *Hub
-
-	// The websocket connection.
-	conn *websocket.Conn
-
-	// Buffered channel of outbound messages.
-	send chan []byte
-
-	// ID uniquely identifying this client
-	id uuid.UUID
-
-	// True if this client is still connected to WS
-	connected bool
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -144,8 +126,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a new client with a unique ID
-	uuid, _ := uuid.NewUUID()
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), id: uuid}
+	client := new(Client).Init(hub, conn)
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
