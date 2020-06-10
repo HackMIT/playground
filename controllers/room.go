@@ -32,6 +32,7 @@ func (r RoomController) CreateRoom(c echo.Context) error {
 	return c.JSON(http.StatusOK, room)
 }
 
+// GET /rooms - get all rooms
 func (r RoomController) GetRooms(c echo.Context) error {
 	// Get all of the room names from Redis
 	roomNames, err := db.GetInstance().Keys("room:*").Result()
@@ -51,6 +52,16 @@ func (r RoomController) GetRooms(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, rooms)
+}
+
+// GET /rooms/<room_id> - get an individual room
+func (r RoomController) GetRoom(c echo.Context) error {
+	// Fetch this room from Redis
+	var room models.Room
+	roomData, _ := db.GetRejsonHandler().JSONGet("room:" + c.Param("id"), ".")
+	json.Unmarshal(roomData.([]byte), &room)
+
+	return c.JSON(http.StatusOK, room)
 }
 
 // POST /rooms/<room_id>/hallways - creates a new hallway
