@@ -5,14 +5,16 @@ import (
 )
 
 type Room struct {
-	Characters map[string]*Character `json:"characters"`
-	Hallways   []Hallway             `json:"hallways"`
-	Slug       string                `json:"slug"`
+	Characters    map[string]*Character `json:"characters"`
+	Hallways      []Hallway             `json:"hallways"`
+	Interactables []Interactable        `json:"interactables"`
+	Slug          string                `json:"slug"`
 }
 
 func (r *Room) Init() *Room {
 	r.Characters = map[string]*Character{}
 	r.Hallways = []Hallway{}
+	r.Interactables = []Interactable{}
 	return r
 }
 
