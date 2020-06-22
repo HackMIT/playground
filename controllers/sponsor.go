@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-	"fmt"
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
@@ -44,29 +43,26 @@ func (s SponsorController) GetSponsor(c echo.Context) error {
 }
 
 // PUT /sponsor/<sponsor_id> - update an individual sponsor
+// only supports changing color at the moment
 func (s SponsorController) UpdateSponsor(c echo.Context) error {	
-	// Fetch current sponsor from Redis
-	var sponsor models.Sponsor
-	sponsorData, _ := db.GetRejsonHandler().JSONGet("sponsor:" + c.Param("id"), ".")
-	json.Unmarshal(sponsorData.([]byte), &sponsor)
-
 	// create new sponsor containing json body
 	newSponsor := new(models.Sponsor).Init()
 	if err := c.Bind(newSponsor); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid json")
 	}
 
-	// merge the two (id always from old sponsor data)
-	sponsor.UpdateSponsor(newSponsor)
-	fmt.Println(sponsor)
-
 	// update to Redis
-	_, err := db.GetRejsonHandler().JSONSet("sponsor:" + sponsor.Id, ".", sponsor)
+	_, err := db.GetRejsonHandler().JSONSet("sponsor:" + c.Param("id"), "color", newSponsor.Color)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError,
 		                         "database error")
 	}
 
+	// Fetch updated sponsor data from Redis
+	var sponsor models.Sponsor
+	sponsorData, _ := db.GetRejsonHandler().JSONGet("sponsor:" + c.Param("id"), ".")
+	json.Unmarshal(sponsorData.([]byte), &sponsor)
+	
 	return c.JSON(http.StatusOK, sponsor)
 }

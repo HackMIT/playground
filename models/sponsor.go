@@ -14,15 +14,6 @@ func (s *Sponsor) Init() *Sponsor {
 	return s
 }
 
-func (s *Sponsor) UpdateSponsor(sNew *Sponsor) {
-	if sNew.Name != "" {
-		s.Name = sNew.Name
-	}
-	if sNew.Color != "" {
-		s.Color = sNew.Color
-	}
-}
-
 func (s Sponsor) MarshalBinary() ([]byte, error) {
 	return json.Marshal(s)
 }
