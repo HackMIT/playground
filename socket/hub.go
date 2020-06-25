@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"strconv"
+	"fmt"
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
@@ -202,15 +203,17 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Get character's current room
 		var character models.Character
 		characterData, _ := db.GetRejsonHandler().JSONGet("character:" + m.sender.name, ".")
+		fmt.Println("before")
 		json.Unmarshal(characterData.([]byte), &character)
+		fmt.Println("after")
 
 		// Update character's position in the room
 		xKey := "characters[\"" + m.sender.name + "\"][\"x\"]"
 		_, err := db.GetRejsonHandler().JSONSet("room:" + character.Room, xKey, res.X)
 
 		if err != nil {
-			log.Println(err)
-			log.Fatal("ERROR: Failure sending move packet to Redis")
+			// log.Println(err)
+			// log.Fatal("ERROR: Failure sending move packet to Redis")
 			return
 		}
 
