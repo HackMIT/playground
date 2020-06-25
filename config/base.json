@@ -4,7 +4,7 @@
 		"start_y_pos": 0.5
 	},
 	"db": {
-		"addr": "localhost:6379",
+		"addr": "localhost:6380",
 		"password": "",
 		"db": 0
 	},
