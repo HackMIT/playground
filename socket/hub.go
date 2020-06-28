@@ -4,14 +4,18 @@ import (
 	"bytes"
 	"encoding"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
 	"github.com/techx/playground/socket/packet"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -128,64 +132,100 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.JoinPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		// Fetch data from Quill
-		quillValues := map[string]string{
-			"token": res.Token,
-		}
-
-		// Make sure SSO token is omitted from join packet that is sent to clients
-		res.Token = ""
-
-		quillBody, _ := json.Marshal(quillValues)
-		// TODO: Error handling
-		resp, _ := http.Post("https://my.hackmit.org/auth/sso/exchange", "application/json", bytes.NewBuffer(quillBody))
-
-		defer resp.Body.Close()
-		body, _ := ioutil.ReadAll(resp.Body)
-
-		var quillData map[string]interface{}
-		err := json.Unmarshal(body, &quillData)
-
-		if err != nil {
-			// Likely invalid SSO token
-			return
-		}
-
-		// Load this client's character
-		characterID, err := db.GetInstance().HGet("quillToCharacter", quillData["id"].(string)).Result()
-
 		var character *models.Character
+		var characterID string
 		var initPacket *packet.InitPacket
 
-		if err != nil {
-			// Never seen this character before, create a new one
-			character = models.NewCharacter(quillData)
-			characterID = character.ID
+		if res.QuillToken != "" {
+			// Fetch data from Quill
+			quillValues := map[string]string{
+				"token": res.QuillToken,
+			}
 
-			// Generate init packet before new character is added to room
-			initPacket = new(packet.InitPacket).Init(character.Room)
+			quillBody, _ := json.Marshal(quillValues)
+			// TODO: Error handling
+			resp, _ := http.Post("https://my.hackmit.org/auth/sso/exchange", "application/json", bytes.NewBuffer(quillBody))
 
-			// Add character to database
-			character.Ingest = db.GetIngestID()
-			db.GetRejsonHandler().JSONSet("character:" + characterID, ".", character)
-			db.GetInstance().HSet("quillToCharacter", quillData["id"].(string), characterID)
+			defer resp.Body.Close()
+			body, _ := ioutil.ReadAll(resp.Body)
 
-			// Add to room:home at (0.5, 0.5)
-			key := "characters[\"" + characterID + "\"]"
-			db.GetRejsonHandler().JSONSet("room:home", key, character)
-		} else {
+			var quillData map[string]interface{}
+			err := json.Unmarshal(body, &quillData)
+
+			if err != nil {
+				// Likely invalid SSO token
+				return
+			}
+
+			// Load this client's character
+			characterID, _ = db.GetInstance().HGet("quillToCharacter", quillData["id"].(string)).Result()
+
+			if err != nil {
+				// Never seen this character before, create a new one
+				character = models.NewCharacter(quillData)
+				characterID = character.ID
+
+				// Generate init packet before new character is added to room
+				initPacket = packet.NewInitPacket(characterID, character.Room, true)
+
+				// Add character to database
+				character.Ingest = db.GetIngestID()
+				db.GetRejsonHandler().JSONSet("character:" + characterID, ".", character)
+				db.GetInstance().HSet("quillToCharacter", quillData["id"].(string), characterID)
+
+				// Add to room:home at (0.5, 0.5)
+				key := "characters[\"" + characterID + "\"]"
+				db.GetRejsonHandler().JSONSet("room:home", key, character)
+			} else {
+				// This person has logged in before, fetch from Redis
+				characterData, _ := db.GetRejsonHandler().JSONGet("character:" + characterID, ".")
+				json.Unmarshal(characterData.([]byte), &character)
+
+				// Generate init packet before new character is added to room
+				initPacket = packet.NewInitPacket(characterID, character.Room, true)
+
+				// Add to whatever room they were at
+				character.Ingest = db.GetIngestID()
+				key := "characters[\"" + characterID + "\"]"
+				db.GetRejsonHandler().JSONSet("room:" + character.Room, key, character)
+			}
+		} else if res.Token != "" {
+			// TODO: Error handling
+			token, _ := jwt.Parse(res.Token, func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+				}
+
+				config := config.GetConfig()
+				return []byte(config.GetString("jwt.secret")), nil
+			})
+
+			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+				characterID = claims["id"].(string)
+			} else {
+				// TODO: Error handling
+				return
+			}
+
 			// This person has logged in before, fetch from Redis
 			characterData, _ := db.GetRejsonHandler().JSONGet("character:" + characterID, ".")
 			json.Unmarshal(characterData.([]byte), &character)
 
 			// Generate init packet before new character is added to room
-			initPacket = new(packet.InitPacket).Init(character.Room)
+			initPacket = packet.NewInitPacket(characterID, character.Room, true)
 
 			// Add to whatever room they were at
 			character.Ingest = db.GetIngestID()
 			key := "characters[\"" + characterID + "\"]"
 			db.GetRejsonHandler().JSONSet("room:" + character.Room, key, character)
+		} else {
+			// Client provided no authentication
+			return
 		}
+
+		// Make sure SSO token is omitted from join packet that is sent to clients
+		res.QuillToken = ""
+		res.Token = ""
 
 		// Send them the relevant init packet
 		data, _ := initPacket.MarshalBinary()
@@ -201,6 +241,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		db.Publish(res)
 		h.Send(character.Room, res)
 	case "move":
+		if m.sender.character == nil {
+			return
+		}
+
 		// Parse move packet
 		res := packet.MovePacket{}
 		json.Unmarshal(m.msg, &res)
@@ -244,14 +288,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		db.GetRejsonHandler().JSONDel("room:" + res.From, "characters[\"" + m.sender.character.ID + "\"]")
 
 		// Send them the init packet for this room
-		initPacket := new(packet.InitPacket).Init(res.To)
+		initPacket := packet.NewInitPacket(m.sender.character.ID, res.To, false)
 		initPacketData, _ := initPacket.MarshalBinary()
 		m.sender.send <- initPacketData
 		m.sender.character.Room = res.To
 
 		// Add them to their new room
 		var character models.Character
-		data, _ := db.GetRejsonHandler().JSONGet("character:" + res.Character.ID, ".")
+		data, _ := db.GetRejsonHandler().JSONGet("character:" + m.sender.character.ID, ".")
 		json.Unmarshal(data.([]byte), &character)
 
 		db.GetRejsonHandler().JSONSet("room:" + res.To, "characters[\"" + m.sender.character.ID + "\"]", character)
