@@ -5,12 +5,15 @@ import (
 )
 
 type Sponsor struct {
-	Name string `json:"Name"`
-	Id string `json:"Id"`
-	Color string `json:"Color"`
+	Name string `json:"name"`
+	Id string `json:"id"`
+	Color string `json:"color"`
 }
 
-func (s *Sponsor) Init() *Sponsor {
+func (s *Sponsor) Init(name string, id string, color string) *Sponsor {
+	s.Name = name;
+	s.Id = id;
+	s.Color = color;
 	return s
 }
 

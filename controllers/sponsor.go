@@ -14,12 +14,13 @@ type SponsorController struct {}
 
 // POST /sponsor - creates a new sponsor
 func (s SponsorController) CreateSponsor(c echo.Context) error {
-	// Create new room model, parse JSON body
-	sponsor := new(models.Sponsor).Init()
-
-	if err := c.Bind(sponsor); err != nil {
+	// Create new sponsor model, parse JSON body
+	json_map := make(map[string]interface{})
+	if err := json.NewDecoder(c.Request().Body).Decode(&json_map); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid json")
 	}
+
+	sponsor := new(models.Sponsor).Init(json_map["name"].(string), json_map["id"].(string), json_map["color"].(string));
 
 	// Add new sponsor to Redis
 	_, err := db.GetRejsonHandler().JSONSet("sponsor:" + sponsor.Id, ".", sponsor)
@@ -45,18 +46,20 @@ func (s SponsorController) GetSponsor(c echo.Context) error {
 // PUT /sponsor/<sponsor_id> - update an individual sponsor
 // only supports changing color at the moment
 func (s SponsorController) UpdateSponsor(c echo.Context) error {	
-	// create new sponsor containing json body
-	newSponsor := new(models.Sponsor).Init()
-	if err := c.Bind(newSponsor); err != nil {
+	// parse json body
+	json_map := make(map[string]interface{})
+	if err := json.NewDecoder(c.Request().Body).Decode(&json_map); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid json")
 	}
 
-	// update to Redis
-	_, err := db.GetRejsonHandler().JSONSet("sponsor:" + c.Param("id"), "color", newSponsor.Color)
+	// update to Redis if color is in request body
+	if (json_map["color"].(string) != "") {
+		_, err := db.GetRejsonHandler().JSONSet("sponsor:" + c.Param("id"), "color", json_map["color"].(string))
 
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError,
-		                         "database error")
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError,
+									 "database error")
+		}
 	}
 
 	// Fetch updated sponsor data from Redis
