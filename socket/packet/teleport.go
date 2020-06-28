@@ -2,17 +2,15 @@ package packet
 
 import (
 	"encoding/json"
+	"github.com/techx/playground/models"
 )
 
 // Sent by ingests when a client changes rooms
 type TeleportPacket struct {
 	BasePacket
 
-	// The id of the client who's moving
-	Id string `json:"id"`
-
-	// The name of the client who's teleporting
-	Name string `json:"name"`
+	// The charcater who is teleporting
+	Character *models.Character `json:"character"`
 
 	// The room they're moving from
 	From string `json:"from"`
@@ -21,12 +19,12 @@ type TeleportPacket struct {
 	To string `json:"to"`
 }
 
-func (p *TeleportPacket) Init(id string, name string, from string, to string) *TeleportPacket {
+func NewTeleportPacket(character *models.Character, from, to string) *TeleportPacket {
+	p := new(TeleportPacket)
 	p.BasePacket = BasePacket{Type: "teleport"}
-	p.Id = id
-	p.Name = name
 	p.From = from
 	p.To = to
+	p.Character = character
 	return p
 }
 

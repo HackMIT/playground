@@ -1,6 +1,8 @@
 package socket
 
 import (
+	"github.com/techx/playground/models"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
@@ -18,25 +20,15 @@ type Client struct {
 	// ID uniquely identifying this client
 	id string
 
-	// The name of the client
-	name string
-
-	// The room this client is in
-	room string
-
-	// True if this client is not authenticated
-	anonymous bool
+	// This client's character
+	character *models.Character
 }
 
-func (c *Client) Init(hub *Hub, conn *websocket.Conn) *Client {
+func NewClient(hub *Hub, conn *websocket.Conn) *Client {
+	c := new(Client)
 	c.hub = hub
 	c.conn = conn
 	c.send = make(chan []byte, 256)
-
-	clientID, _ := uuid.NewUUID()
-	c.id = clientID.String()
-
-	c.anonymous = true
-
+	c.id = uuid.New().String()
 	return c
 }
