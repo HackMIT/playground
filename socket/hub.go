@@ -127,6 +127,19 @@ func (h *Hub) processMessage(m *SocketMessage) {
 	}
 
 	switch res.Type {
+	case "chat":
+		res := packet.ChatPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		m.sender.name = res.Name
+		res.Id = m.sender.id
+
+		res.Room = m.sender.room
+
+		db.Publish(res)
+		h.Send(res.Room, res)
+
+
 	case "join":
 		// Parse join packet
 		res := packet.JoinPacket{}
