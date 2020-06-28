@@ -9,10 +9,7 @@ type MovePacket struct {
 	BasePacket
 
 	// The id of the client who is moving
-	Id string `json:"id"`
-
-	// The name of the client who is moving
-	Name string `json:"name"`
+	ID string `json:"id"`
 
 	// The room that the client is moving in
 	Room string `json:"room"`

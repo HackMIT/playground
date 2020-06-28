@@ -2,6 +2,7 @@ module github.com/techx/playground
 
 require (
 	github.com/deckarep/golang-set v1.7.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-redis/redis v6.15.8+incompatible
 	github.com/gomodule/redigo v1.8.1 // indirect
 	github.com/google/uuid v1.1.1

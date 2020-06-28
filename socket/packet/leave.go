@@ -2,26 +2,24 @@ package packet
 
 import (
 	"encoding/json"
+	"github.com/techx/playground/models"
 )
 
 // Sent by ingests when a client disconnects
 type LeavePacket struct {
 	BasePacket
 
-	// The id of the client who's leaving
-	Id string `json:"id"`
-
-	// The name of the client who's leaving
-	Name string `json:"name"`
+	// The character who is leaving
+	Character *models.Character `json:"character"`
 
 	// The room that the client is leaving
 	Room string `json:"room"`
 }
 
-func (p *LeavePacket) Init(id string, name string, room string) *LeavePacket {
+func NewLeavePacket(character *models.Character, room string) *LeavePacket {
+	p := new(LeavePacket)
 	p.BasePacket = BasePacket{Type: "leave"}
-	p.Id = id
-	p.Name = name
+	p.Character = character
 	p.Room = room
 	return p
 }

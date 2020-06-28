@@ -126,7 +126,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a new client with a unique ID
-	client := new(Client).Init(hub, conn)
+	client := NewClient(hub, conn)
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
