@@ -15,6 +15,8 @@ import (
 type InitPacket struct {
 	BasePacket
 
+	Character *models.Character `json:"character"`
+
 	// The room that the client is about to join
 	Room *models.Room `json:"room"`
 
@@ -23,15 +25,19 @@ type InitPacket struct {
 }
 
 func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
-	// Fetch characters from redis
+	// Fetch character and room from Redis
 	res, _ := db.GetRejsonHandler().JSONGet("room:" + roomSlug, ".")
-
 	var room *models.Room
 	json.Unmarshal(res.([]byte), &room)
+
+	res, _ = db.GetRejsonHandler().JSONGet("character:" + characterID, ".")
+	var character *models.Character
+	json.Unmarshal(res.([]byte), &character)
 
 	// Set data and return
 	p := new(InitPacket)
 	p.BasePacket = BasePacket{Type: "init"}
+	p.Character = character
 	p.Room = room
 
 	if needsToken {
