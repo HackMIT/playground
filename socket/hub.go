@@ -131,15 +131,12 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.ChatPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		m.sender.name = res.Name
-		res.Id = m.sender.id
-
-		res.Room = m.sender.room
+		// Publish chat event to other ingest servers
+		res.Room = m.sender.character.Room
+		res.ID = m.sender.character.ID
 
 		db.Publish(res)
 		h.Send(res.Room, res)
-
-
 	case "join":
 		// Parse join packet
 		res := packet.JoinPacket{}

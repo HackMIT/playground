@@ -7,16 +7,14 @@ import (
 type ChatPacket struct {
 	BasePacket
 
-	// The id of the client who's joining
-	Id string `json:"id"`
+	// The message being sent
+	Message string `json:"mssg"`
 
-	// The client's username
-	Name string `json:"name"`
+	// The id of the client who's joining
+	ID string `json:"id"`
 
 	// The client's room
 	Room string `json:"room"`
-
-	Message string `json:"mssg"`
 }
 
 func (p ChatPacket) MarshalBinary() ([]byte, error) {
