@@ -14,7 +14,7 @@ type Room struct {
 func (r *Room) Init() *Room {
 	r.Characters = map[string]*Character{}
 	r.Hallways = []Hallway{}
-	r.Interactables = []Interactable{}
+	r.Interactables = []Interactable{{Action: "coffee-chat", Appearance: "../images/coffee.png", X: 0.01, Y: 0.01}}
 	return r
 }
 
