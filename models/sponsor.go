@@ -10,13 +10,6 @@ type Sponsor struct {
 	Color string `json:"color"`
 }
 
-func (s *Sponsor) Init(name string, id string, color string) *Sponsor {
-	s.Name = name;
-	s.Id = id;
-	s.Color = color;
-	return s
-}
-
 func (s Sponsor) MarshalBinary() ([]byte, error) {
 	return json.Marshal(s)
 }
