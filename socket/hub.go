@@ -168,20 +168,20 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 
 			// Load this client's character
-			characterID, _ = db.GetInstance().HGet("quillToCharacter", quillData["id"].(string)).Result()
+			characterID, err = db.GetInstance().HGet("quillToCharacter", quillData["id"].(string)).Result()
 
 			if err != nil {
 				// Never seen this character before, create a new one
 				character = models.NewCharacter(quillData)
 				characterID = character.ID
 
-				// Generate init packet before new character is added to room
-				initPacket = packet.NewInitPacket(characterID, character.Room, true)
-
 				// Add character to database
 				character.Ingest = db.GetIngestID()
 				db.GetRejsonHandler().JSONSet("character:" + characterID, ".", character)
 				db.GetInstance().HSet("quillToCharacter", quillData["id"].(string), characterID)
+
+				// Generate init packet before new character is added to room
+				initPacket = packet.NewInitPacket(characterID, character.Room, true)
 
 				// Add to room:home at (0.5, 0.5)
 				key := "characters[\"" + characterID + "\"]"
