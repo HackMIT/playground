@@ -43,8 +43,8 @@ func Init(reset bool) {
 		home.Slug = "home"
 		home.Hallways = []models.Hallway{
 			models.Hallway{
-				X: 0.01,
-				Y: 0.01,
+				X: 0.13,
+				Y: 0.4,
 				Radius: 0.1,
 				To: "sponsor",
 			},
