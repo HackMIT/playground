@@ -146,7 +146,21 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		var characterID string
 		var initPacket *packet.InitPacket
 
-		if res.QuillToken != "" {
+		if res.Name != "" {
+			character = models.NewCharacter(res.Name)
+			characterID = character.ID
+
+			// Add character to database
+			character.Ingest = db.GetIngestID()
+			db.GetRejsonHandler().JSONSet("character:" + characterID, ".", character)
+
+			// Generate init packet before new character is added to room
+			initPacket = packet.NewInitPacket(characterID, character.Room, true)
+
+			// Add to room:home at (0.5, 0.5)
+			key := "characters[\"" + characterID + "\"]"
+			db.GetRejsonHandler().JSONSet("room:home", key, character)
+		} else if res.QuillToken != "" {
 			// Fetch data from Quill
 			quillValues := map[string]string{
 				"token": res.QuillToken,
@@ -172,7 +186,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			if err != nil {
 				// Never seen this character before, create a new one
-				character = models.NewCharacter(quillData)
+				character = models.NewCharacterFromQuill(quillData)
 				characterID = character.ID
 
 				// Add character to database
@@ -218,7 +232,15 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 
 			// This person has logged in before, fetch from Redis
-			characterData, _ := db.GetRejsonHandler().JSONGet("character:" + characterID, ".")
+			characterData, err := db.GetRejsonHandler().JSONGet("character:" + characterID, ".")
+
+			if err != nil {
+				errorPacket := packet.NewErrorPacket(1)
+				data, _ := json.Marshal(errorPacket)
+				m.sender.send <- data
+				return
+			}
+
 			json.Unmarshal(characterData.([]byte), &character)
 
 			// Generate init packet before new character is added to room
@@ -234,6 +256,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		// Make sure SSO token is omitted from join packet that is sent to clients
+		res.Name = ""
 		res.QuillToken = ""
 		res.Token = ""
 

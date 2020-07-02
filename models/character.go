@@ -16,7 +16,18 @@ type Character struct {
 	Ingest   int     `json:"ingest"`
 }
 
-func NewCharacter(quillData map[string]interface{}) *Character {
+func NewCharacter(name string) *Character {
+	c := new(Character)
+	c.ID = uuid.New().String()
+	c.Name = name
+	c.GradYear = 2022
+	c.X = 0.5
+	c.Y = 0.5
+	c.Room = "home"
+	return c
+}
+
+func NewCharacterFromQuill(quillData map[string]interface{}) *Character {
 	c := new(Character)
 	c.ID = uuid.New().String()
 	c.Name = quillData["profile"].(map[string]interface{})["name"].(string)

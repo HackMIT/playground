@@ -39,11 +39,21 @@ func Init(reset bool) {
 	if reset {
 		instance.FlushDB()
 
-		room := new(models.Room).Init()
-		coffeeChat := new(models.Interactable).Init("coffee-chat", "../images/coffee.png", 0.01, 0.01)
-		room.Interactables = []*models.Interactable{coffeeChat}
-		room.Slug = "home"
-		rh.JSONSet("room:home", ".", room)
+		home := new(models.Room).Init()
+		home.Slug = "home"
+		home.Hallways = []models.Hallway{
+			models.Hallway{
+				X: 0.01,
+				Y: 0.01,
+				Radius: 0.1,
+				To: "sponsor",
+			},
+		}
+		rh.JSONSet("room:home", ".", home)
+
+		sponsor := new(models.Room).Init()
+		sponsor.Slug = "sponsor"
+		rh.JSONSet("room:sponsor", ".", sponsor)
 	}
 
 	// Save our ingest ID

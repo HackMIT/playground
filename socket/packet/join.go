@@ -11,6 +11,7 @@ type JoinPacket struct {
 	BasePacket
 
 	// Client attributes
+	Name string `json:"name,omitempty"`
 	QuillToken string `json:"quillToken,omitempty"`
 	Token string `json:"token,omitempty"`
 
