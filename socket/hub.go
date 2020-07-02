@@ -215,7 +215,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 		} else if res.Token != "" {
 			// TODO: Error handling
-			token, _ := jwt.Parse(res.Token, func(token *jwt.Token) (interface{}, error) {
+			token, err := jwt.Parse(res.Token, func(token *jwt.Token) (interface{}, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 				}
@@ -223,6 +223,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				config := config.GetConfig()
 				return []byte(config.GetString("jwt.secret")), nil
 			})
+
+			if err != nil {
+				errorPacket := packet.NewErrorPacket(1)
+				data, _ := json.Marshal(errorPacket)
+				m.sender.send <- data
+				return
+			}
 
 			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 				characterID = claims["id"].(string)
@@ -316,22 +323,23 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Update this character's room
 		db.GetRejsonHandler().JSONSet("character:" + m.sender.character.ID, "room", res.To)
+		db.GetRejsonHandler().JSONSet("character:" + m.sender.character.ID, "x", 0.5)
+		db.GetRejsonHandler().JSONSet("character:" + m.sender.character.ID, "y", 0.5)
 
 		// Remove this character from the previous room
 		db.GetRejsonHandler().JSONDel("room:" + res.From, "characters[\"" + m.sender.character.ID + "\"]")
+
+		// Add them to their new room
+		var character models.Character
+		data, _ := db.GetRejsonHandler().JSONGet("character:" + m.sender.character.ID, ".")
+		json.Unmarshal(data.([]byte), &character)
+		db.GetRejsonHandler().JSONSet("room:" + res.To, "characters[\"" + m.sender.character.ID + "\"]", character)
 
 		// Send them the init packet for this room
 		initPacket := packet.NewInitPacket(m.sender.character.ID, res.To, false)
 		initPacketData, _ := initPacket.MarshalBinary()
 		m.sender.send <- initPacketData
 		m.sender.character.Room = res.To
-
-		// Add them to their new room
-		var character models.Character
-		data, _ := db.GetRejsonHandler().JSONGet("character:" + m.sender.character.ID, ".")
-		json.Unmarshal(data.([]byte), &character)
-
-		db.GetRejsonHandler().JSONSet("room:" + res.To, "characters[\"" + m.sender.character.ID + "\"]", character)
 
 		// Publish event to other ingest servers
 		db.Publish(res)
