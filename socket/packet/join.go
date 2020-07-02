@@ -21,6 +21,7 @@ type JoinPacket struct {
 
 func NewJoinPacket(character *models.Character) *JoinPacket {
 	p := new(JoinPacket)
+	p.BasePacket = BasePacket{Type: "join"}
 	p.Character = character
 	return p
 }

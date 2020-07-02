@@ -46,14 +46,40 @@ func Init(reset bool) {
 				X: 0.13,
 				Y: 0.4,
 				Radius: 0.1,
-				To: "sponsor",
+				To: "microsoft",
+			},
+			models.Hallway{
+				X: 0.25,
+				Y: 0.66,
+				Radius: 0.07,
+				To: "dashboard",
 			},
 		}
 		rh.JSONSet("room:home", ".", home)
 
-		sponsor := new(models.Room).Init()
-		sponsor.Slug = "sponsor"
-		rh.JSONSet("room:sponsor", ".", sponsor)
+		microsoft := new(models.Room).Init()
+		microsoft.Slug = "microsoft"
+		microsoft.Hallways = []models.Hallway{
+			models.Hallway{
+				X: 0.03,
+				Y: 0.68,
+				Radius: 0.05,
+				To: "home",
+			},
+		}
+		rh.JSONSet("room:microsoft", ".", microsoft)
+
+		dashboard := new(models.Room).Init()
+		dashboard.Slug = "dashboard"
+		dashboard.Hallways = []models.Hallway{
+			models.Hallway{
+				X: 0.03,
+				Y: 0.68,
+				Radius: 0.05,
+				To: "home",
+			},
+		}
+		rh.JSONSet("room:dashboard", ".", dashboard)
 	}
 
 	// Save our ingest ID

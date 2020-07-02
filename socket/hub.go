@@ -329,19 +329,20 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Remove this character from the previous room
 		db.GetRejsonHandler().JSONDel("room:" + res.From, "characters[\"" + m.sender.character.ID + "\"]")
 
-		// Add them to their new room
-		var character models.Character
-		data, _ := db.GetRejsonHandler().JSONGet("character:" + m.sender.character.ID, ".")
-		json.Unmarshal(data.([]byte), &character)
-		db.GetRejsonHandler().JSONSet("room:" + res.To, "characters[\"" + m.sender.character.ID + "\"]", character)
-
 		// Send them the init packet for this room
 		initPacket := packet.NewInitPacket(m.sender.character.ID, res.To, false)
 		initPacketData, _ := initPacket.MarshalBinary()
 		m.sender.send <- initPacketData
 		m.sender.character.Room = res.To
 
+		// Add them to their new room
+		var character models.Character
+		data, _ := db.GetRejsonHandler().JSONGet("character:" + m.sender.character.ID, ".")
+		json.Unmarshal(data.([]byte), &character)
+		db.GetRejsonHandler().JSONSet("room:" + res.To, "characters[\"" + m.sender.character.ID + "\"]", character)
+
 		// Publish event to other ingest servers
+		res.Character = &character
 		db.Publish(res)
 
 		resData, _ := res.MarshalBinary()
