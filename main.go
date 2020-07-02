@@ -13,6 +13,7 @@ import (
 func main() {
 	environment := flag.String("e", "dev", "")
 	port := flag.Int("p", 8080, "")
+	reset := flag.Bool("reset", false, "Resets the database")
 
 	flag.Usage = func() {
 		fmt.Println("Usage: server -e {mode} -p {port}")
@@ -22,6 +23,6 @@ func main() {
 	flag.Parse()
 
 	config.Init(*environment)
-	db.Init()
+	db.Init(*reset)
 	server.Init(*port)
 }

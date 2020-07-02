@@ -24,7 +24,7 @@ var (
 	rh *rejson.Handler
 )
 
-func Init() {
+func Init(reset bool) {
 	config := config.GetConfig()
 	rh = rejson.NewReJSONHandler()
 
@@ -35,6 +35,16 @@ func Init() {
 	})
 
 	rh.SetGoRedisClient(instance)
+
+	if reset {
+		instance.FlushDB()
+
+		room := new(models.Room).Init()
+		coffeeChat := new(models.Interactable).Init("coffee-chat", "../images/coffee.png", 0.01, 0.01)
+		room.Interactables = []*models.Interactable{coffeeChat}
+		room.Slug = "home"
+		rh.JSONSet("room:home", ".", room)
+	}
 
 	// Save our ingest ID
 	ingestRes, _ := instance.ClientID().Result()

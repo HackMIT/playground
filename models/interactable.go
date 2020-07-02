@@ -12,6 +12,5 @@ func (i *Interactable) Init(action string, appearance string, x float64, y float
 	i.Appearance = appearance
 	i.X = x
 	i.Y = y
-	
 	return i
 }
