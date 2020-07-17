@@ -1,6 +1,6 @@
 {
 	"db": {
-		"addr": "localhost:6379",
+		"addr": "172.18.0.2:6379",
 		"password": "",
 		"db": 0
 	},

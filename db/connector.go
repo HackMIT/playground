@@ -43,16 +43,10 @@ func Init(reset bool) {
 		home.Slug = "home"
 		home.Hallways = []models.Hallway{
 			models.Hallway{
-				X: 0.13,
-				Y: 0.4,
+				X: 0.62,
+				Y: 0.59,
 				Radius: 0.1,
 				To: "microsoft",
-			},
-			models.Hallway{
-				X: 0.25,
-				Y: 0.66,
-				Radius: 0.07,
-				To: "dashboard",
 			},
 		}
 		rh.JSONSet("room:home", ".", home)
