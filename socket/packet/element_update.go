@@ -9,8 +9,8 @@ import (
 type ElementUpdatePacket struct {
 	BasePacket
 
-	// The slug of the room being updated
-	Slug string `json:"slug"`
+	// The room being updated
+	Room string `json:"room"`
 
 	// The ID of the element being updated
 	ID string `json:"id"`

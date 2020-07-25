@@ -104,6 +104,8 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 	switch res["type"] {
 	case "join", "move":
 		h.SendBytes(res["room"].(string), msg)
+	case "element_delete", "element_update":
+		h.SendBytes(res["slug"].(string), msg)
 	case "teleport":
 		var p packet.TeleportPacket
 		json.Unmarshal(msg, &p)
@@ -137,13 +139,20 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		db.Publish(res)
 		h.Send(res.Room, res)
+	case "element_delete":
+		res := packet.ElementDeletePacket{}
+		json.Unmarshal(m.msg, &res)
+
+		db.GetRejsonHandler().JSONDel("room:" + res.Room, "elements[\"" + res.ID + "\"]")
+		db.Publish(res)
+		h.Send(res.Room, res)
 	case "element_update":
 		res := packet.ElementUpdatePacket{}
 		json.Unmarshal(m.msg, &res)
 
-		db.GetRejsonHandler().JSONSet("room:" + res.Slug, "elements[\"" + res.ID + "\"]", res.Element)
-
-		// TODO: Send updates to other clients
+		db.GetRejsonHandler().JSONSet("room:" + res.Room, "elements[\"" + res.ID + "\"]", res.Element)
+		db.Publish(res)
+		h.Send(res.Room, res)
 	case "join":
 		// Parse join packet
 		res := packet.JoinPacket{}
