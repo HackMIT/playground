@@ -137,6 +137,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		db.Publish(res)
 		h.Send(res.Room, res)
+	case "element_update":
+		res := packet.ElementUpdatePacket{}
+		json.Unmarshal(m.msg, &res)
+
+		db.GetRejsonHandler().JSONSet("room:" + res.Slug, "elements[\"" + res.ID + "\"]", res.Element)
+
+		// TODO: Send updates to other clients
 	case "join":
 		// Parse join packet
 		res := packet.JoinPacket{}

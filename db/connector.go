@@ -13,6 +13,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 	"github.com/nitishm/go-rejson"
 	"github.com/go-redis/redis"
+	"github.com/google/uuid"
 )
 
 const ingestClientName string = "ingest"
@@ -40,6 +41,14 @@ func Init(reset bool) {
 		instance.FlushDB()
 
 		home := new(models.Room).Init()
+		home.Elements = map[string]*models.Element{
+			uuid.New().String(): &models.Element{
+				X: 0.2,
+				Y: 0.2,
+				Width: 0.1,
+				Path: "lamp",
+			},
+		}
 		home.Slug = "home"
 		home.Hallways = []models.Hallway{
 			models.Hallway{
