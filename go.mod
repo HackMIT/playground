@@ -1,6 +1,7 @@
 module github.com/techx/playground
 
 require (
+	github.com/aws/aws-sdk-go v1.33.12
 	github.com/deckarep/golang-set v1.7.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-redis/redis v6.15.8+incompatible

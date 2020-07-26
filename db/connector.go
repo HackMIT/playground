@@ -46,7 +46,7 @@ func Init(reset bool) {
 				X: 0.2,
 				Y: 0.2,
 				Width: 0.1,
-				Path: "lamp",
+				Path: "lamp.svg",
 			},
 		}
 		home.Slug = "home"

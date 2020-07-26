@@ -7,6 +7,9 @@ import (
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/models"
 
+    "github.com/aws/aws-sdk-go/aws"
+    "github.com/aws/aws-sdk-go/aws/session"
+    "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -22,6 +25,9 @@ type InitPacket struct {
 
 	// A token for the client to save for future authentication
 	Token string `json:"token,omitempty"`
+
+	// All possible element paths
+	ElementPaths []string `json:"elementPaths"`
 }
 
 func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
@@ -50,6 +56,35 @@ func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
 		tokenString, _ := token.SignedString([]byte(config.GetString("jwt.secret")))
 		p.Token = tokenString
 	}
+
+	// Find all of the possible paths
+	// TODO: Cache these
+	sess := session.Must(session.NewSession())
+	svc := s3.New(sess)
+
+	input := &s3.ListObjectsV2Input{
+		Bucket: aws.String("hackmit-playground-2020"),
+		Prefix: aws.String("elements/"),
+	}
+
+	result, err := svc.ListObjectsV2(input)
+
+	if err != nil {
+		panic(err)
+	}
+
+	elementPaths := make([]string, len(result.Contents) - 1)
+
+	for i, item := range result.Contents {
+		if i == 0 {
+			// First key is the elements directory
+			continue
+		}
+
+		elementPaths[i - 1] = (*item.Key)[9:]
+	}
+
+	p.ElementPaths = elementPaths
 
 	return p
 }

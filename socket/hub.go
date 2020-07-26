@@ -16,6 +16,7 @@ import (
 	"github.com/techx/playground/socket/packet"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -104,7 +105,7 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 	switch res["type"] {
 	case "join", "move":
 		h.SendBytes(res["room"].(string), msg)
-	case "element_delete", "element_update":
+	case "element_add", "element_delete", "element_update":
 		h.SendBytes(res["slug"].(string), msg)
 	case "teleport":
 		var p packet.TeleportPacket
@@ -139,18 +140,35 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		db.Publish(res)
 		h.Send(res.Room, res)
+	case "element_add":
+		res := packet.ElementAddPacket{}
+		json.Unmarshal(m.msg, &res)
+		res.Room = m.sender.character.Room
+
+		res.ID = uuid.New().String()
+		db.GetRejsonHandler().JSONSet("room:" + res.Room, "elements[\"" + res.ID+ "\"]", res.Element)
+
+		// Publish event to other ingest servers
+		db.Publish(res)
+		h.Send(res.Room, res)
 	case "element_delete":
 		res := packet.ElementDeletePacket{}
 		json.Unmarshal(m.msg, &res)
+		res.Room = m.sender.character.Room
 
 		db.GetRejsonHandler().JSONDel("room:" + res.Room, "elements[\"" + res.ID + "\"]")
+
+		// Publish event to other ingest servers
 		db.Publish(res)
 		h.Send(res.Room, res)
 	case "element_update":
 		res := packet.ElementUpdatePacket{}
 		json.Unmarshal(m.msg, &res)
+		res.Room = m.sender.character.Room
 
 		db.GetRejsonHandler().JSONSet("room:" + res.Room, "elements[\"" + res.ID + "\"]", res.Element)
+
+		// Publish event to other ingest servers
 		db.Publish(res)
 		h.Send(res.Room, res)
 	case "join":
