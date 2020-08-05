@@ -9,6 +9,7 @@ type Room struct {
 	Hallways      []Hallway             `json:"hallways"`
 	Interactables []*Interactable        `json:"interactables"`
 	Slug          string                `json:"slug"`
+	Sponsor       bool                   `json:"sponsor"`
 }
 
 func (r *Room) Init() *Room {

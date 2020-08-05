@@ -14,6 +14,7 @@ type Character struct {
 	Y        float64 `json:"y"`
 	Room     string  `json:"room"`
 	Ingest   int     `json:"ingest"`
+	Type	 string  `json:"type"`
 }
 
 func NewCharacter(name string) *Character {

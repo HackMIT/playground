@@ -46,13 +46,14 @@ func Init(reset bool) {
 				X: 0.62,
 				Y: 0.59,
 				Radius: 0.1,
-				To: "microsoft",
+				To: "sponsor",
 			},
 		}
 		rh.JSONSet("room:home", ".", home)
 
 		microsoft := new(models.Room).Init()
-		microsoft.Slug = "microsoft"
+		microsoft.Slug = "sponsor"
+		microsoft.Sponsor = true
 		microsoft.Hallways = []models.Hallway{
 			models.Hallway{
 				X: 0.03,
@@ -61,7 +62,7 @@ func Init(reset bool) {
 				To: "home",
 			},
 		}
-		rh.JSONSet("room:microsoft", ".", microsoft)
+		rh.JSONSet("room:sponsor", ".", microsoft)
 
 		dashboard := new(models.Room).Init()
 		dashboard.Slug = "dashboard"
