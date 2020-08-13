@@ -26,8 +26,11 @@ type InitPacket struct {
 	// A token for the client to save for future authentication
 	Token string `json:"token,omitempty"`
 
-	// All possible element paths
-	ElementPaths []string `json:"elementPaths"`
+	// All possible element names
+	ElementNames []string `json:"elementNames"`
+
+	// All room names
+	RoomNames []string `json:"roomNames"`
 }
 
 func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
@@ -73,7 +76,7 @@ func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
 		panic(err)
 	}
 
-	elementPaths := make([]string, len(result.Contents) - 1)
+	elementNames := make([]string, len(result.Contents) - 1)
 
 	for i, item := range result.Contents {
 		if i == 0 {
@@ -81,10 +84,13 @@ func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
 			continue
 		}
 
-		elementPaths[i - 1] = (*item.Key)[9:]
+		elementNames[i - 1] = (*item.Key)[9:]
 	}
 
-	p.ElementPaths = elementPaths
+	p.ElementNames = elementNames
+
+	// Get all room names
+	p.RoomNames, _ = db.GetInstance().SMembers("rooms").Result()
 
 	return p
 }

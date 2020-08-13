@@ -50,8 +50,8 @@ func Init(reset bool) {
 			},
 		}
 		home.Slug = "home"
-		home.Hallways = []models.Hallway{
-			models.Hallway{
+		home.Hallways = map[string]*models.Hallway{
+			uuid.New().String(): &models.Hallway{
 				X: 0.62,
 				Y: 0.59,
 				Radius: 0.1,
@@ -59,11 +59,12 @@ func Init(reset bool) {
 			},
 		}
 		rh.JSONSet("room:home", ".", home)
+		instance.SAdd("rooms", "home")
 
 		microsoft := new(models.Room).Init()
 		microsoft.Slug = "microsoft"
-		microsoft.Hallways = []models.Hallway{
-			models.Hallway{
+		microsoft.Hallways = map[string]*models.Hallway{
+			uuid.New().String(): &models.Hallway{
 				X: 0.03,
 				Y: 0.68,
 				Radius: 0.05,
@@ -71,11 +72,12 @@ func Init(reset bool) {
 			},
 		}
 		rh.JSONSet("room:microsoft", ".", microsoft)
+		instance.SAdd("rooms", "microsoft")
 
 		dashboard := new(models.Room).Init()
 		dashboard.Slug = "dashboard"
-		dashboard.Hallways = []models.Hallway{
-			models.Hallway{
+		dashboard.Hallways = map[string]*models.Hallway{
+			uuid.New().String(): &models.Hallway{
 				X: 0.03,
 				Y: 0.68,
 				Radius: 0.05,
@@ -83,6 +85,7 @@ func Init(reset bool) {
 			},
 		}
 		rh.JSONSet("room:dashboard", ".", dashboard)
+		instance.SAdd("rooms", "dashboard")
 	}
 
 	// Save our ingest ID

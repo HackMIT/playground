@@ -29,13 +29,15 @@ func (r RoomController) CreateRoom(c echo.Context) error {
 		                         "database error")
 	}
 
+	db.GetInstance().SAdd("rooms", room.Slug)
+
 	return c.JSON(http.StatusOK, room)
 }
 
 // GET /rooms - get all rooms
 func (r RoomController) GetRooms(c echo.Context) error {
 	// Get all of the room names from Redis
-	roomNames, err := db.GetInstance().Keys("room:*").Result()
+	roomNames, err := db.GetInstance().SMembers("rooms").Result()
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError,

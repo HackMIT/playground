@@ -171,6 +171,37 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Publish event to other ingest servers
 		db.Publish(res)
 		h.Send(res.Room, res)
+	case "hallway_add":
+		res := packet.HallwayAddPacket{}
+		json.Unmarshal(m.msg, &res)
+		res.Room = m.sender.character.Room
+
+		res.ID = uuid.New().String()
+		db.GetRejsonHandler().JSONSet("room:" + res.Room, "hallways[\"" + res.ID + "\"]", res.Hallway)
+
+		// Publish event to other ingest servers
+		db.Publish(res)
+		h.Send(res.Room, res)
+	case "hallway_delete":
+		res := packet.HallwayDeletePacket{}
+		json.Unmarshal(m.msg, &res)
+		res.Room = m.sender.character.Room
+
+		db.GetRejsonHandler().JSONDel("room:" + res.Room, "hallways[\"" + res.ID + "\"]")
+
+		// Publish event to other ingest servers
+		db.Publish(res)
+		h.Send(res.Room, res)
+	case "hallway_update":
+		res := packet.HallwayUpdatePacket{}
+		json.Unmarshal(m.msg, &res)
+		res.Room = m.sender.character.Room
+
+		db.GetRejsonHandler().JSONSet("room:" + res.Room, "hallways[\"" + res.ID + "\"]", res.Hallway)
+
+		// Publish event to other ingest servers
+		db.Publish(res)
+		h.Send(res.Room, res)
 	case "join":
 		// Parse join packet
 		res := packet.JoinPacket{}
