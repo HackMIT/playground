@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+    "strings"
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
@@ -17,7 +18,11 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
+	"google.golang.org/api/googleapi/transport"
+	"google.golang.org/api/youtube/v3"
 )
+
+const youtubeAPIKey = "AIzaSyBbKVxrxksLlxJYno6ZG_TzHvIpXU2O3eM"
 
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
@@ -88,7 +93,7 @@ func (h *Hub) SendBytes(room string, msg []byte) {
 			continue
 		}
 
-		if client.character.Room != room {
+		if room != "*" && client.character.Room != room {
 			continue
 		}
 
@@ -381,6 +386,55 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		db.Publish(res)
 		h.Send(m.sender.character.Room, res)
+    case "song":
+        // Parse song packet
+        res := packet.SongPacket{}
+        json.Unmarshal(m.msg, &res)
+
+        // Make the YouTube API call
+        youtubeClient, _ := youtube.New(&http.Client{
+            Transport: &transport.APIKey{Key: youtubeAPIKey},
+        })
+        call := youtubeClient.Videos.List("snippet,contentDetails").
+                Id(res.VidCode)
+
+        response, err := call.Do()
+        if err != nil {
+            // TODO: Send error packet
+            panic(err)
+        }
+
+        // Should only have one video
+        for _, video := range response.Items {
+            // Parse duration string
+            duration := video.ContentDetails.Duration
+            minIndex := strings.Index(duration, "M")
+            secIndex := strings.Index(duration, "S")
+
+            // Convert duration to seconds
+            minutes, err := strconv.Atoi(duration[2:minIndex])
+            seconds, err := strconv.Atoi(duration[minIndex + 1:secIndex])
+
+            // Error parsing duration string
+            if err != nil {
+                // TODO: Send error packet
+                panic(err)
+            }
+
+            res.Duration = (minutes * 60) + seconds
+            res.Title = video.Snippet.Title
+            res.ThumbnailURL = video.Snippet.Thumbnails.Default.Url
+        }
+
+        _, err = db.GetRejsonHandler().JSONArrAppend("songs", ".", res.Song)
+
+        if err != nil {
+            // TODO: Send error packet
+            panic(err)
+        }
+
+        db.Publish(res)
+        h.Send("*", res)
 	case "teleport":
 		// Parse teleport packet
 		res := packet.TeleportPacket{}

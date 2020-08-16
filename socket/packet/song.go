@@ -9,9 +9,7 @@ import (
 // Sent by ingests when a song is added to queue
 type SongPacket struct {
 	BasePacket
-
-	// The added song
-	Song *models.Song `json:"song"`
+    *models.Song
 }
 
 func (p *SongPacket) Init(song *models.Song) *SongPacket {
