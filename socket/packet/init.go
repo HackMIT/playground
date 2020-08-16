@@ -70,7 +70,9 @@ func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
 	result, err := svc.ListObjectsV2(input)
 
 	if err != nil {
-		panic(err)
+		// panic(err)
+		p.ElementPaths = make([]string, 0)
+		return p
 	}
 
 	elementPaths := make([]string, len(result.Contents) - 1)

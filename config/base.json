@@ -1,13 +1,13 @@
 {
-	"db": {
-		"addr": "172.18.0.2:6379",
-		"password": "",
-		"db": 0
-	},
-	"jwt": {
-		"secret": "asdf"
-	},
-	"server": {
-		"addr": ":8080"
-	}
+  "db": {
+    "addr": "localhost:6379",
+    "password": "",
+    "db": 0
+  },
+  "jwt": {
+    "secret": "asdf"
+  },
+  "server": {
+    "addr": ":8080"
+  }
 }

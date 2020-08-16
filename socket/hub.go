@@ -350,6 +350,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		db.Publish(res)
 		h.Send(m.sender.character.Room, res)
+	case "settings":
+		res := packet.SettingsPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		db.GetRejsonHandler().JSONSet("character:" + m.sender.character.ID, "settings", res.Settings)
 	case "teleport":
 		// Parse teleport packet
 		res := packet.TeleportPacket{}
