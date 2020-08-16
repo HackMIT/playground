@@ -73,21 +73,21 @@ func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
 	result, err := svc.ListObjectsV2(input)
 
 	if err != nil {
-		panic(err)
-	}
+        p.ElementNames = []string{}
+	} else {
+        elementNames := make([]string, len(result.Contents) - 1)
 
-	elementNames := make([]string, len(result.Contents) - 1)
+        for i, item := range result.Contents {
+            if i == 0 {
+                // First key is the elements directory
+                continue
+            }
 
-	for i, item := range result.Contents {
-		if i == 0 {
-			// First key is the elements directory
-			continue
-		}
+            elementNames[i - 1] = (*item.Key)[9:]
+        }
 
-		elementNames[i - 1] = (*item.Key)[9:]
-	}
-
-	p.ElementNames = elementNames
+        p.ElementNames = elementNames
+    }
 
 	// Get all room names
 	p.RoomNames, _ = db.GetInstance().SMembers("rooms").Result()
