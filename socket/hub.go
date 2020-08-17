@@ -5,6 +5,7 @@ import (
 	"encoding"
 	"encoding/json"
 	"fmt"
+    "hash/fnv"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -93,12 +94,22 @@ func (h *Hub) SendBytes(room string, msg []byte) {
 			continue
 		}
 
-		if room != "*" && client.character.Room != room {
-			continue
-		}
+        if room == "*" {
+            client.send <- msg
+            continue
+        }
+
+        if client.character.Room == room {
+            client.send <- msg
+            continue
+        }
+
+        if strings.Contains(room, "character:") && client.character.ID == strings.Split(room, ":")[1] {
+            client.send <- msg
+            continue
+        }
 
 		// TODO: If this send fails, disconnect the client
-		client.send <- msg
 	}
 }
 
@@ -108,6 +119,12 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 	json.Unmarshal(msg, &res)
 
 	switch res["type"] {
+    case "message":
+        h.SendBytes("character:" + res["recipient"].(string), msg)
+
+        if res["recipient"].(string) != res["sender"].(string) {
+            h.SendBytes("character:" + res["sender"].(string), msg)
+        }
 	case "join", "move":
 		h.SendBytes(res["room"].(string), msg)
 	case "element_add", "element_delete", "element_update":
@@ -350,6 +367,38 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		db.Publish(res)
 		h.Send(character.Room, res)
+    case "message":
+        // Parse message packet
+        res := packet.MessagePacket{}
+        json.Unmarshal(m.msg, &res)
+        res.Sender = m.sender.character.ID
+
+        // Save this message
+        messageID := uuid.New().String()
+        db.GetRejsonHandler().JSONSet("message:" + messageID, ".", res)
+
+        ha := fnv.New32a()
+        ha.Write([]byte(res.Sender))
+        senderHash := ha.Sum32()
+
+        ha.Reset()
+        ha.Write([]byte(res.Recipient))
+        recipientHash := ha.Sum32()
+
+        conversationKey := "conversation:" + res.Sender + ":" + res.Recipient
+
+        if recipientHash < senderHash {
+            conversationKey = "conversation:" + res.Recipient + ":" + res.Sender
+        }
+
+        db.GetInstance().RPush(conversationKey, messageID)
+
+        db.Publish(res)
+        h.Send("character:" + res.Recipient, res)
+
+        if res.Recipient != res.Sender {
+            h.Send("character:" + res.Sender, res)
+        }
 	case "move":
 		if m.sender.character == nil {
 			return
