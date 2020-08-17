@@ -2,7 +2,6 @@ package db
 
 import (
 	"encoding"
-	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -11,8 +10,7 @@ import (
 	"github.com/techx/playground/db/models"
 
 	mapset "github.com/deckarep/golang-set"
-	"github.com/nitishm/go-rejson"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v7"
 	"github.com/google/uuid"
 )
 
@@ -22,12 +20,10 @@ var (
 	ingestID int
 	instance *redis.Client
 	psc *redis.PubSub
-	rh *rejson.Handler
 )
 
 func Init(reset bool) {
 	config := config.GetConfig()
-	rh = rejson.NewReJSONHandler()
 
 	instance = redis.NewClient(&redis.Options{
 		Addr: config.GetString("db.addr"),
@@ -35,45 +31,52 @@ func Init(reset bool) {
 		DB: config.GetInt("db.db"),
 	})
 
-	rh.SetGoRedisClient(instance)
+    pip := instance.Pipeline()
 
 	if reset {
-		instance.FlushDB()
+        instance.FlushDB()
 
 		home := new(models.Room).Init()
-		home.Elements = map[string]*models.Element{
-			uuid.New().String(): &models.Element{
-				X: 0.2,
-				Y: 0.2,
-				Width: 0.1,
-				Path: "lamp.svg",
-			},
-		}
+        lampElementID := uuid.New().String()
+        lampElement := &models.Element{
+            X: 0.2,
+            Y: 0.2,
+            Width: 0.1,
+            Path: "lamp.svg",
+        }
+        pip.SAdd("room:home:elements", lampElementID)
+        pip.HSet("element:" + lampElementID, StructToMap(lampElement))
+
+        sponsorHallwayID := uuid.New().String()
+        sponsorHallway := &models.Hallway{
+            X: 0.62,
+            Y: 0.59,
+            Radius: 0.1,
+            To: "sponsor",
+        }
+        pip.SAdd("room:home:hallways", sponsorHallwayID)
+        pip.HSet("hallway:" + sponsorHallwayID, StructToMap(sponsorHallway))
+
 		home.Slug = "home"
-		home.Hallways = map[string]*models.Hallway{
-			uuid.New().String(): &models.Hallway{
-				X: 0.62,
-				Y: 0.59,
-				Radius: 0.1,
-				To: "sponsor",
-			},
-		}
-		rh.JSONSet("room:home", ".", home)
-		instance.SAdd("rooms", "home")
+        pip.HSet("room:home", StructToMap(home))
+        pip.SAdd("rooms", "home")
 
 		sponsor := new(models.Room).Init()
 		sponsor.Slug = "sponsor"
 		sponsor.Sponsor = true
-		sponsor.Hallways = map[string]*models.Hallway{
-			uuid.New().String(): &models.Hallway{
-				X: 0.03,
-				Y: 0.68,
-				Radius: 0.05,
-				To: "home",
-			},
-		}
-		rh.JSONSet("room:sponsor", ".", sponsor)
-		instance.SAdd("rooms", "sponsor")
+
+        homeHallwayID := uuid.New().String()
+        homeHallway := &models.Hallway{
+            X: 0.03,
+            Y: 0.68,
+            Radius: 0.05,
+            To: "home",
+        }
+        pip.SAdd("room:sponsor:hallways", homeHallwayID)
+        pip.HSet("hallway:" + homeHallwayID, StructToMap(homeHallway))
+
+        pip.HSet("room:sponsor", StructToMap(sponsor))
+        pip.SAdd("rooms", "sponsor")
 	}
 
 	// Save our ingest ID
@@ -81,8 +84,9 @@ func Init(reset bool) {
 	ingestID = int(ingestRes)
 
 	// Initialize jukebox
-	rh.JSONSet("songs", ".", []string{})
-	rh.JSONSet("queuestatus", ".", models.QueueStatus{SongEnd: time.Now()})
+    // TODO: Make sure this works correctly when there are multiple ingests
+    pip.HSet("queuestatus", StructToMap(models.QueueStatus{SongEnd: time.Now()}))
+    pip.Exec()
 }
 
 func GetIngestID() int {
@@ -91,10 +95,6 @@ func GetIngestID() int {
 
 func GetInstance() *redis.Client {
 	return instance
-}
-
-func GetRejsonHandler() *rejson.Handler {
-	return rh
 }
 
 func ListenForUpdates(callback func(msg []byte)) {
@@ -195,35 +195,50 @@ func MonitorLeader() {
 			// Remove characters connected to this ingest from their rooms
 			characters, _ := instance.SMembers("ingest:" + id + ":characters").Result()
 
-			for _, characterName := range characters {
-				res, _ := rh.JSONGet("character:" + characterName, "room")
-				room := string(res.([]byte)[1:len(res.([]byte))-1])
+            pip := instance.Pipeline()
+            roomCmds := make([]*redis.StringCmd, len(characters))
 
-				rh.JSONDel("room:" + room, "characters[\"" + characterName + "\"]")
-			}
+            for i, characterID  := range characters {
+                roomCmds[i] = pip.HGet("character:" + characterID, "room")
+            }
+
+            pip.Exec()
+            pip = instance.Pipeline()
+
+            for i, roomCmd := range roomCmds {
+                room, _ := roomCmd.Result()
+                pip.SRem("room:" + room, characters[i])
+            }
+
+            pip.Exec()
 
 			// Ingest has been taken care of, remove from set
 			instance.SRem("ingests", id)
 		}
 
 		// Get song queue status
-		queueStatusData, _ := rh.JSONGet("queuestatus", ".")
-		var queueStatus models.QueueStatus
-		json.Unmarshal(queueStatusData.([]byte), &queueStatus)
+        queueRes, _ := instance.HGetAll("queuestatus").Result()
+
+        var queueStatus models.QueueStatus
+        Bind(queueRes, &queueStatus)
+
 		songEnd := queueStatus.SongEnd
 
 		// If current song ended, start next song (if there is one)
 		if songEnd.Before(time.Now()) {
-			queueLengthData, _ := rh.JSONArrLen("songs", ".")
-			queueLength := queueLengthData.(int64)
+            queueLength, _ := instance.SCard("songs").Result()
+
 			if queueLength > 0 {
 				// Pop the next song off the queue
-				songData, _ := rh.JSONArrPop("songs", ".", 0)
-				var song models.Song
-				json.Unmarshal(songData.([]byte), &song)
+                songID, _ := instance.LPop("songs").Result()
+
+                songRes, _ := instance.HGetAll("song:" + songID).Result()
+                var song models.Song
+                Bind(songRes, &song)
+
 				// Update queue status to reflect new song
 				newStatus := models.QueueStatus{time.Now().Add(time.Second * time.Duration(song.Duration))}
-				rh.JSONSet("queuestatus", ".", newStatus)
+                instance.HSet("queuestatus", StructToMap(newStatus))
 			}
 		}
 	}

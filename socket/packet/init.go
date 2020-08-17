@@ -11,6 +11,7 @@ import (
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/dgrijalva/jwt-go"
+    "github.com/go-redis/redis/v7"
 )
 
 // Sent by server to clients upon connecting. Contains information about the
@@ -35,13 +36,65 @@ type InitPacket struct {
 
 func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
 	// Fetch character and room from Redis
-	res, _ := db.GetRejsonHandler().JSONGet("room:" + roomSlug, ".")
-	var room *models.Room
-	json.Unmarshal(res.([]byte), &room)
+    pip := db.GetInstance().Pipeline()
+    roomCmd := pip.HGetAll("room:" + roomSlug)
+    roomCharactersCmd := pip.SMembers("room:" + roomSlug + ":characters")
+    roomElementsCmd := pip.SMembers("room:" + roomSlug + ":elements")
+    roomHallwaysCmd := pip.SMembers("room:" + roomSlug + ":hallways")
+    characterCmd := pip.HGetAll("character:" + characterID)
+    pip.Exec()
 
-	res, _ = db.GetRejsonHandler().JSONGet("character:" + characterID, ".")
-	var character *models.Character
-	json.Unmarshal(res.([]byte), &character)
+    room := new(models.Room).Init()
+    roomRes, _ := roomCmd.Result()
+    db.Bind(roomRes, room)
+
+    character := new(models.Character)
+    characterRes, _ := characterCmd.Result()
+    db.Bind(characterRes, character)
+
+    // Load additional room stuff
+    pip = db.GetInstance().Pipeline()
+
+    characterIDs, _ := roomCharactersCmd.Result()
+    characterCmds := make([]*redis.StringStringMapCmd, len(characterIDs))
+
+    for i, characterID := range characterIDs {
+        characterCmds[i] = pip.HGetAll("character:" + characterID)
+    }
+
+    elementIDs, _ := roomElementsCmd.Result()
+    elementCmds := make([]*redis.StringStringMapCmd, len(elementIDs))
+
+    for i, elementID := range elementIDs {
+        elementCmds[i] = pip.HGetAll("element:" + elementID)
+    }
+
+    hallwayIDs, _ := roomHallwaysCmd.Result()
+    hallwayCmds := make([]*redis.StringStringMapCmd, len(hallwayIDs))
+
+    for i, hallwayID := range hallwayIDs {
+        hallwayCmds[i] = pip.HGetAll("hallway:" + hallwayID)
+    }
+
+    pip.Exec()
+
+    for i, characterCmd := range characterCmds {
+        characterRes, _ := characterCmd.Result()
+        room.Characters[characterIDs[i]] = new(models.Character)
+        db.Bind(characterRes, room.Characters[characterIDs[i]])
+    }
+
+    for i, elementCmd := range elementCmds {
+        elementRes, _ := elementCmd.Result()
+        room.Elements[elementIDs[i]] = new(models.Element)
+        db.Bind(elementRes, room.Elements[elementIDs[i]])
+    }
+
+    for i, hallwayCmd := range hallwayCmds {
+        hallwayRes, _ := hallwayCmd.Result()
+        room.Hallways[hallwayIDs[i]] = new(models.Hallway)
+        db.Bind(hallwayRes, room.Hallways[hallwayIDs[i]])
+    }
 
 	// Set data and return
 	p := new(InitPacket)
