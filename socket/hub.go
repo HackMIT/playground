@@ -127,7 +127,7 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
         }
 	case "join", "move":
 		h.SendBytes(res["room"].(string), msg)
-	case "element_add", "element_delete", "element_update":
+	case "element_add", "element_delete", "element_update", "hallway_add", "hallway_delete", "hallway_update":
 		h.SendBytes(res["slug"].(string), msg)
 	case "teleport":
 		var p packet.TeleportPacket
@@ -193,6 +193,39 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Publish event to other ingest servers
 		db.Publish(res)
 		h.Send(res.Room, res)
+    case "get_messages":
+        res := packet.GetMessagesPacket{}
+        json.Unmarshal(m.msg, &res)
+        sender := m.sender.character.ID
+
+        ha := fnv.New32a()
+        ha.Write([]byte(sender))
+        senderHash := ha.Sum32()
+
+        ha.Reset()
+        ha.Write([]byte(res.Recipient))
+        recipientHash := ha.Sum32()
+
+        conversationKey := "conversation:" + sender + ":" + res.Recipient
+
+        if recipientHash < senderHash {
+            conversationKey = "conversation:" + res.Recipient + ":" + sender
+        }
+
+        messageIDs, _ := db.GetInstance().LRange(conversationKey, -100, -1).Result()
+
+        messages := make([]map[string]string, len(messageIDs))
+
+        for i, messageID := range messageIDs {
+            var msg map[string]string
+            data, _ := db.GetRejsonHandler().JSONGet("message:" + messageID, ".")
+            json.Unmarshal(data.([]byte), &msg)
+
+            messages[i] = msg
+        }
+
+        resp := packet.NewMessagesPacket(messages, res.Recipient)
+        h.Send("character:" + m.sender.character.ID, resp)
 	case "hallway_add":
 		res := packet.HallwayAddPacket{}
 		json.Unmarshal(m.msg, &res)
