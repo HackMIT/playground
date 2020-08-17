@@ -1,7 +1,7 @@
 package socket
 
 import (
-	"github.com/techx/playground/models"
+	"github.com/techx/playground/db/models"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"

@@ -5,7 +5,7 @@ import (
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
-	"github.com/techx/playground/models"
+	"github.com/techx/playground/db/models"
 
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/session"

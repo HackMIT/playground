@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/techx/playground/config"
-	"github.com/techx/playground/models"
+	"github.com/techx/playground/db/models"
 
 	mapset "github.com/deckarep/golang-set"
 	"github.com/nitishm/go-rejson"

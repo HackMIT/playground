@@ -16,10 +16,6 @@ func newRouter(hub *socket.Hub) *echo.Echo {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	// Jukebox controller
-	jukebox := new(controllers.JukeboxController).Init(hub)
-	e.POST("/jukebox/songs", jukebox.QueueSong)
-
 	// Rooms controller
 	room := new(controllers.RoomController)
 	e.GET("/rooms", room.GetRooms)

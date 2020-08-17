@@ -2,7 +2,7 @@ package packet
 
 import (
 	"encoding/json"
-	"github.com/techx/playground/models"
+	"github.com/techx/playground/db/models"
 )
 
 // Sent by clients when they're adding an element

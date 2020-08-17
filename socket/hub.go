@@ -14,7 +14,7 @@ import (
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
-	"github.com/techx/playground/models"
+	"github.com/techx/playground/db/models"
 	"github.com/techx/playground/socket/packet"
 
 	"github.com/dgrijalva/jwt-go"
@@ -72,7 +72,7 @@ func (h *Hub) Run() {
 
 			// Notify others that this client left
 			packet := packet.NewLeavePacket(client.character, room)
-			h.Send(room, packet)
+			h.Send(packet)
 		case message := <-h.broadcast:
 			// Process incoming messages from clients
 			h.processMessage(message)
@@ -81,9 +81,13 @@ func (h *Hub) Run() {
 }
 
 // Sends a message to all of our clients
-func (h *Hub) Send(room string, msg encoding.BinaryMarshaler) {
+func (h *Hub) Send(msg encoding.BinaryMarshaler) {
+    // Send to other ingest servers
+    db.Publish(msg)
+
+    // Send to clients connected to this ingest
 	data, _ := msg.MarshalBinary()
-	h.SendBytes(room, data)
+    h.ProcessRedisMessage(data)
 }
 
 func (h *Hub) SendBytes(room string, msg []byte) {
@@ -125,19 +129,23 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
         if res["recipient"].(string) != res["sender"].(string) {
             h.SendBytes("character:" + res["sender"].(string), msg)
         }
-	case "join", "move":
+	case "chat", "move", "leave":
 		h.SendBytes(res["room"].(string), msg)
+    case "join":
+        h.SendBytes(res["character"].(map[string]interface{})["room"].(string), msg)
 	case "element_add", "element_delete", "element_update", "hallway_add", "hallway_delete", "hallway_update":
 		h.SendBytes(res["slug"].(string), msg)
+    case "song":
+        h.SendBytes("*", msg)
 	case "teleport":
 		var p packet.TeleportPacket
 		json.Unmarshal(msg, &p)
 
-		leavePacket := packet.NewLeavePacket(p.Character, p.From)
-		h.Send(p.From, leavePacket)
+		leavePacket, _ := packet.NewLeavePacket(p.Character, p.From).MarshalBinary()
+		h.SendBytes(p.From, leavePacket)
 
-		joinPacket := packet.NewJoinPacket(p.Character)
-		h.Send(p.To, joinPacket)
+		joinPacket, _ := packet.NewJoinPacket(p.Character).MarshalBinary()
+        h.SendBytes(p.To, joinPacket)
 	}
 }
 
@@ -156,12 +164,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.ChatPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		// Publish chat event to other ingest servers
+		// Publish chat event to other clients
 		res.Room = m.sender.character.Room
 		res.ID = m.sender.character.ID
-
-		db.Publish(res)
-		h.Send(res.Room, res)
+        h.Send(res)
 	case "element_add":
 		res := packet.ElementAddPacket{}
 		json.Unmarshal(m.msg, &res)
@@ -170,9 +176,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.ID = uuid.New().String()
 		db.GetRejsonHandler().JSONSet("room:" + res.Room, "elements[\"" + res.ID+ "\"]", res.Element)
 
-		// Publish event to other ingest servers
-		db.Publish(res)
-		h.Send(res.Room, res)
+		// Publish event to other clients
+		h.Send(res)
 	case "element_delete":
 		res := packet.ElementDeletePacket{}
 		json.Unmarshal(m.msg, &res)
@@ -181,8 +186,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		db.GetRejsonHandler().JSONDel("room:" + res.Room, "elements[\"" + res.ID + "\"]")
 
 		// Publish event to other ingest servers
-		db.Publish(res)
-		h.Send(res.Room, res)
+		h.Send(res)
 	case "element_update":
 		res := packet.ElementUpdatePacket{}
 		json.Unmarshal(m.msg, &res)
@@ -191,8 +195,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		db.GetRejsonHandler().JSONSet("room:" + res.Room, "elements[\"" + res.ID + "\"]", res.Element)
 
 		// Publish event to other ingest servers
-		db.Publish(res)
-		h.Send(res.Room, res)
+		h.Send(res)
     case "get_messages":
         res := packet.GetMessagesPacket{}
         json.Unmarshal(m.msg, &res)
@@ -225,7 +228,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
         }
 
         resp := packet.NewMessagesPacket(messages, res.Recipient)
-        h.Send("character:" + m.sender.character.ID, resp)
+        data, _ := resp.MarshalBinary()
+        h.SendBytes("character:" + m.sender.character.ID, data)
 	case "hallway_add":
 		res := packet.HallwayAddPacket{}
 		json.Unmarshal(m.msg, &res)
@@ -235,8 +239,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		db.GetRejsonHandler().JSONSet("room:" + res.Room, "hallways[\"" + res.ID + "\"]", res.Hallway)
 
 		// Publish event to other ingest servers
-		db.Publish(res)
-		h.Send(res.Room, res)
+		h.Send(res)
 	case "hallway_delete":
 		res := packet.HallwayDeletePacket{}
 		json.Unmarshal(m.msg, &res)
@@ -245,8 +248,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		db.GetRejsonHandler().JSONDel("room:" + res.Room, "hallways[\"" + res.ID + "\"]")
 
 		// Publish event to other ingest servers
-		db.Publish(res)
-		h.Send(res.Room, res)
+		h.Send(res)
 	case "hallway_update":
 		res := packet.HallwayUpdatePacket{}
 		json.Unmarshal(m.msg, &res)
@@ -255,8 +257,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		db.GetRejsonHandler().JSONSet("room:" + res.Room, "hallways[\"" + res.ID + "\"]", res.Hallway)
 
 		// Publish event to other ingest servers
-		db.Publish(res)
-		h.Send(res.Room, res)
+		h.Send(res)
 	case "join":
 		// Parse join packet
 		res := packet.JoinPacket{}
@@ -398,8 +399,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		m.sender.character = character
 		res.Character = character
 
-		db.Publish(res)
-		h.Send(character.Room, res)
+		h.Send(res)
     case "message":
         // Parse message packet
         res := packet.MessagePacket{}
@@ -426,12 +426,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
         db.GetInstance().RPush(conversationKey, messageID)
 
-        db.Publish(res)
-        h.Send("character:" + res.Recipient, res)
-
-        if res.Recipient != res.Sender {
-            h.Send("character:" + res.Sender, res)
-        }
+        h.Send(res)
 	case "move":
 		if m.sender.character == nil {
 			return
@@ -466,8 +461,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.Room = m.sender.character.Room
 		res.ID = m.sender.character.ID
 
-		db.Publish(res)
-		h.Send(m.sender.character.Room, res)
+		h.Send(res)
     case "song":
         // Parse song packet
         res := packet.SongPacket{}
@@ -515,8 +509,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
             panic(err)
         }
 
-        db.Publish(res)
-        h.Send("*", res)
+        h.Send(res)
 	case "teleport":
 		// Parse teleport packet
 		res := packet.TeleportPacket{}
@@ -544,9 +537,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Publish event to other ingest servers
 		res.Character = &character
-		db.Publish(res)
-
-		resData, _ := res.MarshalBinary()
-		h.ProcessRedisMessage(resData)
+        h.Send(res)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/techx/playground/db"
-	"github.com/techx/playground/models"
+	"github.com/techx/playground/db/models"
 
 	"github.com/labstack/echo/v4"
 )
