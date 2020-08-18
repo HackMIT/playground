@@ -82,6 +82,7 @@ func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
         characterRes, _ := characterCmd.Result()
         room.Characters[characterIDs[i]] = new(models.Character)
         db.Bind(characterRes, room.Characters[characterIDs[i]])
+        room.Characters[characterIDs[i]].ID = characterIDs[i]
     }
 
     for i, elementCmd := range elementCmds {

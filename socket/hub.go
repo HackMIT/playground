@@ -133,7 +133,7 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
     case "join":
         h.SendBytes(res["character"].(map[string]interface{})["room"].(string), msg)
 	case "element_add", "element_delete", "element_update", "hallway_add", "hallway_delete", "hallway_update":
-		h.SendBytes(res["slug"].(string), msg)
+		h.SendBytes(res["room"].(string), msg)
     case "song":
         h.SendBytes("*", msg)
 	case "teleport":
@@ -154,7 +154,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 	if err := json.Unmarshal(m.msg, &res); err != nil {
 		// TODO: Log to Sentry or something -- this should never happen
-		log.Println("ERROR: Received invalid JSON message from", m.sender.id, "->", m.msg)
+        fmt.Println(err)
+		log.Println("ERROR: Received invalid JSON message from", m.sender.id, "->", string(m.msg))
 		return
 	}
 
@@ -202,6 +203,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Publish event to other ingest servers
 		h.Send(res)
+    case "get_map":
+        // Send locations back to client
+        resp := packet.NewMapPacket()
+        data, _ := resp.MarshalBinary()
+        h.SendBytes("character:" + m.sender.character.ID, data)
     case "get_messages":
         res := packet.GetMessagesPacket{}
         json.Unmarshal(m.msg, &res)
@@ -232,10 +238,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
         pip.Exec()
         messages := make([]*models.Message, len(messageIDs))
-        pip = db.GetInstance().Pipeline()
 
         for i, messageCmd := range messageCmds {
             messageRes, _ := messageCmd.Result()
+            messages[i] = new(models.Message)
             db.Bind(messageRes, messages[i])
         }
 
@@ -282,7 +288,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.JoinPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		var character *models.Character
+        character := new(models.Character)
 		var characterID string
 		var initPacket *packet.InitPacket
 
@@ -300,7 +306,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			initPacket = packet.NewInitPacket(characterID, character.Room, true)
 
 			// Add to room:home at (0.5, 0.5)
-            pip.SAdd("room:home:characters:", characterID)
+            pip.SAdd("room:home:characters", characterID)
 		} else if res.QuillToken != "" {
 			// Fetch data from Quill
 			quillValues := map[string]string{
@@ -386,10 +392,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				return
 			}
 
-            db.Bind(characterRes, &character)
+            db.Bind(characterRes, character)
 
 			// Generate init packet before new character is added to room
-            fmt.Println(characterID)
 			initPacket = packet.NewInitPacket(characterID, character.Room, true)
 
 			// Add to whatever room they were in
@@ -538,7 +543,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Update this character's room
         pip := db.GetInstance().Pipeline()
-        pip.HSet("character:" + m.sender.character.ID, "room", map[string]interface{}{
+        pip.HSet("character:" + m.sender.character.ID, map[string]interface{}{
             "room": res.To,
             "x": 0.5,
             "y": 0.5,
@@ -566,5 +571,22 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Publish event to other ingest servers
 		res.Character = &character
         h.Send(res)
+    case "update_map":
+        // Parse update packet
+        res := packet.UpdateMapPacket{}
+        json.Unmarshal(m.msg, &res)
+
+        // Update this character's location
+        locationID := m.sender.character.ID
+
+        pip := db.GetInstance().Pipeline()
+        pip.HSet("location:" + locationID, db.StructToMap(res.Location))
+        pip.SAdd("locations", locationID)
+        pip.Exec()
+
+        // Send locations back to client
+        resp := packet.NewMapPacket()
+        data, _ := resp.MarshalBinary()
+        h.SendBytes("character:" + m.sender.character.ID, data)
 	}
 }

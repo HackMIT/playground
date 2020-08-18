@@ -6,6 +6,8 @@
   - List of message IDs (in chronological order)
 - `element:<element_id>` (hash)
 - `hallway:<hallway_id>` (hash)
+- `locations` (set)
+- `location:<location_id>` (hash)
 - `message:<message_id>` (hash)
 - `quillToCharacter` (hash)
   - Mapping of Quill user IDs to Playground character IDs
