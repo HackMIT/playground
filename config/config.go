@@ -13,6 +13,7 @@ func Init(env string) {
 	// Load config from config/base.json
 	config = viper.New()
 	config.SetConfigName("base")
+	config.AddConfigPath(".")
 	config.AddConfigPath("config")
 	err = config.ReadInConfig()
 

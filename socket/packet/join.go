@@ -2,7 +2,7 @@ package packet
 
 import (
 	"encoding/json"
-	"github.com/techx/playground/models"
+	"github.com/techx/playground/db/models"
 )
 
 // Sent by clients after receiving the init packet. Identifies them to the
@@ -11,6 +11,7 @@ type JoinPacket struct {
 	BasePacket
 
 	// Client attributes
+	Name string `json:"name,omitempty"`
 	QuillToken string `json:"quillToken,omitempty"`
 	Token string `json:"token,omitempty"`
 
@@ -20,6 +21,7 @@ type JoinPacket struct {
 
 func NewJoinPacket(character *models.Character) *JoinPacket {
 	p := new(JoinPacket)
+	p.BasePacket = BasePacket{Type: "join"}
 	p.Character = character
 	return p
 }
