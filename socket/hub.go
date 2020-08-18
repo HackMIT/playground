@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"fmt"
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
@@ -316,5 +315,4 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		resData, _ := res.MarshalBinary()
 		h.ProcessRedisMessage(resData)
-	}
 }
