@@ -48,6 +48,12 @@ func Init(reset bool) {
 				Radius: 0.1,
 				To: "sponsor",
 			},
+			models.Hallway{
+				X: 0.31,
+				Y: 0.57,
+				Radius: 0.1,
+				To: "sponsor-hq",
+			},
 		}
 		rh.JSONSet("room:home", ".", home)
 
@@ -63,6 +69,19 @@ func Init(reset bool) {
 			},
 		}
 		rh.JSONSet("room:sponsor", ".", microsoft)
+
+		microsofthq := new(models.Room).Init()
+		microsofthq.Slug = "sponsor-hq"
+		microsofthq.SponsorHq = true
+		microsofthq.Hallways = []models.Hallway{
+			models.Hallway{
+				X: 0.03,
+				Y: 0.68,
+				Radius: 0.05,
+				To: "home",
+			},
+		}
+		rh.JSONSet("room:sponsor-hq", ".", microsofthq)
 
 		dashboard := new(models.Room).Init()
 		dashboard.Slug = "dashboard"

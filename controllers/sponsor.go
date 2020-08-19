@@ -41,29 +41,28 @@ func (s SponsorController) GetSponsor(c echo.Context) error {
 	return c.JSON(http.StatusOK, sponsor)
 }
 
-// PUT /sponsor/<sponsor_id> - update an individual sponsor
-// only supports changing color at the moment
-func (s SponsorController) UpdateSponsor(c echo.Context) error {	
-	// parse json body
-	var updatedSponsor = new(models.Sponsor)
-	if err := c.Bind(updatedSponsor); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid json")
+// GET /sponsor - gets all sponsors
+func (s SponsorController) GetSponsors(c echo.Context) error {
+	// Get all of the room names from Redis
+	sponsorData, err := db.GetInstance().Keys("sponsor:*").Result()
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError,
+		                         "database error")
 	}
 
-	// update to Redis if color is in request body
-	if (updatedSponsor.Color != "") {
-		_, err := db.GetRejsonHandler().JSONSet("sponsor:" + c.Param("id"), "color", updatedSponsor.Color)
+	// Load each room into this array
+	sponsors := make([]models.Room, len(sponsorData))
 
-		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError,
-									 "database error")
-		}
-	}
+	// something happens to get all the rooms
+	// for i, name := range sponsorData {
+	// 	// Error here is unlikely because we already fetched from the DB
+	// 	sponsor, _ := db.GetRejsonHandler().JSONGet(name, ".")
+	// 	json.Unmarshal(roomData.([]byte), &rooms[i])
+	// }
 
-	// Fetch updated sponsor data from Redis
-	var sponsor models.Sponsor
-	sponsorData, _ := db.GetRejsonHandler().JSONGet("sponsor:" + c.Param("id"), ".")
-	json.Unmarshal(sponsorData.([]byte), &sponsor)
+	return c.JSON(http.StatusOK, sponsors)
+
+
 	
-	return c.JSON(http.StatusOK, sponsor)
 }

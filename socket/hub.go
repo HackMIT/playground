@@ -347,5 +347,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		resData, _ := res.MarshalBinary()
 		h.ProcessRedisMessage(resData)
+	case "sponsor":
+		fmt.Println("Sponsor packet received!")
+	case "hackerqueue":
+		fmt.Println("Hackerqueue packet received!")
 	}
 }

@@ -8,6 +8,7 @@ type Sponsor struct {
 	Name string `json:"name"`
 	Id string `json:"id"`
 	Color string `json:"color"`
+	Hackerqueue []string `json:"hackerqueue"`
 }
 
 func (s Sponsor) MarshalBinary() ([]byte, error) {

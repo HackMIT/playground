@@ -29,8 +29,8 @@ func newRouter(hub *socket.Hub) *echo.Echo {
 
 	// Sponsor controller
 	sponsor := new(controllers.SponsorController)
+	e.GET("/sponsor", sponsor.GetSponsors)
 	e.GET("/sponsor/:id", sponsor.GetSponsor)
-	e.PUT("/sponsor/:id", sponsor.UpdateSponsor)
 	e.POST("/sponsor", sponsor.CreateSponsor)
 
 	return e

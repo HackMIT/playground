@@ -10,6 +10,7 @@ type Room struct {
 	Interactables []*Interactable        `json:"interactables"`
 	Slug          string                `json:"slug"`
 	Sponsor       bool                   `json:"sponsor"`
+	SponsorHq	  bool                   `json:"sponsorHq"`
 }
 
 func (r *Room) Init() *Room {

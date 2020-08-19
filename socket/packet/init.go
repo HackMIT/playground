@@ -2,6 +2,7 @@ package packet
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
@@ -28,6 +29,7 @@ func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
 	// Fetch character and room from Redis
 	res, _ := db.GetRejsonHandler().JSONGet("room:" + roomSlug, ".")
 	var room *models.Room
+	fmt.Println()
 	json.Unmarshal(res.([]byte), &room)
 
 	res, _ = db.GetRejsonHandler().JSONGet("character:" + characterID, ".")
