@@ -204,7 +204,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Publish event to other ingest servers
 		h.Send(res)
     case "get_map":
-        // Send locations back to client
+		// Send locations back to client
+		fmt.Println("get_map called")
         resp := packet.NewMapPacket()
         data, _ := resp.MarshalBinary()
         h.SendBytes("character:" + m.sender.character.ID, data)
@@ -572,7 +573,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.Character = &character
         h.Send(res)
     case "update_map":
-        // Parse update packet
+		// Parse update packet
+		fmt.Println("update_map packet received")
         res := packet.UpdateMapPacket{}
         json.Unmarshal(m.msg, &res)
 
@@ -580,7 +582,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
         locationID := m.sender.character.ID
 
         pip := db.GetInstance().Pipeline()
-        pip.HSet("location:" + locationID, db.StructToMap(res.Location))
+        pip.HSet("location:" + locationID, db.StructToMap(&models.Location{
+			Lat: res.Lat,
+			Lng: res.Lng,
+			Name: res.Name,
+		}))
         pip.SAdd("locations", locationID)
         pip.Exec()
 
