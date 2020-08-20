@@ -1,16 +1,18 @@
 package packet
 
 import (
+    "fmt"
 	"encoding/json"
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
-	"github.com/techx/playground/models"
+	"github.com/techx/playground/db/models"
 
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/dgrijalva/jwt-go"
+    "github.com/go-redis/redis/v7"
 )
 
 // Sent by server to clients upon connecting. Contains information about the
@@ -26,19 +28,79 @@ type InitPacket struct {
 	// A token for the client to save for future authentication
 	Token string `json:"token,omitempty"`
 
-	// All possible element paths
-	ElementPaths []string `json:"elementPaths"`
+	// All possible element names
+	ElementNames []string `json:"elementNames"`
+
+	// All room names
+    RoomNames []string `json:"roomNames"`
+    
+    // Settings
+    Settings map[string]interface{} `json:"settings"`
 }
 
 func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
 	// Fetch character and room from Redis
-	res, _ := db.GetRejsonHandler().JSONGet("room:" + roomSlug, ".")
-	var room *models.Room
-	json.Unmarshal(res.([]byte), &room)
+    pip := db.GetInstance().Pipeline()
+    roomCmd := pip.HGetAll("room:" + roomSlug)
+    roomCharactersCmd := pip.SMembers("room:" + roomSlug + ":characters")
+    roomElementsCmd := pip.SMembers("room:" + roomSlug + ":elements")
+    roomHallwaysCmd := pip.SMembers("room:" + roomSlug + ":hallways")
+    characterCmd := pip.HGetAll("character:" + characterID)
+    settingsCmd := pip.HGetAll("character:" + characterID + ":settings")
+    pip.Exec()
 
-	res, _ = db.GetRejsonHandler().JSONGet("character:" + characterID, ".")
-	var character *models.Character
-	json.Unmarshal(res.([]byte), &character)
+    room := new(models.Room).Init()
+    roomRes, _ := roomCmd.Result()
+    db.Bind(roomRes, room)
+
+    character := new(models.Character)
+    characterRes, _ := characterCmd.Result()
+    db.Bind(characterRes, character)
+
+    // Load additional room stuff
+    pip = db.GetInstance().Pipeline()
+
+    characterIDs, _ := roomCharactersCmd.Result()
+    characterCmds := make([]*redis.StringStringMapCmd, len(characterIDs))
+
+    for i, characterID := range characterIDs {
+        characterCmds[i] = pip.HGetAll("character:" + characterID)
+    }
+
+    elementIDs, _ := roomElementsCmd.Result()
+    elementCmds := make([]*redis.StringStringMapCmd, len(elementIDs))
+
+    for i, elementID := range elementIDs {
+        elementCmds[i] = pip.HGetAll("element:" + elementID)
+    }
+
+    hallwayIDs, _ := roomHallwaysCmd.Result()
+    hallwayCmds := make([]*redis.StringStringMapCmd, len(hallwayIDs))
+
+    for i, hallwayID := range hallwayIDs {
+        hallwayCmds[i] = pip.HGetAll("hallway:" + hallwayID)
+    }
+
+    pip.Exec()
+
+    for i, characterCmd := range characterCmds {
+        characterRes, _ := characterCmd.Result()
+        room.Characters[characterIDs[i]] = new(models.Character)
+        db.Bind(characterRes, room.Characters[characterIDs[i]])
+        room.Characters[characterIDs[i]].ID = characterIDs[i]
+    }
+
+    for i, elementCmd := range elementCmds {
+        elementRes, _ := elementCmd.Result()
+        room.Elements[elementIDs[i]] = new(models.Element)
+        db.Bind(elementRes, room.Elements[elementIDs[i]])
+    }
+
+    for i, hallwayCmd := range hallwayCmds {
+        hallwayRes, _ := hallwayCmd.Result()
+        room.Hallways[hallwayIDs[i]] = new(models.Hallway)
+        db.Bind(hallwayRes, room.Hallways[hallwayIDs[i]])
+    }
 
 	// Set data and return
 	p := new(InitPacket)
@@ -70,23 +132,30 @@ func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
 	result, err := svc.ListObjectsV2(input)
 
 	if err != nil {
-		// panic(err)
-		p.ElementPaths = make([]string, 0)
-		return p
-	}
+        p.ElementNames = []string{}
+	} else {
+        elementNames := make([]string, len(result.Contents) - 1)
 
-	elementPaths := make([]string, len(result.Contents) - 1)
+        for i, item := range result.Contents {
+            if i == 0 {
+                // First key is the elements directory
+                continue
+            }
 
-	for i, item := range result.Contents {
-		if i == 0 {
-			// First key is the elements directory
-			continue
-		}
+            elementNames[i - 1] = (*item.Key)[9:]
+        }
 
-		elementPaths[i - 1] = (*item.Key)[9:]
-	}
+        p.ElementNames = elementNames
+    }
 
-	p.ElementPaths = elementPaths
+	// Get all room names
+	p.RoomNames, _ = db.GetInstance().SMembers("rooms").Result()
+
+    // Get settings
+    p.Settings = map[string]interface{}{}
+    settingsRes, _ := settingsCmd.Result()
+    fmt.Println(settingsRes)
+    db.Bind(settingsRes, &p.Settings)
 
 	return p
 }
