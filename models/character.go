@@ -14,6 +14,7 @@ type Character struct {
 	Y        float64 `json:"y"`
 	Room     string  `json:"room"`
 	Ingest   int     `json:"ingest"`
+	Settings map[string]interface{} `json:"settings"`
 }
 
 func NewCharacter(name string) *Character {
@@ -24,6 +25,7 @@ func NewCharacter(name string) *Character {
 	c.X = 0.5
 	c.Y = 0.5
 	c.Room = "home"
+	c.Settings = map[string]interface{}{}
 	return c
 }
 
