@@ -587,6 +587,18 @@ func (h *Hub) processMessage(m *SocketMessage) {
         // Send locations back to client
         resp := packet.NewMapPacket()
         data, _ := resp.MarshalBinary()
-        h.SendBytes("character:" + m.sender.character.ID, data)
+		h.SendBytes("character:" + m.sender.character.ID, data)
+	case "workshop":
+		// Parse workshop packet
+		res := packet.WorkshopPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		pip := db.GetInstance().Pipeline()
+		pip.SAdd("workshop:"+res.Name+":attendees", res.User)
+		pip.SAdd("character:"+res.User+":workshops", res.Name)
+		pip.SAdd("workshops", res.Name)
+		pip.Exec()
+
+		h.Send(res)
 	}
 }

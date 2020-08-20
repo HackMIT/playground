@@ -18,3 +18,6 @@
 - `rooms` (set)
 - `song:<song_id>` (hash)
 - `songs` (list)
+- `workshop:<workshop_id>:attendees` (set)
+- `character:<character_id>:workshops` (set)
+- `workshops` (set)
