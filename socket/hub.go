@@ -410,6 +410,16 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Add this character's id to this ingest in Redis
 		db.GetInstance().SAdd("ingest:" + strconv.Itoa(character.Ingest) + ":characters", characterID)
 
+		// Get event name
+		event := ""
+		var err error
+		if res.Event != "" {
+			event, err = db.GetInstance().Get("event:" + res.Event).Result()
+			if err != nil {
+				// TODO: error handling
+			}
+		}
+
         // Wrap up
         pip.Exec()
 
@@ -417,6 +427,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.Name = ""
 		res.QuillToken = ""
 		res.Token = ""
+		res.Event = event
 
 		// Send them the relevant init packet
 		data, _ := initPacket.MarshalBinary()
@@ -588,15 +599,15 @@ func (h *Hub) processMessage(m *SocketMessage) {
         resp := packet.NewMapPacket()
         data, _ := resp.MarshalBinary()
 		h.SendBytes("character:" + m.sender.character.ID, data)
-	case "workshop":
-		// Parse workshop packet
-		res := packet.WorkshopPacket{}
+	case "event":
+		// Parse event packet
+		res := packet.EventPacket{}
 		json.Unmarshal(m.msg, &res)
 
 		pip := db.GetInstance().Pipeline()
-		pip.SAdd("workshop:"+res.Name+":attendees", res.User)
-		pip.SAdd("character:"+res.User+":workshops", res.Name)
-		pip.SAdd("workshops", res.Name)
+		pip.SAdd("event:"+res.Name+":attendees", res.User)
+		pip.SAdd("character:"+res.User+":events", res.Name)
+		pip.SAdd("events", res.Name)
 		pip.Exec()
 
 		h.Send(res)

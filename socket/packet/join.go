@@ -14,6 +14,7 @@ type JoinPacket struct {
 	Name string `json:"name,omitempty"`
 	QuillToken string `json:"quillToken,omitempty"`
 	Token string `json:"token,omitempty"`
+	Event string `json:"event,omitempty"`
 
 	// Server attributes
 	Character *models.Character `json:"character"`
