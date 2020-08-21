@@ -205,7 +205,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		h.Send(res)
     case "get_map":
 		// Send locations back to client
-		fmt.Println("get_map called")
         resp := packet.NewMapPacket()
         data, _ := resp.MarshalBinary()
         h.SendBytes("character:" + m.sender.character.ID, data)
@@ -574,7 +573,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
         h.Send(res)
     case "update_map":
 		// Parse update packet
-		fmt.Println("update_map packet received")
         res := packet.UpdateMapPacket{}
         json.Unmarshal(m.msg, &res)
 

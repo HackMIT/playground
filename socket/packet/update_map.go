@@ -2,13 +2,12 @@ package packet
 
 import (
     "encoding/json"
+    "github.com/techx/playground/db/models"
 )
 
 type UpdateMapPacket struct {
     BasePacket
-    Lat float64 `json:"lat"`
-    Lng float64 `json:"lng"`
-    Name string `json:"name"`
+    *models.Location `json:"location"`
 }
 
 func (p UpdateMapPacket) MarshalBinary() ([]byte, error) {
