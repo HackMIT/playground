@@ -411,13 +411,15 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		db.GetInstance().SAdd("ingest:" + strconv.Itoa(character.Ingest) + ":characters", characterID)
 
 		// Get event name
-		event := ""
+		var event string
 		var err error
 		if res.Event != "" {
 			event, err = db.GetInstance().Get("event:" + res.Event).Result()
 			if err != nil {
 				// TODO: error handling
 			}
+		} else {
+			event = ""
 		}
 
         // Wrap up
@@ -604,11 +606,17 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.EventPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		pip := db.GetInstance().Pipeline()
-		pip.SAdd("event:"+res.Name+":attendees", res.User)
-		pip.SAdd("character:"+res.User+":events", res.Name)
-		pip.SAdd("events", res.Name)
-		pip.Exec()
+		isValidEvent, err := db.GetInstance().SIsMember("events", res.ID).Result()
+		if err != nil {
+			// TODO: error handling
+		}
+
+		if isValidEvent {
+			pip := db.GetInstance().Pipeline()
+			pip.SAdd("event:" + res.ID + ":attendees", m.sender.character.ID)
+			pip.SAdd("character:" + m.sender.character.ID + ":events", res.ID)
+			pip.Exec()
+		}
 
 		h.Send(res)
 	}

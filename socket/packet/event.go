@@ -7,18 +7,14 @@ import (
 // Sent when a user confirms attendance for an event
 type EventPacket struct {
 	BasePacket
-	
-	// User who attended this event
-	User string 
 
 	// ID of this event
-	Name string
+	ID string `json:"id"`
 }
 
-func (p *EventPacket) Init(user string, name string) *EventPacket {
+func (p *EventPacket) Init(id string) *EventPacket {
 	p.BasePacket = BasePacket{Type: "event"}
-	p.User = user
-	p.Name = name
+	p.ID = id
 	return p
 }
 
