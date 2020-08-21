@@ -617,7 +617,5 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			pip.SAdd("character:" + m.sender.character.ID + ":events", res.ID)
 			pip.Exec()
 		}
-
-		h.Send(res)
 	}
 }
