@@ -6,15 +6,15 @@ import (
 
 // Character is the digital representation of a client
 type Character struct {
-	ID       string  `json:"id"`
-	Name     string  `json:"name"`
-	School   string  `json:"school"`
-	GradYear int     `json:"gradYear"`
-	X        float64 `json:"x"`
-	Y        float64 `json:"y"`
-	Room     string  `json:"room"`
-	Ingest   int     `json:"ingest"`
-	Type	 string  `json:"type"`
+    ID       string  `json:"id" redis:"-"`
+    Name     string  `json:"name" redis:"name"`
+    School   string  `json:"school" redis:"school"`
+    GradYear int     `json:"gradYear" redis:"gradYear"`
+    X        float64 `json:"x" redis:"x"`
+    Y        float64 `json:"y" redis:"y"`
+    Room     string  `json:"room" redis:"room"`
+	Ingest   int     `json:"ingest" redis:"ingest"`
+	Type	 string  `json:"type" redis:"type"`
 }
 
 func NewCharacter(name string) *Character {
