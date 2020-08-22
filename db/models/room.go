@@ -5,11 +5,11 @@ import (
 )
 
 type Room struct {
-    Characters map[string]*Character `json:"characters" redis:"-"`
-    Elements   map[string]*Element   `json:"elements" redis:"-"`
-    Hallways   map[string]*Hallway   `json:"hallways" redis:"-"`
-    Slug       string                `json:"slug" redis:"slug"`
-    Sponsor    bool                  `json:"sponsor" redis:"sponsor"`
+	Characters map[string]*Character `json:"characters" redis:"-"`
+	Elements   map[string]*Element   `json:"elements" redis:"-"`
+	Hallways   map[string]*Hallway   `json:"hallways" redis:"-"`
+	Slug       string                `json:"slug" redis:"slug"`
+	Sponsor    bool                  `json:"sponsor" redis:"sponsor"`
 }
 
 func (r *Room) Init() *Room {

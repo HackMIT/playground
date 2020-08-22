@@ -2,6 +2,7 @@ package packet
 
 import (
 	"encoding/json"
+
 	"github.com/techx/playground/db/models"
 )
 
@@ -11,9 +12,9 @@ type JoinPacket struct {
 	BasePacket
 
 	// Client attributes
-	Name string `json:"name,omitempty"`
+	Name       string `json:"name,omitempty"`
 	QuillToken string `json:"quillToken,omitempty"`
-	Token string `json:"token,omitempty"`
+	Token      string `json:"token,omitempty"`
 
 	// Server attributes
 	Character *models.Character `json:"character"`

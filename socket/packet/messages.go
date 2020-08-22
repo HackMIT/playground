@@ -1,25 +1,26 @@
 package packet
 
 import (
-    "encoding/json"
-    "github.com/techx/playground/db/models"
+	"encoding/json"
+
+	"github.com/techx/playground/db/models"
 )
 
 type MessagesPacket struct {
-    BasePacket
+	BasePacket
 
-    Messages []*models.Message `json:"messages"`
-    Recipient string `json:"recipient"`
+	Messages  []*models.Message `json:"messages"`
+	Recipient string            `json:"recipient"`
 }
 
 func NewMessagesPacket(messages []*models.Message, recipient string) *MessagesPacket {
-    return &MessagesPacket{
-        BasePacket: BasePacket{
-            Type: "messages",
-        },
-        Messages: messages,
-        Recipient: recipient,
-    }
+	return &MessagesPacket{
+		BasePacket: BasePacket{
+			Type: "messages",
+		},
+		Messages:  messages,
+		Recipient: recipient,
+	}
 }
 
 func (p MessagesPacket) MarshalBinary() ([]byte, error) {

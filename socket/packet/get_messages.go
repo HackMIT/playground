@@ -1,13 +1,13 @@
 package packet
 
 import (
-    "encoding/json"
+	"encoding/json"
 )
 
 type GetMessagesPacket struct {
-    BasePacket
+	BasePacket
 
-    Recipient string `json:"recipient"`
+	Recipient string `json:"recipient"`
 }
 
 func (p GetMessagesPacket) MarshalBinary() ([]byte, error) {
