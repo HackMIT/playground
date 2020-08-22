@@ -487,7 +487,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.SettingsPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		db.GetInstance().HSet("character:" + m.sender.character.ID + ":settings", res.Settings)
+		db.GetInstance().HSet("character:" + m.sender.character.ID + ":settings", db.StructToMap(res.Settings))
+        fmt.Println("setting settings:")
+        fmt.Println(res.Settings)
 		h.SendBytes("character:" + m.sender.character.ID, m.msg)
 	case "song":
 		// Parse song packet

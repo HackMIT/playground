@@ -2,6 +2,7 @@ package packet
 
 import (
 	"encoding/json"
+    "github.com/techx/playground/db/models"
 )
 
 // Sent by clients when settings are changed
@@ -9,7 +10,7 @@ type SettingsPacket struct {
 	BasePacket
 
 	// The client's new settings
-	Settings map[string]interface{} `json:"settings"`
+	Settings *models.Settings `json:"settings"`
 }
 
 func (p SettingsPacket) MarshalBinary() ([]byte, error) {

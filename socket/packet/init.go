@@ -33,9 +33,9 @@ type InitPacket struct {
 
 	// All room names
     RoomNames []string `json:"roomNames"`
-    
+
     // Settings
-    Settings map[string]interface{} `json:"settings"`
+    Settings *models.Settings `json:"settings"`
 }
 
 func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
@@ -152,10 +152,10 @@ func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
 	p.RoomNames, _ = db.GetInstance().SMembers("rooms").Result()
 
     // Get settings
-    p.Settings = map[string]interface{}{}
+    p.Settings = new(models.Settings)
     settingsRes, _ := settingsCmd.Result()
     fmt.Println(settingsRes)
-    db.Bind(settingsRes, &p.Settings)
+    db.Bind(settingsRes, p.Settings)
 
 	return p
 }
