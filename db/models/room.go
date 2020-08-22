@@ -8,15 +8,27 @@ type Room struct {
 	Characters map[string]*Character `json:"characters" redis:"-"`
 	Elements   map[string]*Element   `json:"elements" redis:"-"`
 	Hallways   map[string]*Hallway   `json:"hallways" redis:"-"`
-	Slug       string                `json:"slug" redis:"slug"`
-	Sponsor    bool                  `json:"sponsor" redis:"sponsor"`
+
+	Background string `json:"background" redis:"background"`
+	ID         string `json:"id" redis:"id"`
+	Sponsor    bool   `json:"sponsor" redis:"sponsor"`
+}
+
+func NewRoom(id, background string, sponsor bool) *Room {
+	return &Room{
+		Characters: map[string]*Character{},
+		Elements:   map[string]*Element{},
+		Hallways:   map[string]*Hallway{},
+		Background: background,
+		ID:         id,
+		Sponsor:    sponsor,
+	}
 }
 
 func (r *Room) Init() *Room {
 	r.Characters = map[string]*Character{}
 	r.Elements = map[string]*Element{}
 	r.Hallways = map[string]*Hallway{}
-	r.Sponsor = false
 	return r
 }
 

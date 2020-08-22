@@ -36,7 +36,7 @@ func Init(reset bool) {
 	if reset {
 		instance.FlushDB()
 
-		home := new(models.Room).Init()
+		home := models.NewRoom("home", "home.png", false)
 		lampElementID := uuid.New().String()
 		lampElement := &models.Element{
 			X:     0.2,
@@ -56,14 +56,10 @@ func Init(reset bool) {
 		}
 		pip.SAdd("room:home:hallways", sponsorHallwayID)
 		pip.HSet("hallway:"+sponsorHallwayID, StructToMap(sponsorHallway))
-
-		home.Slug = "home"
 		pip.HSet("room:home", StructToMap(home))
 		pip.SAdd("rooms", "home")
 
-		sponsor := new(models.Room).Init()
-		sponsor.Slug = "sponsor"
-		sponsor.Sponsor = true
+		sponsor := models.NewRoom("sponsor", "sponsor.png", true)
 
 		homeHallwayID := uuid.New().String()
 		homeHallway := &models.Hallway{
@@ -74,7 +70,6 @@ func Init(reset bool) {
 		}
 		pip.SAdd("room:sponsor:hallways", homeHallwayID)
 		pip.HSet("hallway:"+homeHallwayID, StructToMap(homeHallway))
-
 		pip.HSet("room:sponsor", StructToMap(sponsor))
 		pip.SAdd("rooms", "sponsor")
 	}

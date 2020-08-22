@@ -393,6 +393,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 
 			db.Bind(characterRes, character)
+			character.ID = characterID
 
 			// Generate init packet before new character is added to room
 			initPacket = packet.NewInitPacket(characterID, character.Room, true)
@@ -483,6 +484,18 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.ID = m.sender.character.ID
 
 		h.Send(res)
+	case "room_add":
+		// Parse room add packet
+		res := packet.RoomAddPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		pip := db.GetInstance().Pipeline()
+		pip.SAdd("rooms", res.ID)
+		pip.HSet("room:"+res.ID, db.StructToMap(models.NewRoom(res.ID, res.Background, res.Sponsor)))
+		pip.Exec()
+
+		data, _ := res.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
 	case "song":
 		// Parse song packet
 		res := packet.SongPacket{}
@@ -492,6 +505,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		youtubeClient, _ := youtube.New(&http.Client{
 			Transport: &transport.APIKey{Key: youtubeAPIKey},
 		})
+
 		call := youtubeClient.Videos.List([]string{"snippet", "contentDetails"}).
 			Id(res.VidCode)
 
@@ -550,7 +564,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		})
 
 		// Remove this character from the previous room
-		pip.SRem("room:"+res.From+":characters", m.sender.character.ID)
+		pip.SRem("room:"+m.sender.character.Room+":characters", m.sender.character.ID)
 		pip.Exec()
 
 		// Send them the init packet for this room
@@ -561,12 +575,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Add them to their new room
 		pip = db.GetInstance().Pipeline()
-		characterRes, _ := pip.HGetAll("character:" + m.sender.character.ID).Result()
+		characterCmd := pip.HGetAll("character:" + m.sender.character.ID)
 		pip.SAdd("room:"+res.To+":characters", m.sender.character.ID)
 		pip.Exec()
 
+		characterRes, _ := characterCmd.Result()
 		var character models.Character
 		db.Bind(characterRes, &character)
+		character.ID = m.sender.character.ID
 
 		// Publish event to other ingest servers
 		res.Character = &character
