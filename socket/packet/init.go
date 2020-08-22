@@ -1,7 +1,6 @@
 package packet
 
 import (
-    "fmt"
 	"encoding/json"
 
 	"github.com/techx/playground/config"
@@ -154,7 +153,6 @@ func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
     // Get settings
     p.Settings = new(models.Settings)
     settingsRes, _ := settingsCmd.Result()
-    fmt.Println(settingsRes)
     db.Bind(settingsRes, p.Settings)
 
 	return p
