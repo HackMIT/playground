@@ -25,6 +25,14 @@ func NewRoom(id, background string, sponsor bool) *Room {
 	}
 }
 
+func NewHomeRoom(characterID string) *Room {
+	return &Room{
+		Background: "home.png",
+		ID:         "home:" + characterID,
+		Sponsor:    false,
+	}
+}
+
 func (r *Room) Init() *Room {
 	r.Characters = map[string]*Character{}
 	r.Elements = map[string]*Element{}

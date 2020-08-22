@@ -136,7 +136,7 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 		h.SendBytes(res["room"].(string), msg)
 	case "song":
 		h.SendBytes("*", msg)
-	case "teleport":
+	case "teleport", "teleport_home":
 		var p packet.TeleportPacket
 		json.Unmarshal(msg, &p)
 
@@ -550,13 +550,27 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		h.Send(res)
-	case "teleport":
+	case "teleport", "teleport_home":
 		// Parse teleport packet
 		res := packet.TeleportPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		// Update this character's room
 		pip := db.GetInstance().Pipeline()
+
+		if res.Type == "teleport_home" {
+			homeExists, _ := db.GetInstance().SIsMember("rooms", "home:"+m.sender.character.ID).Result()
+
+			if !homeExists {
+				room := models.NewHomeRoom(m.sender.character.ID)
+				pip.HSet("room:home:"+m.sender.character.ID, db.StructToMap(room))
+				pip.SAdd("rooms", "home:"+m.sender.character.ID)
+			}
+
+			res.From = m.sender.character.Room
+			res.To = "home:" + m.sender.character.ID
+		}
+
+		// Update this character's room
 		pip.HSet("character:"+m.sender.character.ID, map[string]interface{}{
 			"room": res.To,
 			"x":    0.5,
