@@ -16,6 +16,7 @@ import (
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
 	"github.com/techx/playground/socket/packet"
+	"github.com/techx/playground/utils"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-redis/redis/v7"
@@ -163,6 +164,12 @@ func (h *Hub) processMessage(m *SocketMessage) {
 	case "chat":
 		res := packet.ChatPacket{}
 		json.Unmarshal(m.msg, &res)
+
+		// Check for non-ASCII characters
+		if !utils.IsASCII(res.Message) {
+			// TODO: Send error packet
+			return
+		}
 
 		// Publish chat event to other clients
 		res.Room = m.sender.character.Room
@@ -443,6 +450,12 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.MessagePacket{}
 		json.Unmarshal(m.msg, &res)
 		res.From = m.sender.character.ID
+
+		// Check for non-ASCII characters
+		if !utils.IsASCII(res.Message.Text) {
+			// TODO: Send error packet
+			return
+		}
 
 		messageID := uuid.New().String()
 
