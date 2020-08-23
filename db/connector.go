@@ -19,64 +19,59 @@ const ingestClientName string = "ingest"
 var (
 	ingestID int
 	instance *redis.Client
-	psc *redis.PubSub
+	psc      *redis.PubSub
 )
 
 func Init(reset bool) {
 	config := config.GetConfig()
 
 	instance = redis.NewClient(&redis.Options{
-		Addr: config.GetString("db.addr"),
+		Addr:     config.GetString("db.addr"),
 		Password: config.GetString("db.password"),
-		DB: config.GetInt("db.db"),
+		DB:       config.GetInt("db.db"),
 	})
 
-    pip := instance.Pipeline()
+	pip := instance.Pipeline()
 
 	if reset {
-        instance.FlushDB()
+		instance.FlushDB()
 
-		home := new(models.Room).Init()
-        lampElementID := uuid.New().String()
-        lampElement := &models.Element{
-            X: 0.2,
-            Y: 0.2,
-            Width: 0.1,
-            Path: "lamp.svg",
-        }
-        pip.SAdd("room:home:elements", lampElementID)
-        pip.HSet("element:" + lampElementID, StructToMap(lampElement))
+		home := models.NewRoom("home", "home.png", false)
+		lampElementID := uuid.New().String()
+		lampElement := &models.Element{
+			X:     0.2,
+			Y:     0.2,
+			Width: 0.1,
+			Path:  "lamp.svg",
+		}
+		pip.SAdd("room:home:elements", lampElementID)
+		pip.HSet("element:"+lampElementID, StructToMap(lampElement))
 
-        sponsorHallwayID := uuid.New().String()
-        sponsorHallway := &models.Hallway{
-            X: 0.62,
-            Y: 0.59,
-            Radius: 0.1,
-            To: "sponsor",
-        }
-        pip.SAdd("room:home:hallways", sponsorHallwayID)
-        pip.HSet("hallway:" + sponsorHallwayID, StructToMap(sponsorHallway))
+		sponsorHallwayID := uuid.New().String()
+		sponsorHallway := &models.Hallway{
+			X:      0.62,
+			Y:      0.59,
+			Radius: 0.1,
+			To:     "sponsor",
+		}
+		pip.SAdd("room:home:hallways", sponsorHallwayID)
+		pip.HSet("hallway:"+sponsorHallwayID, StructToMap(sponsorHallway))
+		pip.HSet("room:home", StructToMap(home))
+		pip.SAdd("rooms", "home")
 
-		home.Slug = "home"
-        pip.HSet("room:home", StructToMap(home))
-        pip.SAdd("rooms", "home")
+		sponsor := models.NewRoom("sponsor", "sponsor.png", true)
 
-		sponsor := new(models.Room).Init()
-		sponsor.Slug = "sponsor"
-		sponsor.Sponsor = true
-
-        homeHallwayID := uuid.New().String()
-        homeHallway := &models.Hallway{
-            X: 0.03,
-            Y: 0.68,
-            Radius: 0.05,
-            To: "home",
-        }
-        pip.SAdd("room:sponsor:hallways", homeHallwayID)
-        pip.HSet("hallway:" + homeHallwayID, StructToMap(homeHallway))
-
-        pip.HSet("room:sponsor", StructToMap(sponsor))
-        pip.SAdd("rooms", "sponsor")
+		homeHallwayID := uuid.New().String()
+		homeHallway := &models.Hallway{
+			X:      0.03,
+			Y:      0.68,
+			Radius: 0.05,
+			To:     "home",
+		}
+		pip.SAdd("room:sponsor:hallways", homeHallwayID)
+		pip.HSet("hallway:"+homeHallwayID, StructToMap(homeHallway))
+		pip.HSet("room:sponsor", StructToMap(sponsor))
+		pip.SAdd("rooms", "sponsor")
 	}
 
 	// Save our ingest ID
@@ -84,9 +79,9 @@ func Init(reset bool) {
 	ingestID = int(ingestRes)
 
 	// Initialize jukebox
-    // TODO: Make sure this works correctly when there are multiple ingests
-    pip.HSet("queuestatus", StructToMap(models.QueueStatus{SongEnd: time.Now()}))
-    pip.Exec()
+	// TODO: Make sure this works correctly when there are multiple ingests
+	pip.HSet("queuestatus", StructToMap(models.QueueStatus{SongEnd: time.Now()}))
+	pip.Exec()
 }
 
 func GetIngestID() int {
@@ -195,50 +190,50 @@ func MonitorLeader() {
 			// Remove characters connected to this ingest from their rooms
 			characters, _ := instance.SMembers("ingest:" + id + ":characters").Result()
 
-            pip := instance.Pipeline()
-            roomCmds := make([]*redis.StringCmd, len(characters))
+			pip := instance.Pipeline()
+			roomCmds := make([]*redis.StringCmd, len(characters))
 
-            for i, characterID  := range characters {
-                roomCmds[i] = pip.HGet("character:" + characterID, "room")
-            }
+			for i, characterID := range characters {
+				roomCmds[i] = pip.HGet("character:"+characterID, "room")
+			}
 
-            pip.Exec()
-            pip = instance.Pipeline()
+			pip.Exec()
+			pip = instance.Pipeline()
 
-            for i, roomCmd := range roomCmds {
-                room, _ := roomCmd.Result()
-                pip.SRem("room:" + room, characters[i])
-            }
+			for i, roomCmd := range roomCmds {
+				room, _ := roomCmd.Result()
+				pip.SRem("room:"+room, characters[i])
+			}
 
-            pip.Exec()
+			pip.Exec()
 
 			// Ingest has been taken care of, remove from set
 			instance.SRem("ingests", id)
 		}
 
 		// Get song queue status
-        queueRes, _ := instance.HGetAll("queuestatus").Result()
+		queueRes, _ := instance.HGetAll("queuestatus").Result()
 
-        var queueStatus models.QueueStatus
-        Bind(queueRes, &queueStatus)
+		var queueStatus models.QueueStatus
+		Bind(queueRes, &queueStatus)
 
 		songEnd := queueStatus.SongEnd
 
 		// If current song ended, start next song (if there is one)
 		if songEnd.Before(time.Now()) {
-            queueLength, _ := instance.SCard("songs").Result()
+			queueLength, _ := instance.SCard("songs").Result()
 
 			if queueLength > 0 {
 				// Pop the next song off the queue
-                songID, _ := instance.LPop("songs").Result()
+				songID, _ := instance.LPop("songs").Result()
 
-                songRes, _ := instance.HGetAll("song:" + songID).Result()
-                var song models.Song
-                Bind(songRes, &song)
+				songRes, _ := instance.HGetAll("song:" + songID).Result()
+				var song models.Song
+				Bind(songRes, &song)
 
 				// Update queue status to reflect new song
 				newStatus := models.QueueStatus{time.Now().Add(time.Second * time.Duration(song.Duration))}
-                instance.HSet("queuestatus", StructToMap(newStatus))
+				instance.HSet("queuestatus", StructToMap(newStatus))
 			}
 		}
 	}

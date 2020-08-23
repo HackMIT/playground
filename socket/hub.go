@@ -5,20 +5,21 @@ import (
 	"encoding"
 	"encoding/json"
 	"fmt"
-    "hash/fnv"
+	"hash/fnv"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
-    "strings"
+	"strings"
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
 	"github.com/techx/playground/socket/packet"
+	"github.com/techx/playground/utils"
 
 	"github.com/dgrijalva/jwt-go"
-    "github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v7"
 	"github.com/google/uuid"
 	"google.golang.org/api/googleapi/transport"
 	"google.golang.org/api/youtube/v3"
@@ -66,8 +67,8 @@ func (h *Hub) Run() {
 			}
 
 			// Remove this client from the room
-            room, _ := db.GetInstance().HGet("character:" + client.character.ID, "room").Result()
-            db.GetInstance().SRem("room:" + room + ":characters", client.character.ID)
+			room, _ := db.GetInstance().HGet("character:"+client.character.ID, "room").Result()
+			db.GetInstance().SRem("room:"+room+":characters", client.character.ID)
 
 			// Notify others that this client left
 			packet := packet.NewLeavePacket(client.character, room)
@@ -81,12 +82,12 @@ func (h *Hub) Run() {
 
 // Sends a message to all of our clients
 func (h *Hub) Send(msg encoding.BinaryMarshaler) {
-    // Send to other ingest servers
-    db.Publish(msg)
+	// Send to other ingest servers
+	db.Publish(msg)
 
-    // Send to clients connected to this ingest
+	// Send to clients connected to this ingest
 	data, _ := msg.MarshalBinary()
-    h.ProcessRedisMessage(data)
+	h.ProcessRedisMessage(data)
 }
 
 func (h *Hub) SendBytes(room string, msg []byte) {
@@ -97,20 +98,20 @@ func (h *Hub) SendBytes(room string, msg []byte) {
 			continue
 		}
 
-        if room == "*" {
-            client.send <- msg
-            continue
-        }
+		if room == "*" {
+			client.send <- msg
+			continue
+		}
 
-        if client.character.Room == room {
-            client.send <- msg
-            continue
-        }
+		if client.character.Room == room {
+			client.send <- msg
+			continue
+		}
 
-        if strings.Contains(room, "character:") && client.character.ID == strings.Split(room, ":")[1] {
-            client.send <- msg
-            continue
-        }
+		if strings.Contains(room, "character:") && client.character.ID == strings.Split(room, ":")[1] {
+			client.send <- msg
+			continue
+		}
 
 		// TODO: If this send fails, disconnect the client
 	}
@@ -122,21 +123,21 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 	json.Unmarshal(msg, &res)
 
 	switch res["type"] {
-    case "message":
-        h.SendBytes("character:" + res["to"].(string), msg)
+	case "message":
+		h.SendBytes("character:"+res["to"].(string), msg)
 
-        if res["to"].(string) != res["from"].(string) {
-            h.SendBytes("character:" + res["from"].(string), msg)
-        }
+		if res["to"].(string) != res["from"].(string) {
+			h.SendBytes("character:"+res["from"].(string), msg)
+		}
 	case "chat", "move", "leave":
 		h.SendBytes(res["room"].(string), msg)
-    case "join":
-        h.SendBytes(res["character"].(map[string]interface{})["room"].(string), msg)
+	case "join":
+		h.SendBytes(res["character"].(map[string]interface{})["room"].(string), msg)
 	case "element_add", "element_delete", "element_update", "hallway_add", "hallway_delete", "hallway_update":
 		h.SendBytes(res["room"].(string), msg)
-    case "song":
-        h.SendBytes("*", msg)
-	case "teleport":
+	case "song":
+		h.SendBytes("*", msg)
+	case "teleport", "teleport_home":
 		var p packet.TeleportPacket
 		json.Unmarshal(msg, &p)
 
@@ -144,7 +145,7 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 		h.SendBytes(p.From, leavePacket)
 
 		joinPacket, _ := packet.NewJoinPacket(p.Character).MarshalBinary()
-        h.SendBytes(p.To, joinPacket)
+		h.SendBytes(p.To, joinPacket)
 	}
 }
 
@@ -154,7 +155,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 	if err := json.Unmarshal(m.msg, &res); err != nil {
 		// TODO: Log to Sentry or something -- this should never happen
-        fmt.Println(err)
+		fmt.Println(err)
 		log.Println("ERROR: Received invalid JSON message from", m.sender.id, "->", string(m.msg))
 		return
 	}
@@ -164,21 +165,27 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.ChatPacket{}
 		json.Unmarshal(m.msg, &res)
 
+		// Check for non-ASCII characters
+		if !utils.IsASCII(res.Message) {
+			// TODO: Send error packet
+			return
+		}
+
 		// Publish chat event to other clients
 		res.Room = m.sender.character.Room
 		res.ID = m.sender.character.ID
-        h.Send(res)
+		h.Send(res)
 	case "element_add":
 		res := packet.ElementAddPacket{}
 		json.Unmarshal(m.msg, &res)
 		res.Room = m.sender.character.Room
 
-        res.ID = uuid.New().String()
+		res.ID = uuid.New().String()
 
-        pip := db.GetInstance().Pipeline()
-        pip.HSet("element:" + res.ID, db.StructToMap(res.Element))
-        pip.SAdd("room:" + res.Room + ":elements", res.ID)
-        pip.Exec()
+		pip := db.GetInstance().Pipeline()
+		pip.HSet("element:"+res.ID, db.StructToMap(res.Element))
+		pip.SAdd("room:"+res.Room+":elements", res.ID)
+		pip.Exec()
 
 		// Publish event to other clients
 		h.Send(res)
@@ -187,10 +194,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 		res.Room = m.sender.character.Room
 
-        pip := db.GetInstance().Pipeline()
-        pip.Del("element:" + res.ID)
-        pip.SRem("room:" + res.Room + ":elements", res.ID)
-        pip.Exec()
+		pip := db.GetInstance().Pipeline()
+		pip.Del("element:" + res.ID)
+		pip.SRem("room:"+res.Room+":elements", res.ID)
+		pip.Exec()
 
 		// Publish event to other ingest servers
 		h.Send(res)
@@ -199,55 +206,71 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 		res.Room = m.sender.character.Room
 
-        db.GetInstance().HSet("element:" + res.ID, db.StructToMap(res.Element))
+		db.GetInstance().HSet("element:"+res.ID, db.StructToMap(res.Element))
 
 		// Publish event to other ingest servers
 		h.Send(res)
-    case "get_map":
-        // Send locations back to client
-        resp := packet.NewMapPacket()
-        data, _ := resp.MarshalBinary()
-        h.SendBytes("character:" + m.sender.character.ID, data)
-    case "get_messages":
-        res := packet.GetMessagesPacket{}
-        json.Unmarshal(m.msg, &res)
-        sender := m.sender.character.ID
+	case "event":
+		// Parse event packet
+		res := packet.EventPacket{}
+		json.Unmarshal(m.msg, &res)
 
-        ha := fnv.New32a()
-        ha.Write([]byte(sender))
-        senderHash := ha.Sum32()
+		isValidEvent, err := db.GetInstance().SIsMember("events", res.ID).Result()
+		if err != nil {
+			// TODO: error handling
+		}
 
-        ha.Reset()
-        ha.Write([]byte(res.Recipient))
-        recipientHash := ha.Sum32()
+		if isValidEvent {
+			pip := db.GetInstance().Pipeline()
+			pip.SAdd("event:"+res.ID+":attendees", m.sender.character.ID)
+			pip.SAdd("character:"+m.sender.character.ID+":events", res.ID)
+			pip.Exec()
+		}
+	case "get_map":
+		// Send locations back to client
+		resp := packet.NewMapPacket()
+		data, _ := resp.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
+	case "get_messages":
+		res := packet.GetMessagesPacket{}
+		json.Unmarshal(m.msg, &res)
+		sender := m.sender.character.ID
 
-        conversationKey := "conversation:" + sender + ":" + res.Recipient
+		ha := fnv.New32a()
+		ha.Write([]byte(sender))
+		senderHash := ha.Sum32()
 
-        if recipientHash < senderHash {
-            conversationKey = "conversation:" + res.Recipient + ":" + sender
-        }
+		ha.Reset()
+		ha.Write([]byte(res.Recipient))
+		recipientHash := ha.Sum32()
 
-        messageIDs, _ := db.GetInstance().LRange(conversationKey, -100, -1).Result()
+		conversationKey := "conversation:" + sender + ":" + res.Recipient
 
-        pip := db.GetInstance().Pipeline()
-        messageCmds := make([]*redis.StringStringMapCmd, len(messageIDs))
+		if recipientHash < senderHash {
+			conversationKey = "conversation:" + res.Recipient + ":" + sender
+		}
 
-        for i, messageID := range messageIDs {
-            messageCmds[i] = pip.HGetAll("message:" + messageID)
-        }
+		messageIDs, _ := db.GetInstance().LRange(conversationKey, -100, -1).Result()
 
-        pip.Exec()
-        messages := make([]*models.Message, len(messageIDs))
+		pip := db.GetInstance().Pipeline()
+		messageCmds := make([]*redis.StringStringMapCmd, len(messageIDs))
 
-        for i, messageCmd := range messageCmds {
-            messageRes, _ := messageCmd.Result()
-            messages[i] = new(models.Message)
-            db.Bind(messageRes, messages[i])
-        }
+		for i, messageID := range messageIDs {
+			messageCmds[i] = pip.HGetAll("message:" + messageID)
+		}
 
-        resp := packet.NewMessagesPacket(messages, res.Recipient)
-        data, _ := resp.MarshalBinary()
-        h.SendBytes("character:" + m.sender.character.ID, data)
+		pip.Exec()
+		messages := make([]*models.Message, len(messageIDs))
+
+		for i, messageCmd := range messageCmds {
+			messageRes, _ := messageCmd.Result()
+			messages[i] = new(models.Message)
+			db.Bind(messageRes, messages[i])
+		}
+
+		resp := packet.NewMessagesPacket(messages, res.Recipient)
+		data, _ := resp.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
 	case "hallway_add":
 		res := packet.HallwayAddPacket{}
 		json.Unmarshal(m.msg, &res)
@@ -255,10 +278,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		res.ID = uuid.New().String()
 
-        pip := db.GetInstance().Pipeline()
-        pip.HSet("hallway:" + res.ID, db.StructToMap(res.Hallway))
-        pip.SAdd("room:" + res.Room + ":hallways", res.ID)
-        pip.Exec()
+		pip := db.GetInstance().Pipeline()
+		pip.HSet("hallway:"+res.ID, db.StructToMap(res.Hallway))
+		pip.SAdd("room:"+res.Room+":hallways", res.ID)
+		pip.Exec()
 
 		// Publish event to other ingest servers
 		h.Send(res)
@@ -267,10 +290,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 		res.Room = m.sender.character.Room
 
-        pip := db.GetInstance().Pipeline()
-        pip.Del("hallway:" + res.ID)
-        pip.SRem("room:" + res.Room + ":hallways", res.ID)
-        pip.Exec()
+		pip := db.GetInstance().Pipeline()
+		pip.Del("hallway:" + res.ID)
+		pip.SRem("room:"+res.Room+":hallways", res.ID)
+		pip.Exec()
 
 		// Publish event to other ingest servers
 		h.Send(res)
@@ -279,7 +302,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 		res.Room = m.sender.character.Room
 
-        db.GetInstance().HSet("hallway:" + res.ID, db.StructToMap(res.Hallway))
+		db.GetInstance().HSet("hallway:"+res.ID, db.StructToMap(res.Hallway))
 
 		// Publish event to other ingest servers
 		h.Send(res)
@@ -288,11 +311,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.JoinPacket{}
 		json.Unmarshal(m.msg, &res)
 
-        character := new(models.Character)
+		character := new(models.Character)
 		var characterID string
 		var initPacket *packet.InitPacket
 
-        pip := db.GetInstance().Pipeline()
+		pip := db.GetInstance().Pipeline()
 
 		if res.Name != "" {
 			character = models.NewCharacter(res.Name)
@@ -300,13 +323,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			// Add character to database
 			character.Ingest = db.GetIngestID()
-            db.GetInstance().HSet("character:" + characterID, db.StructToMap(character))
+			db.GetInstance().HSet("character:"+characterID, db.StructToMap(character))
 
 			// Generate init packet before new character is added to room
 			initPacket = packet.NewInitPacket(characterID, character.Room, true)
 
 			// Add to room:home at (0.5, 0.5)
-            pip.SAdd("room:home:characters", characterID)
+			pip.SAdd("room:home:characters", characterID)
 		} else if res.QuillToken != "" {
 			// Fetch data from Quill
 			quillValues := map[string]string{
@@ -325,6 +348,15 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			if err != nil {
 				// Likely invalid SSO token
+				// TODO: Send error packet
+				return
+			}
+
+			admitted := quillData["status"].(map[string]interface{})["admitted"].(bool)
+
+			if !admitted {
+				// Don't allow non-admitted hackers to access Playground
+				// TODO: Send error packet
 				return
 			}
 
@@ -338,24 +370,24 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 				// Add character to database
 				character.Ingest = db.GetIngestID()
-                pip.HSet("character:" + characterID, db.StructToMap(character))
-                pip.HSet("quillToCharacter", quillData["id"].(string), characterID)
+				pip.HSet("character:"+characterID, db.StructToMap(character))
+				pip.HSet("quillToCharacter", quillData["id"].(string), characterID)
 
 				// Generate init packet before new character is added to room
 				initPacket = packet.NewInitPacket(characterID, character.Room, true)
 
 				// Add to room:home at (0.5, 0.5)
-                pip.SAdd("room:home:characters", characterID)
+				pip.SAdd("room:home:characters", characterID)
 			} else {
 				// This person has logged in before, fetch from Redis
-                characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
-                db.Bind(characterRes, &character)
+				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
+				db.Bind(characterRes, &character)
 
 				// Generate init packet before new character is added to room
 				initPacket = packet.NewInitPacket(characterID, character.Room, true)
 
 				// Add to whatever room they were in
-                pip.SAdd("room:" + character.Room + ":characters", character.ID)
+				pip.SAdd("room:"+character.Room+":characters", character.ID)
 			}
 		} else if res.Token != "" {
 			// TODO: Error handling
@@ -383,7 +415,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 
 			// This person has logged in before, fetch from Redis
-            characterRes, err := db.GetInstance().HGetAll("character:" + characterID).Result()
+			characterRes, err := db.GetInstance().HGetAll("character:" + characterID).Result()
 
 			if err != nil || len(characterRes) == 0 {
 				errorPacket := packet.NewErrorPacket(1)
@@ -392,23 +424,24 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				return
 			}
 
-            db.Bind(characterRes, character)
+			db.Bind(characterRes, character)
+			character.ID = characterID
 
 			// Generate init packet before new character is added to room
 			initPacket = packet.NewInitPacket(characterID, character.Room, true)
 
 			// Add to whatever room they were in
-            // TODO: Setting a character's ingest definitely doesn't work right
-            // now, look into this more later
+			// TODO: Setting a character's ingest definitely doesn't work right
+			// now, look into this more later
 			character.Ingest = db.GetIngestID()
-            pip.SAdd("room:" + character.Room + ":characters", character.ID)
+			pip.SAdd("room:"+character.Room+":characters", character.ID)
 		} else {
 			// Client provided no authentication
 			return
 		}
 
 		// Add this character's id to this ingest in Redis
-		db.GetInstance().SAdd("ingest:" + strconv.Itoa(character.Ingest) + ":characters", characterID)
+		db.GetInstance().SAdd("ingest:"+strconv.Itoa(character.Ingest)+":characters", characterID)
 
 		// Get event name
 		var event string
@@ -422,8 +455,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			event = ""
 		}
 
-        // Wrap up
-        pip.Exec()
+		// Wrap up
+		pip.Exec()
 
 		// Make sure SSO token is omitted from join packet that is sent to clients
 		res.Name = ""
@@ -440,36 +473,42 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.Character = character
 
 		h.Send(res)
-    case "message":
-        // TODO: Save timestamp
-        // Parse message packet
-        res := packet.MessagePacket{}
-        json.Unmarshal(m.msg, &res)
-        res.From = m.sender.character.ID
+	case "message":
+		// TODO: Save timestamp
+		// Parse message packet
+		res := packet.MessagePacket{}
+		json.Unmarshal(m.msg, &res)
+		res.From = m.sender.character.ID
 
-        messageID := uuid.New().String()
+		// Check for non-ASCII characters
+		if !utils.IsASCII(res.Message.Text) {
+			// TODO: Send error packet
+			return
+		}
 
-        pip := db.GetInstance().Pipeline()
-        pip.HSet("message:" + messageID, db.StructToMap(res.Message))
+		messageID := uuid.New().String()
 
-        ha := fnv.New32a()
-        ha.Write([]byte(res.From))
-        senderHash := ha.Sum32()
+		pip := db.GetInstance().Pipeline()
+		pip.HSet("message:"+messageID, db.StructToMap(res.Message))
 
-        ha.Reset()
-        ha.Write([]byte(res.To))
-        recipientHash := ha.Sum32()
+		ha := fnv.New32a()
+		ha.Write([]byte(res.From))
+		senderHash := ha.Sum32()
 
-        conversationKey := "conversation:" + res.From + ":" + res.To
+		ha.Reset()
+		ha.Write([]byte(res.To))
+		recipientHash := ha.Sum32()
 
-        if recipientHash < senderHash {
-            conversationKey = "conversation:" + res.To + ":" + res.From
-        }
+		conversationKey := "conversation:" + res.From + ":" + res.To
 
-        pip.RPush(conversationKey, messageID)
-        pip.Exec()
+		if recipientHash < senderHash {
+			conversationKey = "conversation:" + res.To + ":" + res.From
+		}
 
-        h.Send(res)
+		pip.RPush(conversationKey, messageID)
+		pip.Exec()
+
+		h.Send(res)
 	case "move":
 		if m.sender.character == nil {
 			return
@@ -480,10 +519,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 
 		// Update character's position in the room
-        pip := db.GetInstance().Pipeline()
-        pip.HSet("character:" + m.sender.character.ID, "x", res.X)
-        pip.HSet("character:" + m.sender.character.ID, "y", res.Y)
-        _, err := pip.Exec()
+		pip := db.GetInstance().Pipeline()
+		pip.HSet("character:"+m.sender.character.ID, "x", res.X)
+		pip.HSet("character:"+m.sender.character.ID, "y", res.Y)
+		_, err := pip.Exec()
 
 		if err != nil {
 			log.Println(err)
@@ -496,75 +535,102 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.ID = m.sender.character.ID
 
 		h.Send(res)
-    case "song":
-        // Parse song packet
-        res := packet.SongPacket{}
-        json.Unmarshal(m.msg, &res)
+	case "room_add":
+		// Parse room add packet
+		res := packet.RoomAddPacket{}
+		json.Unmarshal(m.msg, &res)
 
-        // Make the YouTube API call
-        youtubeClient, _ := youtube.New(&http.Client{
-            Transport: &transport.APIKey{Key: youtubeAPIKey},
-        })
-        call := youtubeClient.Videos.List([]string{"snippet", "contentDetails"}).
-                Id(res.VidCode)
+		pip := db.GetInstance().Pipeline()
+		pip.SAdd("rooms", res.ID)
+		pip.HSet("room:"+res.ID, db.StructToMap(models.NewRoom(res.ID, res.Background, res.Sponsor)))
+		pip.Exec()
 
-        response, err := call.Do()
-        if err != nil {
-            // TODO: Send error packet
-            panic(err)
-        }
+		data, _ := res.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
+	case "song":
+		// Parse song packet
+		res := packet.SongPacket{}
+		json.Unmarshal(m.msg, &res)
 
-        // Should only have one video
-        for _, video := range response.Items {
-            // Parse duration string
-            duration := video.ContentDetails.Duration
-            minIndex := strings.Index(duration, "M")
-            secIndex := strings.Index(duration, "S")
+		// Make the YouTube API call
+		youtubeClient, _ := youtube.New(&http.Client{
+			Transport: &transport.APIKey{Key: youtubeAPIKey},
+		})
 
-            // Convert duration to seconds
-            minutes, err := strconv.Atoi(duration[2:minIndex])
-            seconds, err := strconv.Atoi(duration[minIndex + 1:secIndex])
+		call := youtubeClient.Videos.List([]string{"snippet", "contentDetails"}).
+			Id(res.VidCode)
 
-            // Error parsing duration string
-            if err != nil {
-                // TODO: Send error packet
-                panic(err)
-            }
+		response, err := call.Do()
+		if err != nil {
+			// TODO: Send error packet
+			panic(err)
+		}
 
-            res.Duration = (minutes * 60) + seconds
-            res.Title = video.Snippet.Title
-            res.ThumbnailURL = video.Snippet.Thumbnails.Default.Url
-        }
+		// Should only have one video
+		for _, video := range response.Items {
+			// Parse duration string
+			duration := video.ContentDetails.Duration
+			minIndex := strings.Index(duration, "M")
+			secIndex := strings.Index(duration, "S")
 
-        songID := uuid.New().String()
+			// Convert duration to seconds
+			minutes, err := strconv.Atoi(duration[2:minIndex])
+			seconds, err := strconv.Atoi(duration[minIndex+1 : secIndex])
 
-        pip := db.GetInstance().Pipeline()
-        pip.HSet("song:" + songID, db.StructToMap(res.Song))
-        pip.RPush("songs", songID)
-        pip.Exec()
+			// Error parsing duration string
+			if err != nil {
+				// TODO: Send error packet
+				panic(err)
+			}
 
-        if err != nil {
-            // TODO: Send error packet
-            panic(err)
-        }
+			res.Duration = (minutes * 60) + seconds
+			res.Title = video.Snippet.Title
+			res.ThumbnailURL = video.Snippet.Thumbnails.Default.Url
+		}
 
-        h.Send(res)
-	case "teleport":
+		songID := uuid.New().String()
+
+		pip := db.GetInstance().Pipeline()
+		pip.HSet("song:"+songID, db.StructToMap(res.Song))
+		pip.RPush("songs", songID)
+		pip.Exec()
+
+		if err != nil {
+			// TODO: Send error packet
+			panic(err)
+		}
+
+		h.Send(res)
+	case "teleport", "teleport_home":
 		// Parse teleport packet
 		res := packet.TeleportPacket{}
 		json.Unmarshal(m.msg, &res)
 
+		pip := db.GetInstance().Pipeline()
+
+		if res.Type == "teleport_home" {
+			homeExists, _ := db.GetInstance().SIsMember("rooms", "home:"+m.sender.character.ID).Result()
+
+			if !homeExists {
+				room := models.NewHomeRoom(m.sender.character.ID)
+				pip.HSet("room:home:"+m.sender.character.ID, db.StructToMap(room))
+				pip.SAdd("rooms", "home:"+m.sender.character.ID)
+			}
+
+			res.From = m.sender.character.Room
+			res.To = "home:" + m.sender.character.ID
+		}
+
 		// Update this character's room
-        pip := db.GetInstance().Pipeline()
-        pip.HSet("character:" + m.sender.character.ID, map[string]interface{}{
-            "room": res.To,
-            "x": 0.5,
-            "y": 0.5,
-        })
+		pip.HSet("character:"+m.sender.character.ID, map[string]interface{}{
+			"room": res.To,
+			"x":    0.5,
+			"y":    0.5,
+		})
 
 		// Remove this character from the previous room
-        pip.SRem("room:" + res.From + ":characters", m.sender.character.ID)
-        pip.Exec()
+		pip.SRem("room:"+m.sender.character.Room+":characters", m.sender.character.ID)
+		pip.Exec()
 
 		// Send them the init packet for this room
 		initPacket := packet.NewInitPacket(m.sender.character.ID, res.To, false)
@@ -573,49 +639,35 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		m.sender.character.Room = res.To
 
 		// Add them to their new room
-        pip = db.GetInstance().Pipeline()
-        characterRes, _ := pip.HGetAll("character:" + m.sender.character.ID).Result()
-        pip.SAdd("room:" + res.To + ":characters", m.sender.character.ID)
-        pip.Exec()
+		pip = db.GetInstance().Pipeline()
+		characterCmd := pip.HGetAll("character:" + m.sender.character.ID)
+		pip.SAdd("room:"+res.To+":characters", m.sender.character.ID)
+		pip.Exec()
 
+		characterRes, _ := characterCmd.Result()
 		var character models.Character
-        db.Bind(characterRes, &character)
+		db.Bind(characterRes, &character)
+		character.ID = m.sender.character.ID
 
 		// Publish event to other ingest servers
 		res.Character = &character
-        h.Send(res)
-    case "update_map":
-        // Parse update packet
-        res := packet.UpdateMapPacket{}
-        json.Unmarshal(m.msg, &res)
-
-        // Update this character's location
-        locationID := m.sender.character.ID
-
-        pip := db.GetInstance().Pipeline()
-        pip.HSet("location:" + locationID, db.StructToMap(res.Location))
-        pip.SAdd("locations", locationID)
-        pip.Exec()
-
-        // Send locations back to client
-        resp := packet.NewMapPacket()
-        data, _ := resp.MarshalBinary()
-		h.SendBytes("character:" + m.sender.character.ID, data)
-	case "event":
-		// Parse event packet
-		res := packet.EventPacket{}
+		h.Send(res)
+	case "update_map":
+		// Parse update packet
+		res := packet.UpdateMapPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		isValidEvent, err := db.GetInstance().SIsMember("events", res.ID).Result()
-		if err != nil {
-			// TODO: error handling
-		}
+		// Update this character's location
+		locationID := m.sender.character.ID
 
-		if isValidEvent {
-			pip := db.GetInstance().Pipeline()
-			pip.SAdd("event:" + res.ID + ":attendees", m.sender.character.ID)
-			pip.SAdd("character:" + m.sender.character.ID + ":events", res.ID)
-			pip.Exec()
-		}
+		pip := db.GetInstance().Pipeline()
+		pip.HSet("location:"+locationID, db.StructToMap(res.Location))
+		pip.SAdd("locations", locationID)
+		pip.Exec()
+
+		// Send locations back to client
+		resp := packet.NewMapPacket()
+		data, _ := resp.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
 	}
 }
