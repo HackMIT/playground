@@ -2,13 +2,14 @@ package packet
 
 import (
 	"encoding/json"
+
 	"github.com/techx/playground/db/models"
 )
 
 // Sent by ingests when a song is added to queue
 type SongPacket struct {
 	BasePacket
-    *models.Song
+	*models.Song
 }
 
 func (p *SongPacket) Init(song *models.Song) *SongPacket {

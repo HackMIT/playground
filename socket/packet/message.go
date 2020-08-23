@@ -1,13 +1,14 @@
 package packet
 
 import (
-    "encoding/json"
-    "github.com/techx/playground/db/models"
+	"encoding/json"
+
+	"github.com/techx/playground/db/models"
 )
 
 type MessagePacket struct {
-    BasePacket
-    *models.Message
+	BasePacket
+	*models.Message
 }
 
 func (p MessagePacket) MarshalBinary() ([]byte, error) {

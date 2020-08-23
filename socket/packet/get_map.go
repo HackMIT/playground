@@ -1,11 +1,11 @@
 package packet
 
 import (
-    "encoding/json"
+	"encoding/json"
 )
 
 type GetMapPacket struct {
-    BasePacket
+	BasePacket
 }
 
 func (p GetMapPacket) MarshalBinary() ([]byte, error) {

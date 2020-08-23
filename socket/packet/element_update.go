@@ -2,6 +2,7 @@ package packet
 
 import (
 	"encoding/json"
+
 	"github.com/techx/playground/db/models"
 )
 

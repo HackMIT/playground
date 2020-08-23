@@ -5,10 +5,10 @@ import (
 )
 
 type Song struct {
-	Duration int `json:"duration"`
+	Duration     int    `json:"duration"`
 	ThumbnailURL string `json:"thumbnailUrl"`
-	Title string `json:"title"`
-	VidCode string `json:"vidCode"`
+	Title        string `json:"title"`
+	VidCode      string `json:"vidCode"`
 }
 
 func (s *Song) Init() *Song {

@@ -37,13 +37,13 @@ type InitPacket struct {
 	Settings *models.Settings `json:"settings"`
 }
 
-func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
+func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	// Fetch character and room from Redis
 	pip := db.GetInstance().Pipeline()
-	roomCmd := pip.HGetAll("room:" + roomSlug)
-	roomCharactersCmd := pip.SMembers("room:" + roomSlug + ":characters")
-	roomElementsCmd := pip.SMembers("room:" + roomSlug + ":elements")
-	roomHallwaysCmd := pip.SMembers("room:" + roomSlug + ":hallways")
+	roomCmd := pip.HGetAll("room:" + roomID)
+	roomCharactersCmd := pip.SMembers("room:" + roomID + ":characters")
+	roomElementsCmd := pip.SMembers("room:" + roomID + ":elements")
+	roomHallwaysCmd := pip.SMembers("room:" + roomID + ":hallways")
 	characterCmd := pip.HGetAll("character:" + characterID)
 	settingsCmd := pip.HGetAll("character:" + characterID + ":settings")
 	pip.Exec()
@@ -55,6 +55,7 @@ func NewInitPacket(characterID, roomSlug string, needsToken bool) *InitPacket {
 	character := new(models.Character)
 	characterRes, _ := characterCmd.Result()
 	db.Bind(characterRes, character)
+	character.ID = characterID
 
 	// Load additional room stuff
 	pip = db.GetInstance().Pipeline()
