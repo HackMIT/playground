@@ -1,12 +1,12 @@
 package models
 
 import (
-    "encoding/json"
+	"encoding/json"
 )
 
 type Settings struct {
-    MusicMuted bool `json:"musicMuted" redis:"musicMuted"`
-    SoundMuted bool `json:"soundMuted" redis:"soundMuted"`
+	MusicMuted bool `json:"musicMuted" redis:"musicMuted"`
+	SoundMuted bool `json:"soundMuted" redis:"soundMuted"`
 }
 
 func (s Settings) MarshalBinary() ([]byte, error) {

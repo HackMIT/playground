@@ -2,7 +2,8 @@ package packet
 
 import (
 	"encoding/json"
-    "github.com/techx/playground/db/models"
+
+	"github.com/techx/playground/db/models"
 )
 
 // Sent by clients when settings are changed
