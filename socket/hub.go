@@ -210,6 +210,22 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Publish event to other ingest servers
 		h.Send(res)
+	case "event":
+		// Parse event packet
+		res := packet.EventPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		isValidEvent, err := db.GetInstance().SIsMember("events", res.ID).Result()
+		if err != nil {
+			// TODO: error handling
+		}
+
+		if isValidEvent {
+			pip := db.GetInstance().Pipeline()
+			pip.SAdd("event:"+res.ID+":attendees", m.sender.character.ID)
+			pip.SAdd("character:"+m.sender.character.ID+":events", res.ID)
+			pip.Exec()
+		}
 	case "get_map":
 		// Send locations back to client
 		resp := packet.NewMapPacket()
@@ -427,6 +443,18 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Add this character's id to this ingest in Redis
 		db.GetInstance().SAdd("ingest:"+strconv.Itoa(character.Ingest)+":characters", characterID)
 
+		// Get event name
+		var event string
+		var err error
+		if res.Event != "" {
+			event, err = db.GetInstance().Get("event:" + res.Event).Result()
+			if err != nil {
+				// TODO: error handling
+			}
+		} else {
+			event = ""
+		}
+
 		// Wrap up
 		pip.Exec()
 
@@ -434,6 +462,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.Name = ""
 		res.QuillToken = ""
 		res.Token = ""
+		res.Event = event
 
 		// Send them the relevant init packet
 		data, _ := initPacket.MarshalBinary()

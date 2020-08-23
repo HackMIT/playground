@@ -18,3 +18,7 @@
 - `rooms` (set)
 - `song:<song_id>` (hash)
 - `songs` (list)
+- `event:<event_id>` (string)
+- `event:<event_id>:attendees` (set)
+- `character:<character_id>:events` (set)
+- `events` (set)
