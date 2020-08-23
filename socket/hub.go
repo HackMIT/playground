@@ -325,6 +325,15 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			if err != nil {
 				// Likely invalid SSO token
+				// TODO: Send error packet
+				return
+			}
+
+			admitted := quillData["status"].(map[string]interface{})["admitted"].(bool)
+
+			if !admitted {
+				// Don't allow non-admitted hackers to access Playground
+				// TODO: Send error packet
 				return
 			}
 
