@@ -547,6 +547,12 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		data, _ := res.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
+	case "settings":
+		res := packet.SettingsPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		db.GetInstance().HSet("character:"+m.sender.character.ID+":settings", db.StructToMap(res.Settings))
+		h.SendBytes("character:"+m.sender.character.ID, m.msg)
 	case "song":
 		// Parse song packet
 		res := packet.SongPacket{}

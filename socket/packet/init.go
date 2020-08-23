@@ -32,6 +32,9 @@ type InitPacket struct {
 
 	// All room names
 	RoomNames []string `json:"roomNames"`
+
+	// Settings
+	Settings *models.Settings `json:"settings"`
 }
 
 func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
@@ -42,6 +45,7 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	roomElementsCmd := pip.SMembers("room:" + roomID + ":elements")
 	roomHallwaysCmd := pip.SMembers("room:" + roomID + ":hallways")
 	characterCmd := pip.HGetAll("character:" + characterID)
+	settingsCmd := pip.HGetAll("character:" + characterID + ":settings")
 	pip.Exec()
 
 	room := new(models.Room).Init()
@@ -146,6 +150,11 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 
 	// Get all room names
 	p.RoomNames, _ = db.GetInstance().SMembers("rooms").Result()
+
+	// Get settings
+	p.Settings = new(models.Settings)
+	settingsRes, _ := settingsCmd.Result()
+	db.Bind(settingsRes, p.Settings)
 
 	return p
 }
