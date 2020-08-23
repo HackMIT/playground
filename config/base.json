@@ -1,4 +1,7 @@
 {
+  "achievements": {
+    "num_events": 2
+  },
   "db": {
     "addr": "localhost:6379",
     "password": "",

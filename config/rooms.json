@@ -1,0 +1,86 @@
+[
+  {
+    "id": "home",
+    "background": "nightclub.svg",
+    "sponsor": false,
+    "elements": [
+      {
+        "x": 0.4307,
+        "y": 0.6141,
+        "width": 0.052,
+        "path": "tiles/blue1.svg",
+        "changingImagePath": true,
+        "changingPaths": "tiles/blue1.svg,tiles/blue2.svg,tiles/blue3.svg,tiles/blue4.svg,tiles/green1.svg,tiles/green2.svg,tiles/pink1.svg,tiles/pink2.svg,tiles/pink3.svg,tiles/pink4.svg,tiles/yellow1.svg",
+        "changingInterval": 2000
+      },
+      {
+        "x": 0.4011,
+        "y": 0.6457,
+        "width": 0.0512,
+        "path": "tiles/blue1.svg",
+        "changingImagePath": true,
+        "changingPaths": "tiles/blue1.svg,tiles/blue2.svg,tiles/blue3.svg,tiles/blue4.svg,tiles/green1.svg,tiles/green2.svg,tiles/pink1.svg,tiles/pink2.svg,tiles/pink3.svg,tiles/pink4.svg,tiles/yellow1.svg",
+        "changingInterval": 2000
+      },
+      {
+        "x": 0.4609,
+        "y": 0.5827,
+        "width": 0.051,
+        "path": "tiles/blue1.svg",
+        "changingImagePath": true,
+        "changingPaths": "tiles/blue1.svg,tiles/blue2.svg,tiles/blue3.svg,tiles/blue4.svg,tiles/green1.svg,tiles/green2.svg,tiles/pink1.svg,tiles/pink2.svg,tiles/pink3.svg,tiles/pink4.svg,tiles/yellow1.svg",
+        "changingInterval": 2000
+      },
+      {
+        "x": 0.3726,
+        "y": 0.6729,
+        "width": 0.0512,
+        "path": "tiles/blue1.svg",
+        "changingImagePath": true,
+        "changingPaths": "tiles/blue1.svg,tiles/blue2.svg,tiles/blue3.svg,tiles/blue4.svg,tiles/green1.svg,tiles/green2.svg,tiles/pink1.svg,tiles/pink2.svg,tiles/pink3.svg,tiles/pink4.svg,tiles/yellow1.svg",
+        "changingInterval": 2000
+      },
+      {
+        "x": 0.3564,
+        "y": 0.5241,
+        "width": 0.0781,
+        "path": "djbooth.svg",
+        "action": 1
+      }
+    ]
+  },
+  {
+    "id": "nightclub",
+    "background": "home.png",
+    "sponsor": false,
+    "elements": [
+      {
+        "x": 0.2,
+        "y": 0.2,
+        "width": 0.1,
+        "path": "lamp.svg"
+      }
+    ],
+    "hallways": [
+      {
+        "x": 0.62,
+        "y": 0.59,
+        "radius": 0.1,
+        "to": "sponsor"
+      }
+    ]
+  },
+  {
+    "id": "sponsor",
+    "background": "sponsor.png",
+    "sponsor": true,
+    "hallways": [
+      {
+        "x": 0.03,
+        "y": 0.68,
+        "radius": 0.05,
+        "to": "home"
+      }
+    ]
+  }
+]

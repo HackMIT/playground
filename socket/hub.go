@@ -160,7 +160,165 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		return
 	}
 
+	if m.sender.character == nil && (res.Type != "auth" && res.Type != "join") {
+		// No packets allowed until we've signed in
+		return
+	}
+
 	switch res.Type {
+	case "auth", "join":
+		// Type auth is used when the character is just connecting to the socket, but not actually
+		// joining a room. This is useful in limited circumstances, e.g. recording event attendance
+
+		// Parse join packet
+		res := packet.JoinPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		character := new(models.Character)
+		var initPacket *packet.InitPacket
+
+		pip := db.GetInstance().Pipeline()
+
+		if res.Name != "" {
+			character = models.NewCharacter(res.Name)
+
+			// Add character to database
+			character.Ingest = db.GetIngestID()
+			db.GetInstance().HSet("character:"+character.ID, db.StructToMap(character))
+
+			if res.Type == "join" {
+				// Generate init packet before new character is added to room
+				initPacket = packet.NewInitPacket(character.ID, character.Room, true)
+
+				// Add to room:home at (0.5, 0.5)
+				pip.SAdd("room:home:characters", character.ID)
+			}
+		} else if res.QuillToken != "" {
+			// Fetch data from Quill
+			quillValues := map[string]string{
+				"token": res.QuillToken,
+			}
+
+			quillBody, _ := json.Marshal(quillValues)
+			// TODO: Error handling
+			resp, _ := http.Post("https://my.hackmit.org/auth/sso/exchange", "application/json", bytes.NewBuffer(quillBody))
+
+			defer resp.Body.Close()
+			body, _ := ioutil.ReadAll(resp.Body)
+
+			var quillData map[string]interface{}
+			err := json.Unmarshal(body, &quillData)
+
+			if err != nil {
+				// Likely invalid SSO token
+				// TODO: Send error packet
+				return
+			}
+
+			admitted := quillData["status"].(map[string]interface{})["admitted"].(bool)
+
+			if !admitted {
+				// Don't allow non-admitted hackers to access Playground
+				// TODO: Send error packet
+				return
+			}
+
+			// Load this client's character
+			characterID, err := db.GetInstance().HGet("quillToCharacter", quillData["id"].(string)).Result()
+
+			if err != nil {
+				// Never seen this character before, create a new one
+				character = models.NewCharacterFromQuill(quillData)
+				character.ID = characterID
+
+				// Add character to database
+				pip.HSet("character:"+character.ID, db.StructToMap(character))
+				pip.HSet("quillToCharacter", quillData["id"].(string), character.ID)
+			} else {
+				// This person has logged in before, fetch from Redis
+				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
+				db.Bind(characterRes, &character)
+				character.ID = characterID
+			}
+		} else if res.Token != "" {
+			// TODO: Error handling
+			token, err := jwt.Parse(res.Token, func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+				}
+
+				config := config.GetConfig()
+				return []byte(config.GetString("jwt.secret")), nil
+			})
+
+			if err != nil {
+				errorPacket := packet.NewErrorPacket(1)
+				data, _ := json.Marshal(errorPacket)
+				m.sender.send <- data
+				return
+			}
+
+			var characterID string
+
+			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+				characterID = claims["id"].(string)
+			} else {
+				// TODO: Error handling
+				return
+			}
+
+			// This person has logged in before, fetch from Redis
+			characterRes, err := db.GetInstance().HGetAll("character:" + characterID).Result()
+
+			if err != nil || len(characterRes) == 0 {
+				errorPacket := packet.NewErrorPacket(1)
+				data, _ := json.Marshal(errorPacket)
+				m.sender.send <- data
+				return
+			}
+
+			db.Bind(characterRes, character)
+			character.ID = characterID
+		} else {
+			// Client provided no authentication data
+			return
+		}
+
+		if res.Type == "join" {
+			// Generate init packet before new character is added to room
+			initPacket = packet.NewInitPacket(character.ID, character.Room, true)
+
+			// Add to whatever room they were in
+			pip.SAdd("room:"+character.Room+":characters", character.ID)
+		}
+
+		// Add this character's id to this ingest in Redis
+		pip.SAdd("ingest:"+strconv.Itoa(character.Ingest)+":characters", character.ID)
+
+		character.Ingest = db.GetIngestID()
+		pip.HSet("character:"+character.ID, "ingest", db.GetIngestID())
+
+		// Wrap up
+		pip.Exec()
+
+		// Authenticate the user on our end
+		m.sender.character = character
+
+		if res.Type == "join" {
+			// Make sure SSO token is omitted from join packet that is sent to clients
+			res.Name = ""
+			res.QuillToken = ""
+			res.Token = ""
+
+			// Send them the relevant init packet
+			data, _ := initPacket.MarshalBinary()
+			m.sender.send <- data
+
+			// Send the join packet to clients and Redis
+			res.Character = character
+
+			h.Send(res)
+		}
 	case "chat":
 		res := packet.ChatPacket{}
 		json.Unmarshal(m.msg, &res)
@@ -206,6 +364,18 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 		res.Room = m.sender.character.Room
 
+		// TODO: fix
+		// fix me
+		if res.Element.Path == "tiles/blue1.svg" {
+			res.Element.ChangingImagePath = true
+			res.Element.ChangingPaths = "tiles/blue1.svg,tiles/blue2.svg,tiles/blue3.svg,tiles/blue4.svg,tiles/green1.svg,tiles/green2.svg,tiles/pink1.svg,tiles/pink2.svg,tiles/pink3.svg,tiles/pink4.svg,tiles/yellow1.svg"
+			res.Element.ChangingInterval = 2000
+		}
+
+		if res.Element.Path == "dj_booth" {
+			res.Element.Action = int(models.OpenJukebox)
+		}
+
 		db.GetInstance().HSet("element:"+res.ID, db.StructToMap(res.Element))
 
 		// Publish event to other ingest servers
@@ -216,16 +386,32 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 
 		isValidEvent, err := db.GetInstance().SIsMember("events", res.ID).Result()
-		if err != nil {
-			// TODO: error handling
+
+		if !isValidEvent || err != nil {
+			return
 		}
 
-		if isValidEvent {
-			pip := db.GetInstance().Pipeline()
-			pip.SAdd("event:"+res.ID+":attendees", m.sender.character.ID)
-			pip.SAdd("character:"+m.sender.character.ID+":events", res.ID)
-			pip.Exec()
+		pip := db.GetInstance().Pipeline()
+		pip.SAdd("event:"+res.ID+":attendees", m.sender.character.ID)
+		pip.SAdd("character:"+m.sender.character.ID+":events", res.ID)
+		numEventsCmd := pip.SCard("character:" + m.sender.character.ID + ":events")
+		pip.Exec()
+
+		// Check achievement progress and update if necessary
+		numEvents, err := numEventsCmd.Result()
+
+		if numEvents == config.GetConfig().GetInt64("achievements.num_events") {
+			db.GetInstance().HSet("character:"+m.sender.character.ID+":achievements", "events", true)
+
+			resp := packet.NewAchievementNotificationPacket("events")
+			data, _ := resp.MarshalBinary()
+			h.SendBytes("character:"+m.sender.character.ID, data)
 		}
+	case "get_achievements":
+		// Send achievements back to client
+		resp := packet.NewAchievementsPacket(m.sender.character.ID)
+		data, _ := resp.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
 	case "get_map":
 		// Send locations back to client
 		resp := packet.NewMapPacket()
@@ -305,173 +491,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		db.GetInstance().HSet("hallway:"+res.ID, db.StructToMap(res.Hallway))
 
 		// Publish event to other ingest servers
-		h.Send(res)
-	case "join":
-		// Parse join packet
-		res := packet.JoinPacket{}
-		json.Unmarshal(m.msg, &res)
-
-		character := new(models.Character)
-		var characterID string
-		var initPacket *packet.InitPacket
-
-		pip := db.GetInstance().Pipeline()
-
-		if res.Name != "" {
-			character = models.NewCharacter(res.Name)
-			characterID = character.ID
-
-			// Add character to database
-			character.Ingest = db.GetIngestID()
-			db.GetInstance().HSet("character:"+characterID, db.StructToMap(character))
-
-			// Generate init packet before new character is added to room
-			initPacket = packet.NewInitPacket(characterID, character.Room, true)
-
-			// Add to room:home at (0.5, 0.5)
-			pip.SAdd("room:home:characters", characterID)
-		} else if res.QuillToken != "" {
-			// Fetch data from Quill
-			quillValues := map[string]string{
-				"token": res.QuillToken,
-			}
-
-			quillBody, _ := json.Marshal(quillValues)
-			// TODO: Error handling
-			resp, _ := http.Post("https://my.hackmit.org/auth/sso/exchange", "application/json", bytes.NewBuffer(quillBody))
-
-			defer resp.Body.Close()
-			body, _ := ioutil.ReadAll(resp.Body)
-
-			var quillData map[string]interface{}
-			err := json.Unmarshal(body, &quillData)
-
-			if err != nil {
-				// Likely invalid SSO token
-				// TODO: Send error packet
-				return
-			}
-
-			admitted := quillData["status"].(map[string]interface{})["admitted"].(bool)
-
-			if !admitted {
-				// Don't allow non-admitted hackers to access Playground
-				// TODO: Send error packet
-				return
-			}
-
-			// Load this client's character
-			characterID, err = db.GetInstance().HGet("quillToCharacter", quillData["id"].(string)).Result()
-
-			if err != nil {
-				// Never seen this character before, create a new one
-				character = models.NewCharacterFromQuill(quillData)
-				characterID = character.ID
-
-				// Add character to database
-				character.Ingest = db.GetIngestID()
-				pip.HSet("character:"+characterID, db.StructToMap(character))
-				pip.HSet("quillToCharacter", quillData["id"].(string), characterID)
-
-				// Generate init packet before new character is added to room
-				initPacket = packet.NewInitPacket(characterID, character.Room, true)
-
-				// Add to room:home at (0.5, 0.5)
-				pip.SAdd("room:home:characters", characterID)
-			} else {
-				// This person has logged in before, fetch from Redis
-				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
-				db.Bind(characterRes, &character)
-
-				// Generate init packet before new character is added to room
-				initPacket = packet.NewInitPacket(characterID, character.Room, true)
-
-				// Add to whatever room they were in
-				pip.SAdd("room:"+character.Room+":characters", character.ID)
-			}
-		} else if res.Token != "" {
-			// TODO: Error handling
-			token, err := jwt.Parse(res.Token, func(token *jwt.Token) (interface{}, error) {
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-				}
-
-				config := config.GetConfig()
-				return []byte(config.GetString("jwt.secret")), nil
-			})
-
-			if err != nil {
-				errorPacket := packet.NewErrorPacket(1)
-				data, _ := json.Marshal(errorPacket)
-				m.sender.send <- data
-				return
-			}
-
-			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-				characterID = claims["id"].(string)
-			} else {
-				// TODO: Error handling
-				return
-			}
-
-			// This person has logged in before, fetch from Redis
-			characterRes, err := db.GetInstance().HGetAll("character:" + characterID).Result()
-
-			if err != nil || len(characterRes) == 0 {
-				errorPacket := packet.NewErrorPacket(1)
-				data, _ := json.Marshal(errorPacket)
-				m.sender.send <- data
-				return
-			}
-
-			db.Bind(characterRes, character)
-			character.ID = characterID
-
-			// Generate init packet before new character is added to room
-			initPacket = packet.NewInitPacket(characterID, character.Room, true)
-
-			// Add to whatever room they were in
-			// TODO: Setting a character's ingest definitely doesn't work right
-			// now, look into this more later
-			character.Ingest = db.GetIngestID()
-			pip.SAdd("room:"+character.Room+":characters", character.ID)
-		} else {
-			// Client provided no authentication
-			return
-		}
-
-		// Add this character's id to this ingest in Redis
-		db.GetInstance().SAdd("ingest:"+strconv.Itoa(character.Ingest)+":characters", characterID)
-
-		// Get event name
-		var event string
-		var err error
-		if res.Event != "" {
-			event, err = db.GetInstance().Get("event:" + res.Event).Result()
-			if err != nil {
-				// TODO: error handling
-			}
-		} else {
-			event = ""
-		}
-
-		// Wrap up
-		pip.Exec()
-
-		// Make sure SSO token is omitted from join packet that is sent to clients
-		res.Name = ""
-		res.QuillToken = ""
-		res.Token = ""
-		res.Event = event
-
-		// Send them the relevant init packet
-		data, _ := initPacket.MarshalBinary()
-		m.sender.send <- data
-
-		// Send the join packet to clients and Redis
-		m.sender.character = character
-		res.Character = character
-
 		h.Send(res)
 	case "message":
 		// TODO: Save timestamp
