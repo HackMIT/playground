@@ -342,37 +342,36 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		pip := db.GetInstance().Pipeline()
 		pip.HSet("element:"+res.ID, db.StructToMap(res.Element))
-		pip.SAdd("room:"+res.Room+":elements", res.ID)
+		pip.RPush("room:"+res.Room+":elements", res.ID)
 		pip.Exec()
 
 		// Publish event to other clients
 		h.Send(res)
 	case "element_delete":
-		res := packet.ElementDeletePacket{}
-		json.Unmarshal(m.msg, &res)
-		res.Room = m.sender.character.Room
+		// TODO: fix
+		// res := packet.ElementDeletePacket{}
+		// json.Unmarshal(m.msg, &res)
+		// res.Room = m.sender.character.Room
 
-		pip := db.GetInstance().Pipeline()
-		pip.Del("element:" + res.ID)
-		pip.SRem("room:"+res.Room+":elements", res.ID)
-		pip.Exec()
+		// pip := db.GetInstance().Pipeline()
+		// pip.Del("element:" + res.ID)
+		// pip.SRem("room:"+res.Room+":elements", res.ID)
+		// pip.Exec()
 
-		// Publish event to other ingest servers
-		h.Send(res)
+		// // Publish event to other ingest servers
+		// h.Send(res)
 	case "element_update":
 		res := packet.ElementUpdatePacket{}
 		json.Unmarshal(m.msg, &res)
 		res.Room = m.sender.character.Room
 
-		// TODO: fix
-		// fix me
 		if res.Element.Path == "tiles/blue1.svg" {
 			res.Element.ChangingImagePath = true
 			res.Element.ChangingPaths = "tiles/blue1.svg,tiles/blue2.svg,tiles/blue3.svg,tiles/blue4.svg,tiles/green1.svg,tiles/green2.svg,tiles/pink1.svg,tiles/pink2.svg,tiles/pink3.svg,tiles/pink4.svg,tiles/yellow1.svg"
 			res.Element.ChangingInterval = 2000
 		}
 
-		if res.Element.Path == "dj_booth" {
+		if res.Element.Path == "djbooth.svg" {
 			res.Element.Action = int(models.OpenJukebox)
 		}
 
@@ -394,15 +393,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip := db.GetInstance().Pipeline()
 		pip.SAdd("event:"+res.ID+":attendees", m.sender.character.ID)
 		pip.SAdd("character:"+m.sender.character.ID+":events", res.ID)
-		numEventsCmd := pip.SCard("character:" + m.sender.character.ID + ":events")
+		pip.SCard("character:" + m.sender.character.ID + ":events")
+		numEventsCmd := pip.HIncrBy("character:"+m.sender.character.ID+":achievements", "events", 1)
 		pip.Exec()
 
 		// Check achievement progress and update if necessary
 		numEvents, err := numEventsCmd.Result()
 
-		if numEvents == config.GetConfig().GetInt64("achievements.num_events") {
-			db.GetInstance().HSet("character:"+m.sender.character.ID+":achievements", "events", true)
-
+		if numEvents == config.GetConfig().GetInt64("achievements.num_events") && err == nil {
 			resp := packet.NewAchievementNotificationPacket("events")
 			data, _ := resp.MarshalBinary()
 			h.SendBytes("character:"+m.sender.character.ID, data)

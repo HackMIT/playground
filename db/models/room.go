@@ -6,7 +6,7 @@ import (
 
 type Room struct {
 	Characters map[string]*Character `json:"characters" redis:"-"`
-	Elements   map[string]*Element   `json:"elements" redis:"-"`
+	Elements   []*Element            `json:"elements" redis:"-"`
 	Hallways   map[string]*Hallway   `json:"hallways" redis:"-"`
 
 	Background string `json:"background" redis:"background"`
@@ -17,7 +17,7 @@ type Room struct {
 func NewRoom(id, background string, sponsor bool) *Room {
 	return &Room{
 		Characters: map[string]*Character{},
-		Elements:   map[string]*Element{},
+		Elements:   []*Element{},
 		Hallways:   map[string]*Hallway{},
 		Background: background,
 		ID:         id,
@@ -35,7 +35,7 @@ func NewHomeRoom(characterID string) *Room {
 
 func (r *Room) Init() *Room {
 	r.Characters = map[string]*Character{}
-	r.Elements = map[string]*Element{}
+	r.Elements = []*Element{}
 	r.Hallways = map[string]*Hallway{}
 	return r
 }

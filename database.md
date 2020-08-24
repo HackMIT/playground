@@ -12,7 +12,8 @@
 - `quillToCharacter` (hash)
   - Mapping of Quill user IDs to Playground character IDs
 - `room:<room_id>` (hash)
-  - `room:<room_id>:elements` (set)
+  - `room:<room_id>:elements` (list)
+    - Ordering of elements indicates layering -- right-most indicates top in layer-wise order
   - `room:<room_id>:hallways` (set)
   - `room:<room_id>:characters` (set)
 - `rooms` (set)

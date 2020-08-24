@@ -11,7 +11,6 @@ import (
 
 	mapset "github.com/deckarep/golang-set"
 	"github.com/go-redis/redis/v7"
-	"github.com/google/uuid"
 )
 
 const ingestClientName string = "ingest"
@@ -35,43 +34,6 @@ func Init(reset bool) {
 
 	if reset {
 		instance.FlushDB()
-
-		home := models.NewRoom("home", "home.png", false)
-		lampElementID := uuid.New().String()
-		lampElement := &models.Element{
-			X:     0.2,
-			Y:     0.2,
-			Width: 0.1,
-			Path:  "lamp.svg",
-		}
-		pip.SAdd("room:home:elements", lampElementID)
-		pip.HSet("element:"+lampElementID, StructToMap(lampElement))
-
-		sponsorHallwayID := uuid.New().String()
-		sponsorHallway := &models.Hallway{
-			X:      0.62,
-			Y:      0.59,
-			Radius: 0.1,
-			To:     "sponsor",
-		}
-		pip.SAdd("room:home:hallways", sponsorHallwayID)
-		pip.HSet("hallway:"+sponsorHallwayID, StructToMap(sponsorHallway))
-		pip.HSet("room:home", StructToMap(home))
-		pip.SAdd("rooms", "home")
-
-		sponsor := models.NewRoom("sponsor", "sponsor.png", true)
-
-		homeHallwayID := uuid.New().String()
-		homeHallway := &models.Hallway{
-			X:      0.03,
-			Y:      0.68,
-			Radius: 0.05,
-			To:     "home",
-		}
-		pip.SAdd("room:sponsor:hallways", homeHallwayID)
-		pip.HSet("hallway:"+homeHallwayID, StructToMap(homeHallway))
-		pip.HSet("room:sponsor", StructToMap(sponsor))
-		pip.SAdd("rooms", "sponsor")
 	}
 
 	// Save our ingest ID

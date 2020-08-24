@@ -42,7 +42,7 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	pip := db.GetInstance().Pipeline()
 	roomCmd := pip.HGetAll("room:" + roomID)
 	roomCharactersCmd := pip.SMembers("room:" + roomID + ":characters")
-	roomElementsCmd := pip.SMembers("room:" + roomID + ":elements")
+	roomElementsCmd := pip.LRange("room:"+roomID+":elements", 0, -1)
 	roomHallwaysCmd := pip.SMembers("room:" + roomID + ":hallways")
 	characterCmd := pip.HGetAll("character:" + characterID)
 	settingsCmd := pip.HGetAll("character:" + characterID + ":settings")
@@ -92,8 +92,9 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 
 	for i, elementCmd := range elementCmds {
 		elementRes, _ := elementCmd.Result()
-		room.Elements[elementIDs[i]] = new(models.Element)
-		db.Bind(elementRes, room.Elements[elementIDs[i]])
+		room.Elements = append(room.Elements, new(models.Element))
+		db.Bind(elementRes, room.Elements[i])
+		room.Elements[i].ID = elementIDs[i]
 	}
 
 	for i, hallwayCmd := range hallwayCmds {
