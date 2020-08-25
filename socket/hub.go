@@ -473,8 +473,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
         _, err := pip.Exec()
 
 		if err != nil {
-			// log.Println(err)
-			// log.Fatal("ERROR: Failure sending move packet to Redis")
+			log.Println(err)
+			log.Fatal("ERROR: Failure sending move packet to Redis")
 			return
 		}
 
