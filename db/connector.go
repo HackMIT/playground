@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -25,11 +26,22 @@ var (
 func Init(reset bool) {
 	config := config.GetConfig()
 
-	instance = redis.NewClient(&redis.Options{
-		Addr:     config.GetString("db.addr"),
-		Password: config.GetString("db.password"),
-		DB:       config.GetInt("db.db"),
-	})
+	dbAddr := os.Getenv("DATABASE_ADDR")
+	dbPass := os.Getenv("DATABASE_PASS")
+
+	if dbAddr == "" {
+		instance = redis.NewClient(&redis.Options{
+			Addr:     config.GetString("db.addr"),
+			Password: config.GetString("db.password"),
+			DB:       config.GetInt("db.db"),
+		})
+	} else {
+		instance = redis.NewClient(&redis.Options{
+			Addr:     dbAddr,
+			Password: dbPass,
+			DB:       0,
+		})
+	}
 
 	pip := instance.Pipeline()
 
