@@ -628,6 +628,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Parse teleport packet
 		res := packet.TeleportPacket{}
 		json.Unmarshal(m.msg, &res)
+		res.From = m.sender.character.Room
 
 		pip := db.GetInstance().Pipeline()
 

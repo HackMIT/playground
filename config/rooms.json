@@ -37,10 +37,41 @@
     ],
     "hallways": [
       {
-        "x": 0.827,
-        "y": 0.4287,
-        "radius": 0.0251,
+        "x": 0.8272,
+        "y": 0.4319,
+        "radius": 0.0341,
         "to": "nightclub"
+      }
+    ]
+  },
+  {
+    "id": "nonprofits",
+    "background": "nonprofits.svg",
+    "sponsor": false,
+    "elements": [
+      {
+        "x": 0.5,
+        "y": 0.5,
+        "width": 0.1,
+        "path": "tent.svg"
+      },
+      {
+        "x": 0.5,
+        "y": 0.5,
+        "width": 0.1,
+        "path": "pile_of_logs.svg"
+      },
+      {
+        "x": 0.5,
+        "y": 0.5,
+        "width": 0.1,
+        "path": "campfire.svg"
+      },
+      {
+        "x": 0.5,
+        "y": 0.5,
+        "width": 0.1,
+        "path": "signpost.svg"
       }
     ]
   },
