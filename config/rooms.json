@@ -1,6 +1,51 @@
 [
   {
     "id": "home",
+    "background": "town_square.svg",
+    "sponsor": false,
+    "elements": [
+      {
+        "x": 0.3076,
+        "y": 0.2648,
+        "width": 0.3222,
+        "path": "hacker_arena.svg"
+      },
+      {
+        "x": 0.6895,
+        "y": 0.2531,
+        "width": 0.3306,
+        "path": "shopping_mall.svg"
+      },
+      {
+        "x": 0.7432,
+        "y": 0.5994,
+        "width": 0.0596,
+        "path": "non_profit_sign.svg"
+      },
+      {
+        "x": 0.249,
+        "y": 0.6,
+        "width": 0.0713,
+        "path": "sponsor_town_sign.svg"
+      },
+      {
+        "x": 0.3186,
+        "y": 0.5398,
+        "width": 0.0436,
+        "path": "billboard.svg"
+      }
+    ],
+    "hallways": [
+      {
+        "x": 0.827,
+        "y": 0.4287,
+        "radius": 0.0251,
+        "to": "nightclub"
+      }
+    ]
+  },
+  {
+    "id": "nightclub",
     "background": "nightclub.svg",
     "sponsor": false,
     "elements": [
@@ -65,26 +110,13 @@
         "width": 0.0136,
         "path": "stripper_pole.svg"
       }
-    ]
-  },
-  {
-    "id": "nightclub",
-    "background": "home.png",
-    "sponsor": false,
-    "elements": [
-      {
-        "x": 0.2,
-        "y": 0.2,
-        "width": 0.1,
-        "path": "lamp.svg"
-      }
     ],
     "hallways": [
       {
-        "x": 0.62,
-        "y": 0.59,
-        "radius": 0.1,
-        "to": "sponsor"
+        "x": 0.7576,
+        "y": 0.6749,
+        "radius": 0.0333,
+        "to": "home"
       }
     ]
   },

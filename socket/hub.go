@@ -184,7 +184,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			// Add character to database
 			character.Ingest = db.GetIngestID()
-			db.GetInstance().HSet("character:"+character.ID, db.StructToMap(character))
+			db.GetInstance().HSet("character:"+character.ID, utils.StructToMap(character))
 
 			if res.Type == "join" {
 				// Generate init packet before new character is added to room
@@ -232,12 +232,12 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				character.ID = characterID
 
 				// Add character to database
-				pip.HSet("character:"+character.ID, db.StructToMap(character))
+				pip.HSet("character:"+character.ID, utils.StructToMap(character))
 				pip.HSet("quillToCharacter", quillData["id"].(string), character.ID)
 			} else {
 				// This person has logged in before, fetch from Redis
 				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
-				db.Bind(characterRes, &character)
+				utils.Bind(characterRes, &character)
 				character.ID = characterID
 			}
 		} else if res.Token != "" {
@@ -277,7 +277,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				return
 			}
 
-			db.Bind(characterRes, character)
+			utils.Bind(characterRes, character)
 			character.ID = characterID
 		} else {
 			// Client provided no authentication data
@@ -341,7 +341,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.ID = uuid.New().String()
 
 		pip := db.GetInstance().Pipeline()
-		pip.HSet("element:"+res.ID, db.StructToMap(res.Element))
+		pip.HSet("element:"+res.ID, utils.StructToMap(res.Element))
 		pip.RPush("room:"+res.Room+":elements", res.ID)
 		pip.Exec()
 
@@ -375,7 +375,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			res.Element.Action = int(models.OpenJukebox)
 		}
 
-		db.GetInstance().HSet("element:"+res.ID, db.StructToMap(res.Element))
+		db.GetInstance().HSet("element:"+res.ID, utils.StructToMap(res.Element))
 
 		// Publish event to other ingest servers
 		h.Send(res)
@@ -449,7 +449,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		for i, messageCmd := range messageCmds {
 			messageRes, _ := messageCmd.Result()
 			messages[i] = new(models.Message)
-			db.Bind(messageRes, messages[i])
+			utils.Bind(messageRes, messages[i])
 		}
 
 		resp := packet.NewMessagesPacket(messages, res.Recipient)
@@ -463,7 +463,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.ID = uuid.New().String()
 
 		pip := db.GetInstance().Pipeline()
-		pip.HSet("hallway:"+res.ID, db.StructToMap(res.Hallway))
+		pip.HSet("hallway:"+res.ID, utils.StructToMap(res.Hallway))
 		pip.SAdd("room:"+res.Room+":hallways", res.ID)
 		pip.Exec()
 
@@ -486,7 +486,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 		res.Room = m.sender.character.Room
 
-		db.GetInstance().HSet("hallway:"+res.ID, db.StructToMap(res.Hallway))
+		db.GetInstance().HSet("hallway:"+res.ID, utils.StructToMap(res.Hallway))
 
 		// Publish event to other ingest servers
 		h.Send(res)
@@ -506,7 +506,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		messageID := uuid.New().String()
 
 		pip := db.GetInstance().Pipeline()
-		pip.HSet("message:"+messageID, db.StructToMap(res.Message))
+		pip.HSet("message:"+messageID, utils.StructToMap(res.Message))
 
 		ha := fnv.New32a()
 		ha.Write([]byte(res.From))
@@ -559,7 +559,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		pip := db.GetInstance().Pipeline()
 		pip.SAdd("rooms", res.ID)
-		pip.HSet("room:"+res.ID, db.StructToMap(models.NewRoom(res.ID, res.Background, res.Sponsor)))
+		pip.HSet("room:"+res.ID, utils.StructToMap(models.NewRoom(res.ID, res.Background, res.Sponsor)))
 		pip.Exec()
 
 		data, _ := res.MarshalBinary()
@@ -568,7 +568,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.SettingsPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		db.GetInstance().HSet("character:"+m.sender.character.ID+":settings", db.StructToMap(res.Settings))
+		db.GetInstance().HSet("character:"+m.sender.character.ID+":settings", utils.StructToMap(res.Settings))
 		h.SendBytes("character:"+m.sender.character.ID, m.msg)
 	case "song":
 		// Parse song packet
@@ -614,7 +614,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		songID := uuid.New().String()
 
 		pip := db.GetInstance().Pipeline()
-		pip.HSet("song:"+songID, db.StructToMap(res.Song))
+		pip.HSet("song:"+songID, utils.StructToMap(res.Song))
 		pip.RPush("songs", songID)
 		pip.Exec()
 
@@ -635,9 +635,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			homeExists, _ := db.GetInstance().SIsMember("rooms", "home:"+m.sender.character.ID).Result()
 
 			if !homeExists {
-				room := models.NewHomeRoom(m.sender.character.ID)
-				pip.HSet("room:home:"+m.sender.character.ID, db.StructToMap(room))
-				pip.SAdd("rooms", "home:"+m.sender.character.ID)
+				models.CreateHomeRoom(pip, m.sender.character.ID)
 			}
 
 			res.From = m.sender.character.Room
@@ -669,7 +667,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		characterRes, _ := characterCmd.Result()
 		var character models.Character
-		db.Bind(characterRes, &character)
+		utils.Bind(characterRes, &character)
 		character.ID = m.sender.character.ID
 
 		// Publish event to other ingest servers
@@ -684,7 +682,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		locationID := m.sender.character.ID
 
 		pip := db.GetInstance().Pipeline()
-		pip.HSet("location:"+locationID, db.StructToMap(res.Location))
+		pip.HSet("location:"+locationID, utils.StructToMap(res.Location))
 		pip.SAdd("locations", locationID)
 		pip.Exec()
 

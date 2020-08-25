@@ -6,6 +6,7 @@ import (
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
+	"github.com/techx/playground/utils"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -50,11 +51,11 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 
 	room := new(models.Room).Init()
 	roomRes, _ := roomCmd.Result()
-	db.Bind(roomRes, room)
+	utils.Bind(roomRes, room)
 
 	character := new(models.Character)
 	characterRes, _ := characterCmd.Result()
-	db.Bind(characterRes, character)
+	utils.Bind(characterRes, character)
 	character.ID = characterID
 
 	// Load additional room stuff
@@ -86,21 +87,21 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	for i, characterCmd := range characterCmds {
 		characterRes, _ := characterCmd.Result()
 		room.Characters[characterIDs[i]] = new(models.Character)
-		db.Bind(characterRes, room.Characters[characterIDs[i]])
+		utils.Bind(characterRes, room.Characters[characterIDs[i]])
 		room.Characters[characterIDs[i]].ID = characterIDs[i]
 	}
 
 	for i, elementCmd := range elementCmds {
 		elementRes, _ := elementCmd.Result()
 		room.Elements = append(room.Elements, new(models.Element))
-		db.Bind(elementRes, room.Elements[i])
+		utils.Bind(elementRes, room.Elements[i])
 		room.Elements[i].ID = elementIDs[i]
 	}
 
 	for i, hallwayCmd := range hallwayCmds {
 		hallwayRes, _ := hallwayCmd.Result()
 		room.Hallways[hallwayIDs[i]] = new(models.Hallway)
-		db.Bind(hallwayRes, room.Hallways[hallwayIDs[i]])
+		utils.Bind(hallwayRes, room.Hallways[hallwayIDs[i]])
 	}
 
 	// Set data and return
@@ -155,7 +156,7 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	// Get settings
 	p.Settings = new(models.Settings)
 	settingsRes, _ := settingsCmd.Result()
-	db.Bind(settingsRes, p.Settings)
+	utils.Bind(settingsRes, p.Settings)
 
 	return p
 }

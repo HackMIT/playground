@@ -17,7 +17,7 @@ for room in rooms_data:
     })
 
     if "elements" in room:
-        if room["id"] == "home":
+        if room["id"] == "nightclub":
             tile_start_x = 0.374
             tile_start_y = 0.552
             tile_separator = 0.0305

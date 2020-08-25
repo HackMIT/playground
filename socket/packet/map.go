@@ -6,6 +6,7 @@ import (
 	"github.com/go-redis/redis/v7"
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
+	"github.com/techx/playground/utils"
 )
 
 type MapPacket struct {
@@ -31,7 +32,7 @@ func NewMapPacket() *MapPacket {
 	for i, locationCmd := range locationCmds {
 		locationRes, _ := locationCmd.Result()
 		locations[i] = new(models.Location)
-		db.Bind(locationRes, locations[i])
+		utils.Bind(locationRes, locations[i])
 	}
 
 	// Send locations back to client

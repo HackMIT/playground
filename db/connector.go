@@ -8,6 +8,7 @@ import (
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db/models"
+	"github.com/techx/playground/utils"
 
 	mapset "github.com/deckarep/golang-set"
 	"github.com/go-redis/redis/v7"
@@ -42,7 +43,7 @@ func Init(reset bool) {
 
 	// Initialize jukebox
 	// TODO: Make sure this works correctly when there are multiple ingests
-	pip.HSet("queuestatus", StructToMap(models.QueueStatus{SongEnd: time.Now()}))
+	pip.HSet("queuestatus", utils.StructToMap(models.QueueStatus{SongEnd: time.Now()}))
 	pip.Exec()
 }
 
@@ -177,7 +178,7 @@ func MonitorLeader() {
 		queueRes, _ := instance.HGetAll("queuestatus").Result()
 
 		var queueStatus models.QueueStatus
-		Bind(queueRes, &queueStatus)
+		utils.Bind(queueRes, &queueStatus)
 
 		songEnd := queueStatus.SongEnd
 
@@ -191,11 +192,11 @@ func MonitorLeader() {
 
 				songRes, _ := instance.HGetAll("song:" + songID).Result()
 				var song models.Song
-				Bind(songRes, &song)
+				utils.Bind(songRes, &song)
 
 				// Update queue status to reflect new song
 				newStatus := models.QueueStatus{time.Now().Add(time.Second * time.Duration(song.Duration))}
-				instance.HSet("queuestatus", StructToMap(newStatus))
+				instance.HSet("queuestatus", utils.StructToMap(newStatus))
 			}
 		}
 	}

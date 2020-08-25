@@ -5,6 +5,7 @@ import (
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
+	"github.com/techx/playground/utils"
 )
 
 type AchievementsPacket struct {
@@ -24,7 +25,7 @@ func NewAchievementsPacket(characterID string) *AchievementsPacket {
 	p.ID = characterID
 
 	res, _ := db.GetInstance().HGetAll("character:" + characterID + ":achievements").Result()
-	db.Bind(res, p.Achivements)
+	utils.Bind(res, p.Achivements)
 
 	return p
 }
