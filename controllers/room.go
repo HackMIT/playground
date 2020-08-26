@@ -5,12 +5,13 @@ import (
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
+	"github.com/techx/playground/utils"
 
+	"github.com/go-redis/redis/v7"
 	"github.com/labstack/echo/v4"
-    "github.com/go-redis/redis/v7"
 )
 
-type RoomController struct {}
+type RoomController struct{}
 
 // GET /rooms - get all rooms
 func (r RoomController) GetRooms(c echo.Context) error {
@@ -19,24 +20,24 @@ func (r RoomController) GetRooms(c echo.Context) error {
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError,
-		                         "database error")
+			"database error")
 	}
 
 	// Load each room into this array
-    pip := db.GetInstance().Pipeline()
-    roomCmds := make([]*redis.StringStringMapCmd, len(roomNames))
+	pip := db.GetInstance().Pipeline()
+	roomCmds := make([]*redis.StringStringMapCmd, len(roomNames))
 
 	for i, name := range roomNames {
-        roomCmds[i] = pip.HGetAll("room:" + name)
+		roomCmds[i] = pip.HGetAll("room:" + name)
 	}
 
-    pip.Exec()
+	pip.Exec()
 	rooms := make([]models.Room, len(roomNames))
 
-    for i, roomCmd := range roomCmds {
-        roomData, _ := roomCmd.Result()
-        db.Bind(roomData, &rooms[i])
-    }
+	for i, roomCmd := range roomCmds {
+		roomData, _ := roomCmd.Result()
+		utils.Bind(roomData, &rooms[i])
+	}
 
 	return c.JSON(http.StatusOK, rooms)
 }

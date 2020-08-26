@@ -1,4 +1,7 @@
 {
+  "achievements": {
+    "num_events": 2
+  },
   "db": {
     "addr": "localhost:6379",
     "password": "",
@@ -6,8 +9,5 @@
   },
   "jwt": {
     "secret": "asdf"
-  },
-  "server": {
-    "addr": ":8080"
   }
 }

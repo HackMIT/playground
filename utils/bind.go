@@ -1,4 +1,4 @@
-package db
+package utils
 
 import (
 	"errors"
@@ -47,25 +47,25 @@ func StructToMap(item interface{}) map[string]interface{} {
 
 func Bind(data map[string]string, ptr interface{}) error {
 	if ptr == nil || len(data) == 0 {
-        return nil
-    }
+		return nil
+	}
 
-    typ := reflect.TypeOf(ptr).Elem()
-    val := reflect.ValueOf(ptr).Elem()
+	typ := reflect.TypeOf(ptr).Elem()
+	val := reflect.ValueOf(ptr).Elem()
 
-    // Map
-    if typ.Kind() == reflect.Map {
-        for k, v := range data {
-            val.SetMapIndex(reflect.ValueOf(k), reflect.ValueOf(v[0]))
-        }
+	// Map
+	if typ.Kind() == reflect.Map {
+		for k, v := range data {
+			val.SetMapIndex(reflect.ValueOf(k), reflect.ValueOf(v[0]))
+		}
 
-        return nil
-    }
+		return nil
+	}
 
-    // !struct
-    if typ.Kind() != reflect.Struct {
-        return errors.New("binding element must be a struct")
-    }
+	// !struct
+	if typ.Kind() != reflect.Struct {
+		return errors.New("binding element must be a struct")
+	}
 
 	for i := 0; i < typ.NumField(); i++ {
 		typeField := typ.Field(i)

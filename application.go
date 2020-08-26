@@ -12,7 +12,10 @@ import (
 
 func main() {
 	environment := flag.String("e", "dev", "")
-	port := flag.Int("p", 8080, "")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "5000"
+	}
 	reset := flag.Bool("reset", false, "Resets the database")
 
 	flag.Usage = func() {
@@ -24,5 +27,5 @@ func main() {
 
 	config.Init(*environment)
 	db.Init(*reset)
-	server.Init(*port)
+	server.Init(port)
 }

@@ -1,0 +1,167 @@
+[
+  {
+    "id": "home",
+    "background": "town_square.svg",
+    "sponsor": false,
+    "elements": [
+      {
+        "x": 0.3076,
+        "y": 0.2648,
+        "width": 0.3222,
+        "path": "hacker_arena.svg"
+      },
+      {
+        "x": 0.6895,
+        "y": 0.2531,
+        "width": 0.3306,
+        "path": "shopping_mall.svg"
+      },
+      {
+        "x": 0.7432,
+        "y": 0.5994,
+        "width": 0.0596,
+        "path": "non_profit_sign.svg"
+      },
+      {
+        "x": 0.249,
+        "y": 0.6,
+        "width": 0.0713,
+        "path": "sponsor_town_sign.svg"
+      },
+      {
+        "x": 0.3186,
+        "y": 0.5398,
+        "width": 0.0436,
+        "path": "billboard.svg"
+      }
+    ],
+    "hallways": [
+      {
+        "x": 0.8272,
+        "y": 0.4319,
+        "radius": 0.0341,
+        "to": "nightclub"
+      }
+    ]
+  },
+  {
+    "id": "nonprofits",
+    "background": "nonprofits.svg",
+    "sponsor": false,
+    "elements": [
+      {
+        "x": 0.5,
+        "y": 0.5,
+        "width": 0.1,
+        "path": "tent.svg"
+      },
+      {
+        "x": 0.5,
+        "y": 0.5,
+        "width": 0.1,
+        "path": "pile_of_logs.svg"
+      },
+      {
+        "x": 0.5,
+        "y": 0.5,
+        "width": 0.1,
+        "path": "campfire.svg"
+      },
+      {
+        "x": 0.5,
+        "y": 0.5,
+        "width": 0.1,
+        "path": "signpost.svg"
+      }
+    ]
+  },
+  {
+    "id": "nightclub",
+    "background": "nightclub.svg",
+    "sponsor": false,
+    "elements": [
+      {
+        "x": 0.5121,
+        "y": 0.7196,
+        "width": 0.3738,
+        "path": "glass_cover.svg"
+      },
+      {
+        "x": 0.343,
+        "y": 0.4383,
+        "width": 0.0207,
+        "path": "cute_dj.svg"
+      },
+      {
+        "x": 0.3563,
+        "y": 0.5216,
+        "width": 0.0781,
+        "path": "djbooth.svg",
+        "action": 1
+      },
+      {
+        "x": 0.5837,
+        "y": 0.5273,
+        "width": 0.2146,
+        "path": "bar_closed.svg"
+      },
+      {
+        "x": 0.427,
+        "y": 0.2335,
+        "width": 0.0334,
+        "path": "speaker.svg"
+      },
+      {
+        "x": 0.2111,
+        "y": 0.4557,
+        "width": 0.0334,
+        "path": "speaker.svg"
+      },
+      {
+        "x": 0.5054,
+        "y": 0.8367,
+        "width": 0.059,
+        "path": "table.svg"
+      },
+      {
+        "x": 0.4436,
+        "y": 0.7762,
+        "width": 0.059,
+        "path": "table.svg"
+      },
+      {
+        "x": 0.3846,
+        "y": 0.7136,
+        "width": 0.059,
+        "path": "table.svg"
+      },
+      {
+        "x": 0.4661,
+        "y": 0.3031,
+        "width": 0.0136,
+        "path": "stripper_pole.svg"
+      }
+    ],
+    "hallways": [
+      {
+        "x": 0.7576,
+        "y": 0.6749,
+        "radius": 0.0333,
+        "to": "home"
+      }
+    ]
+  },
+  {
+    "id": "sponsor",
+    "background": "sponsor.png",
+    "sponsor": true,
+    "hallways": [
+      {
+        "x": 0.03,
+        "y": 0.68,
+        "radius": 0.05,
+        "to": "home"
+      }
+    ]
+  }
+]
