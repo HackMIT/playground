@@ -576,6 +576,15 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.SongPacket{}
 		json.Unmarshal(m.msg, &res)
 
+		if res.Remove {
+			pip := db.GetInstance().Pipeline()
+			pip.Del("song:"+res.ID)
+			pip.LRem("songs", 1, res.ID)
+			pip.Exec()
+			h.Send(res)
+			return
+		}
+
 		var jukeboxTimestamp time.Time
 		jukeboxQuery := "character:" + m.sender.character.ID + ":jukeboxTimestamp"
 		jukeboxKeyExists, _ := db.GetInstance().Exists(jukeboxQuery).Result()
@@ -642,6 +651,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		songID := uuid.New().String()
+		res.ID = songID
 
 		jukeboxTime := time.Now().Add(time.Minute * 15)
 

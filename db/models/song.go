@@ -9,6 +9,7 @@ type Song struct {
 	ThumbnailURL string `json:"thumbnailUrl"`
 	Title        string `json:"title"`
 	VidCode      string `json:"vidCode"`
+	ID			 string `json:"id"`
 }
 
 func (s *Song) Init() *Song {
