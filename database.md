@@ -18,3 +18,7 @@
 - `rooms` (set)
 - `song:<song_id>` (hash)
 - `songs` (list)
+- `sponsors` (set)
+- `sponsor:<sponsor_id>` (hash)
+  - `sponsor:<sponsor_id>:subscribed` (set)
+  - `sponsor:<sponsor_id>:hackerqueue` (list)
