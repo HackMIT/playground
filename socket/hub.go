@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
@@ -575,6 +576,27 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.SongPacket{}
 		json.Unmarshal(m.msg, &res)
 
+		var jukeboxTimestamp time.Time
+		jukeboxQuery := "character:" + m.sender.character.ID + ":jukeboxTimestamp"
+		jukeboxKeyExists, _ := db.GetInstance().Exists(jukeboxQuery).Result()
+		// User has never added a song to queue
+		if (jukeboxKeyExists != 1) {
+			jukeboxTimestamp = time.Now()
+			res.RequiresWarning = true
+		} else {
+			timestampString, _ := db.GetInstance().Get(jukeboxQuery).Result()
+			var _ error
+			jukeboxTimestamp, _ = time.Parse(time.RFC3339, timestampString)
+		}
+
+		// 15 minutes has not yet passed since user last submitted a song
+		if jukeboxTimestamp.After(time.Now()) {
+			errorPacket := packet.NewErrorPacket(401)
+			data, _ := json.Marshal(errorPacket)
+			m.sender.send <- data
+			return
+		}
+
 		// Make the YouTube API call
 		youtubeClient, _ := youtube.New(&http.Client{
 			Transport: &transport.APIKey{Key: youtubeAPIKey},
@@ -597,8 +619,16 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			secIndex := strings.Index(duration, "S")
 
 			// Convert duration to seconds
-			minutes, err := strconv.Atoi(duration[2:minIndex])
-			seconds, err := strconv.Atoi(duration[minIndex+1 : secIndex])
+			minutes, _ := strconv.Atoi(duration[2:minIndex])
+			seconds, _ := strconv.Atoi(duration[minIndex+1 : secIndex])
+
+			// Song is too long
+			if minutes >= 6 {
+				errorPacket := packet.NewErrorPacket(400)
+				data, _ := json.Marshal(errorPacket)
+				m.sender.send <- data
+				return
+			}
 
 			// Error parsing duration string
 			if err != nil {
@@ -613,9 +643,12 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		songID := uuid.New().String()
 
+		jukeboxTime := time.Now().Add(time.Minute * 15)
+
 		pip := db.GetInstance().Pipeline()
 		pip.HSet("song:"+songID, utils.StructToMap(res.Song))
 		pip.RPush("songs", songID)
+		pip.Set(jukeboxQuery, jukeboxTime.Format(time.RFC3339), 0)
 		pip.Exec()
 
 		if err != nil {

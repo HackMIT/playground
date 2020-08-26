@@ -10,11 +10,13 @@ import (
 type SongPacket struct {
 	BasePacket
 	*models.Song
+	RequiresWarning bool `json:"requiresWarning"`
 }
 
 func (p *SongPacket) Init(song *models.Song) *SongPacket {
 	p.BasePacket = BasePacket{Type: "song"}
 	p.Song = song
+	p.RequiresWarning = false
 	return p
 }
 
