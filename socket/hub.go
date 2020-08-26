@@ -229,7 +229,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			if err != nil {
 				// Never seen this character before, create a new one
 				character = models.NewCharacterFromQuill(quillData)
-				character.ID = characterID
+				character.ID = uuid.New().String()
 
 				// Add character to database
 				pip.HSet("character:"+character.ID, utils.StructToMap(character))
@@ -297,6 +297,12 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		character.Ingest = db.GetIngestID()
 		pip.HSet("character:"+character.ID, "ingest", db.GetIngestID())
+
+		// Make sure character ID isn't an empty string
+		if character.ID == "" {
+			fmt.Println("ERROR: Empty character ID on join")
+			return
+		}
 
 		// Wrap up
 		pip.Exec()
