@@ -411,6 +411,38 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			data, _ := resp.MarshalBinary()
 			h.SendBytes("character:"+m.sender.character.ID, data)
 		}
+	case "friend_request":
+		// Parse friend request packet
+		res := packet.FriendRequestPacket{}
+		json.Unmarshal(m.msg, &res)
+		res.SenderID = m.sender.character.ID
+
+		// Check if the other person has also sent a friend request
+		isExistingRequest, _ := db.GetInstance().SIsMember("character:"+m.sender.character.ID+":requests", res.RecipientID).Result()
+
+		if isExistingRequest {
+			pip := db.GetInstance().Pipeline()
+			pip.SRem("character:"+m.sender.character.ID+":requests", res.RecipientID)
+			pip.SAdd("character:"+m.sender.character.ID+":friends", res.RecipientID)
+			pip.SAdd("character:"+res.RecipientID+":friends", m.sender.character.ID)
+			pip.Exec()
+
+			// TODO: This will not work with more than one ingest server
+			firstUpdate := packet.NewFriendUpdatePacket(res.RecipientID, m.sender.character.ID)
+			data, _ := firstUpdate.MarshalBinary()
+			h.SendBytes("character:"+res.RecipientID, data)
+
+			secondUpdate := packet.NewFriendUpdatePacket(m.sender.character.ID, res.RecipientID)
+			data, _ = secondUpdate.MarshalBinary()
+			h.SendBytes("character:"+m.sender.character.ID, data)
+		} else {
+			db.GetInstance().SAdd("character:"+res.RecipientID+":requests", m.sender.character.ID)
+
+			// TODO: This will not work with more than one ingest server
+			friendUpdate := packet.NewFriendUpdatePacket(res.RecipientID, m.sender.character.ID)
+			data, _ := friendUpdate.MarshalBinary()
+			h.SendBytes("character:"+res.RecipientID, data)
+		}
 	case "get_achievements":
 		// Send achievements back to client
 		resp := packet.NewAchievementsPacket(m.sender.character.ID)
@@ -419,6 +451,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
 	case "get_map":
 		// Send locations back to client
 		resp := packet.NewMapPacket()
+		data, _ := resp.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
+	case "get_friends":
+		// Send friends back to client
+		resp := packet.NewFriendsPacket(m.sender.character.ID)
 		data, _ := resp.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
 	case "get_messages":
