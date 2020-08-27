@@ -9,6 +9,16 @@ import (
 	"github.com/techx/playground/utils"
 )
 
+type Friend struct {
+	ID       string    `json:"id"`
+	Name     string    `json:"name"`
+	School   string    `json:"school"`
+	Status   int       `json:"status"`
+	Teammate bool      `json:"teammate"`
+	Pending  bool      `json:"pending"`
+	LastSeen time.Time `json:"lastSeen"`
+}
+
 type FriendUpdatePacket struct {
 	BasePacket
 

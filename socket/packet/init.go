@@ -2,6 +2,7 @@ package packet
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
@@ -34,6 +35,9 @@ type InitPacket struct {
 	// All room names
 	RoomNames []string `json:"roomNames"`
 
+	// All of this user's friends
+	Friends []Friend `json:"friends"`
+
 	// Settings
 	Settings *models.Settings `json:"settings"`
 }
@@ -47,6 +51,9 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	roomHallwaysCmd := pip.SMembers("room:" + roomID + ":hallways")
 	characterCmd := pip.HGetAll("character:" + characterID)
 	settingsCmd := pip.HGetAll("character:" + characterID + ":settings")
+	teammatesCmd := pip.SMembers("character:" + characterID + ":teammates")
+	friendsCmd := pip.SMembers("character:" + characterID + ":friends")
+	requestsCmd := pip.SMembers("character:" + characterID + ":requests")
 	pip.Exec()
 
 	room := new(models.Room).Init()
@@ -82,6 +89,27 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 		hallwayCmds[i] = pip.HGetAll("hallway:" + hallwayID)
 	}
 
+	// Get friends
+	teammateIDs, _ := teammatesCmd.Result()
+	friendIDs, _ := friendsCmd.Result()
+	requestIDs, _ := requestsCmd.Result()
+
+	teammateCmds := make([]*redis.StringStringMapCmd, len(teammateIDs))
+	friendCmds := make([]*redis.StringStringMapCmd, len(friendIDs))
+	requestCmds := make([]*redis.StringStringMapCmd, len(requestIDs))
+
+	for i, id := range teammateIDs {
+		teammateCmds[i] = pip.HGetAll("character:" + id)
+	}
+
+	for i, id := range friendIDs {
+		friendCmds[i] = pip.HGetAll("character:" + id)
+	}
+
+	for i, id := range requestIDs {
+		requestCmds[i] = pip.HGetAll("character:" + id)
+	}
+
 	pip.Exec()
 
 	for i, characterCmd := range characterCmds {
@@ -109,6 +137,60 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	p.BasePacket = BasePacket{Type: "init"}
 	p.Character = character
 	p.Room = room
+
+	// Set friends
+	i := 0
+	p.Friends = make([]Friend, len(teammateIDs)+len(friendIDs)+len(requestIDs))
+
+	for j, cmd := range teammateCmds {
+		data, _ := cmd.Result()
+		res := new(models.Character)
+		utils.Bind(data, res)
+
+		p.Friends[i] = Friend{
+			ID:       teammateIDs[j],
+			Name:     res.Name,
+			School:   res.School,
+			Status:   0,
+			Teammate: true,
+			LastSeen: time.Now(),
+		}
+
+		i++
+	}
+
+	for j, cmd := range friendCmds {
+		data, _ := cmd.Result()
+		res := new(models.Character)
+		utils.Bind(data, res)
+
+		p.Friends[i] = Friend{
+			ID:       friendIDs[j],
+			Name:     res.Name,
+			School:   res.School,
+			Status:   0,
+			LastSeen: time.Now(),
+		}
+
+		i++
+	}
+
+	for j, cmd := range requestCmds {
+		data, _ := cmd.Result()
+		res := new(models.Character)
+		utils.Bind(data, res)
+
+		p.Friends[i] = Friend{
+			ID:       requestIDs[j],
+			Name:     res.Name,
+			School:   res.School,
+			Status:   0,
+			Pending:  true,
+			LastSeen: time.Now(),
+		}
+
+		i++
+	}
 
 	if needsToken {
 		// Generate a JWT
