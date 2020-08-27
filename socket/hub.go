@@ -753,6 +753,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		json.Unmarshal(m.msg, &res)
 		res.From = m.sender.character.Room
 
+		if res.X <= 0 || res.X >= 1 {
+			res.X = 0.5
+		}
+
+		if res.Y <= 0 || res.Y >= 1 {
+			res.Y = 0.5
+		}
+
 		pip := db.GetInstance().Pipeline()
 
 		if res.Type == "teleport_home" {
@@ -769,8 +777,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Update this character's room
 		pip.HSet("character:"+m.sender.character.ID, map[string]interface{}{
 			"room": res.To,
-			"x":    0.5,
-			"y":    0.5,
+			"x":    res.X,
+			"y":    res.Y,
 		})
 
 		// Remove this character from the previous room
