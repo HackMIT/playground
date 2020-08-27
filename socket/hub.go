@@ -623,42 +623,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Publish event to other ingest servers
 		res.Character = &character
 		h.Send(res)
-		// fmt.Println("received hackerqueue packet in processMessage")
-		// res := packet.HackerqueuePacket{}
-		// json.Unmarshal(m.msg, &res)
-
-		// pip := db.GetInstance().Pipeline()
-		// if res.Action {
-		// 	pip.RPush("sponsor:" + res.SponsorID + ":hackerqueue", res.HackerID)
-		// } else {
-		// 	pip.LRem("sponsor:" + res.SponsorID + ":hackerqueue", res.HackerID, 0)
-		// }
-		// subscribedCmd := pip.SMembers("sponsor:"+res.SponsorID+":subscribed")
-		// pip.Exec()
- 
-		// // Send locations back to clients
-		// res.SetHackerqueue()
-		// data, _ := res.MarshalBinary()
-		// subscribedRes, _ := subscribedCmd.Result() // list of characterIDs do for loop to send bytes
-		
-		// // TODO ALLEN figure out how to send to all subscribed clients
-		
-		// h.SendBytes("character:"+m.sender.character.ID, data)
-		// // TODO Jack amke sure SendBytes send to pther ingest servers
-
-		// fmt.Println("queue pop packet received")
-		// res := packet.QueuePopPacket{}
-		// json.Unmarshal(m.msg, &res)
-
-		// pip := db.GetInstance().Pipeline()
-		// pip.SAdd("sponsor:" + res.SponsorID + ":subscribed", m.sender.character.ID)
-		// pip.Exec()
-
-		// // resp := packet.NewQueueSubscribePacket(res.SponsorID)
-		// // data, _ := resp.MarshalBinary()
-		
-		// // TODO @ Jack: make sure SendBytes sends to characters over all ingest servers
-		// h.SendBytes("character:"+m.sender.character.ID, data)
 	case "queue_pop":
 		fmt.Println("queue pop packet received")
 		res := packet.QueuePopPacket{}
@@ -673,9 +637,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		data, _ := res.MarshalBinary()
 		
 		// TODO @ Jack: make sure SendBytes sends to characters over all ingest servers
-		ids, _ := db.GetInstance().LRange("sponsor:" + SponsorID + ":subscribed").Result()
-		for id := range ids{
-			h.SendBytes("character:"+id, data)
+		ids , _ := db.GetInstance().LRange("sponsor:" + res.SponsorID + ":subscribed", 0, -1).Result()
+		for _ , id := range ids{
+			h.SendBytes("character:" + id, data)
 		}
 	case "queue_push":
 		fmt.Println("queue push packet received")
@@ -695,8 +659,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		data, _ := res.MarshalBinary()
 
 		// TODO @ Jack: make sure SendBytes sends to characters over all ingest servers
-		ids, _ := db.GetInstance().LRange("sponsor:" + SponsorID + ":subscribed").Result()
-		for id := range ids{
+		ids , _ := db.GetInstance().LRange("sponsor:" + res.SponsorID + ":subscribed", 0 , -1).Result()
+		for _ , id := range ids{
 			h.SendBytes("character:"+id, data)
 		}
 	case "queue_remove":
@@ -711,8 +675,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		data, _ := res.MarshalBinary()
 		
 		// TODO @ Jack: make sure SendBytes sends to characters over all ingest servers
-		ids, _ := db.GetInstance().LRange("sponsor:" + SponsorID + ":subscribed").Result()
-		for id := range ids{
+		ids , _ := db.GetInstance().LRange("sponsor:" + res.SponsorID + ":subscribed", 0 , -1).Result()
+		for _ , id := range ids{
 			h.SendBytes("character:"+id, data)
 		}
 	case "queue_subscribe":
@@ -722,7 +686,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		pip := db.GetInstance().Pipeline()
 		pip.RPush("sponsor:" + res.SponsorID + ":hackerqueue", m.sender.character.ID)
-		pip.
 		pip.Exec()
 
 		resp := packet.NewQueueSubscribePacket(res.SponsorID)

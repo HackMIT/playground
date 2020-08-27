@@ -2,6 +2,10 @@ package packet
 
 import (
 	"encoding/json"
+
+	"github.com/go-redis/redis/v7"
+	"github.com/techx/playground/db"
+	"github.com/techx/playground/db/models"
 )
 
 // sent by hackers and sponsors to subscribe to queue updates
@@ -17,13 +21,13 @@ func NewQueueSubscribePacket(SponsorID string) *QueueSubscribePacket {
 	p := QueueSubscribePacket{}
 	p.SponsorID = SponsorID
 	
-	hackerIDs, _ := db.GetInstance().LRange("sponsor:" + SponsorID + ":hackerqueue").Result()
+	hackerIDs, _ := db.GetInstance().LRange("sponsor:" + SponsorID + ":hackerqueue", 0 , -1).Result()
 
 	pip := db.GetInstance().Pipeline()
 	characterCmds := make([]*redis.StringStringMapCmd, len(hackerIDs))
 	
-	for i, hackerIDs := range hackerIDs {
-		characterCmds[i] = pip.HGetAll("character:" + hackerIDs[i])
+	for i, hackerID := range hackerIDs {
+		characterCmds[i] = pip.HGetAll("character:" + hackerID)
 	}
 	
 	pip.Exec()
@@ -36,6 +40,8 @@ func NewQueueSubscribePacket(SponsorID string) *QueueSubscribePacket {
 	}
 
 	p.Characters = characters
+	
+	return &p
 }
 
 func (p QueueSubscribePacket) MarshalBinary() ([]byte, error) {

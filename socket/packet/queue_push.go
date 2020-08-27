@@ -2,6 +2,8 @@ package packet
 
 import (
 	"encoding/json"
+	
+	"github.com/techx/playground/db/models"
 )
 
 // Sent by hackers to push themselves onto queue
