@@ -456,6 +456,32 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		resp := packet.NewMessagesPacket(messages, res.Recipient)
 		data, _ := resp.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
+	case "get_songs":
+		res := packet.GetSongsPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		songIDs, _ := db.GetInstance().LRange("songs", 0, -1).Result()
+
+		pip := db.GetInstance().Pipeline()
+		songCmds := make([]*redis.StringStringMapCmd, len(songIDs))
+
+		for i, songID := range songIDs {
+			songCmds[i] = pip.HGetAll("song:" + songID)
+		}
+
+		pip.Exec()
+		songs := make([]*models.Song, len(songIDs))
+
+		for i, songCmd := range songCmds {
+			songRes, _ := songCmd.Result()
+			songs[i] = new(models.Song)
+			songs[i].ID = songIDs[i]
+			utils.Bind(songRes, songs[i])
+		}
+
+		resp := packet.NewSongsPacket(songs)
+		data, _ := resp.MarshalBinary()
+		h.SendBytes("*", data)
 	case "hallway_add":
 		res := packet.HallwayAddPacket{}
 		json.Unmarshal(m.msg, &res)
@@ -575,7 +601,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Parse song packet
 		res := packet.SongPacket{}
 		json.Unmarshal(m.msg, &res)
-
 		if res.Remove {
 			pip := db.GetInstance().Pipeline()
 			pip.Del("song:"+res.ID)
@@ -628,8 +653,17 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			secIndex := strings.Index(duration, "S")
 
 			// Convert duration to seconds
-			minutes, _ := strconv.Atoi(duration[2:minIndex])
-			seconds, _ := strconv.Atoi(duration[minIndex+1 : secIndex])
+			var minutes int
+			var seconds int
+			var _ error
+			if minIndex != -1 {
+				minutes, _ = strconv.Atoi(duration[2:minIndex])
+				seconds, _ = strconv.Atoi(duration[minIndex+1:secIndex])
+			} else {
+				minutes = 0
+				timeIndex := strings.Index(duration, "T")
+				seconds, _ = strconv.Atoi(duration[timeIndex+1:secIndex])
+			}
 
 			// Song is too long
 			if minutes >= 6 {
