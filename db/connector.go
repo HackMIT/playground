@@ -207,8 +207,13 @@ func MonitorLeader() {
 				utils.Bind(songRes, &song)
 
 				// Update queue status to reflect new song
-				newStatus := models.QueueStatus{time.Now().Add(time.Second * time.Duration(song.Duration))}
+				endTime := time.Now().Add(time.Second * time.Duration(song.Duration))
+				newStatus := models.QueueStatus{endTime}
 				instance.HSet("queuestatus", utils.StructToMap(newStatus))
+
+				// Send song packet to ingests
+				// p := packet.SongPacket{Song: song, Playing: true, EndTime: endTime}
+				// h.Send(p)
 			}
 		}
 	}
