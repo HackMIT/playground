@@ -36,6 +36,9 @@ type InitPacket struct {
 
 	// Settings
 	Settings *models.Settings `json:"settings"`
+
+	// Tracks if client has sent feedback
+	OpenFeedback bool `json:"openFeedback"`
 }
 
 func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
@@ -108,6 +111,12 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	p := new(InitPacket)
 	p.BasePacket = BasePacket{Type: "init"}
 	p.Character = character
+
+	if !character.FeedbackOpened {
+		p.OpenFeedback = true
+		db.GetInstance().HSet("character:" + characterID, "feedbackOpened", true)
+	}
+
 	p.Room = room
 
 	if needsToken {

@@ -14,6 +14,7 @@ type Character struct {
 	Y        float64 `json:"y" redis:"y"`
 	Room     string  `json:"room" redis:"room"`
 	Ingest   int     `json:"ingest" redis:"ingest"`
+	FeedbackOpened bool `json:"feedbackOpened" redis:"feedbackOpened"`
 }
 
 func NewCharacter(name string) *Character {
@@ -24,6 +25,7 @@ func NewCharacter(name string) *Character {
 	c.X = 0.5
 	c.Y = 0.5
 	c.Room = "home"
+	c.FeedbackOpened = false
 	return c
 }
 
@@ -37,5 +39,6 @@ func NewCharacterFromQuill(quillData map[string]interface{}) *Character {
 	c.X = 0.5
 	c.Y = 0.5
 	c.Room = "home"
+	c.FeedbackOpened = false
 	return c
 }
