@@ -2,16 +2,17 @@ package db
 
 import (
 	"encoding"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db/models"
+	"github.com/techx/playground/utils"
 
 	mapset "github.com/deckarep/golang-set"
 	"github.com/go-redis/redis/v7"
-	"github.com/google/uuid"
 )
 
 const ingestClientName string = "ingest"
@@ -25,53 +26,27 @@ var (
 func Init(reset bool) {
 	config := config.GetConfig()
 
-	instance = redis.NewClient(&redis.Options{
-		Addr:     config.GetString("db.addr"),
-		Password: config.GetString("db.password"),
-		DB:       config.GetInt("db.db"),
-	})
+	dbAddr := os.Getenv("DATABASE_ADDR")
+	dbPass := os.Getenv("DATABASE_PASS")
+
+	if dbAddr == "" {
+		instance = redis.NewClient(&redis.Options{
+			Addr:     config.GetString("db.addr"),
+			Password: config.GetString("db.password"),
+			DB:       config.GetInt("db.db"),
+		})
+	} else {
+		instance = redis.NewClient(&redis.Options{
+			Addr:     dbAddr,
+			Password: dbPass,
+			DB:       0,
+		})
+	}
 
 	pip := instance.Pipeline()
 
 	if reset {
 		instance.FlushDB()
-
-		home := models.NewRoom("home", "home.png", false)
-		lampElementID := uuid.New().String()
-		lampElement := &models.Element{
-			X:     0.2,
-			Y:     0.2,
-			Width: 0.1,
-			Path:  "lamp.svg",
-		}
-		pip.SAdd("room:home:elements", lampElementID)
-		pip.HSet("element:"+lampElementID, StructToMap(lampElement))
-
-		sponsorHallwayID := uuid.New().String()
-		sponsorHallway := &models.Hallway{
-			X:      0.62,
-			Y:      0.59,
-			Radius: 0.1,
-			To:     "sponsor",
-		}
-		pip.SAdd("room:home:hallways", sponsorHallwayID)
-		pip.HSet("hallway:"+sponsorHallwayID, StructToMap(sponsorHallway))
-		pip.HSet("room:home", StructToMap(home))
-		pip.SAdd("rooms", "home")
-
-		sponsor := models.NewRoom("sponsor", "sponsor.png", true)
-
-		homeHallwayID := uuid.New().String()
-		homeHallway := &models.Hallway{
-			X:      0.03,
-			Y:      0.68,
-			Radius: 0.05,
-			To:     "home",
-		}
-		pip.SAdd("room:sponsor:hallways", homeHallwayID)
-		pip.HSet("hallway:"+homeHallwayID, StructToMap(homeHallway))
-		pip.HSet("room:sponsor", StructToMap(sponsor))
-		pip.SAdd("rooms", "sponsor")
 	}
 
 	// Save our ingest ID
@@ -80,7 +55,7 @@ func Init(reset bool) {
 
 	// Initialize jukebox
 	// TODO: Make sure this works correctly when there are multiple ingests
-	pip.HSet("queuestatus", StructToMap(models.QueueStatus{SongEnd: time.Now()}))
+	pip.HSet("queuestatus", utils.StructToMap(models.QueueStatus{SongEnd: time.Now()}))
 	pip.Exec()
 }
 
@@ -215,7 +190,7 @@ func MonitorLeader() {
 		queueRes, _ := instance.HGetAll("queuestatus").Result()
 
 		var queueStatus models.QueueStatus
-		Bind(queueRes, &queueStatus)
+		utils.Bind(queueRes, &queueStatus)
 
 		songEnd := queueStatus.SongEnd
 
@@ -229,11 +204,11 @@ func MonitorLeader() {
 
 				songRes, _ := instance.HGetAll("song:" + songID).Result()
 				var song models.Song
-				Bind(songRes, &song)
+				utils.Bind(songRes, &song)
 
 				// Update queue status to reflect new song
 				newStatus := models.QueueStatus{time.Now().Add(time.Second * time.Duration(song.Duration))}
-				instance.HSet("queuestatus", StructToMap(newStatus))
+				instance.HSet("queuestatus", utils.StructToMap(newStatus))
 			}
 		}
 	}

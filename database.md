@@ -1,6 +1,10 @@
 # Database Schema
 
 - `character:<character_id>` (hash)
+  - `character:<character_id>:teammates` (set)
+  - `character:<character_id>:friends` (set)
+  - `character:<character_id>:requests` (set)
+    - List of IDs of people who have added this person as a friend, but this character has not added back yet
 - `conversation:<character_id>:<character_id>` (list)
   - Ordering of character IDs comes from a hash of each ID -- check `socket/hub.go` for more details
   - List of message IDs (in chronological order)
@@ -12,7 +16,8 @@
 - `quillToCharacter` (hash)
   - Mapping of Quill user IDs to Playground character IDs
 - `room:<room_id>` (hash)
-  - `room:<room_id>:elements` (set)
+  - `room:<room_id>:elements` (list)
+    - Ordering of elements indicates layering -- right-most indicates top in layer-wise order
   - `room:<room_id>:hallways` (set)
   - `room:<room_id>:characters` (set)
 - `rooms` (set)
@@ -22,3 +27,7 @@
 - `sponsor:<sponsor_id>` (hash)
   - `sponsor:<sponsor_id>:subscribed` (set)
   - `sponsor:<sponsor_id>:hackerqueue` (list)
+- `event:<event_id>` (string)
+- `event:<event_id>:attendees` (set)
+- `character:<character_id>:events` (set)
+- `events` (set)

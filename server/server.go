@@ -3,13 +3,12 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/socket"
 )
 
-func Init(port int) {
+func Init(port string) {
 	hub := new(socket.Hub).Init()
 
 	// Wait for socket messages
@@ -30,7 +29,7 @@ func Init(port int) {
 	r := newRouter(hub)
 	http.Handle("/", r)
 
-	addr := ":" + strconv.Itoa(port)
+	addr := ":" + port
 
 	// Start the server
 	fmt.Println("Serving at", addr)

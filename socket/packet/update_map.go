@@ -8,7 +8,7 @@ import (
 
 type UpdateMapPacket struct {
 	BasePacket
-	*models.Location
+	*models.Location `json:"location"`
 }
 
 func (p UpdateMapPacket) MarshalBinary() ([]byte, error) {

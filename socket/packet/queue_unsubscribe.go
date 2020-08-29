@@ -6,7 +6,7 @@ import (
 
 // sent by hackers and sponsors to unsubscribe to queue updates
 type QueueUnsubscribePacket struct {
-	BasePacket
+	BasePacket 
 
 	SponsorID string `json:"sponsorId"`
 }

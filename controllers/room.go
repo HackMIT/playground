@@ -5,6 +5,7 @@ import (
 
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
+	"github.com/techx/playground/utils"
 
 	"github.com/go-redis/redis/v7"
 	"github.com/labstack/echo/v4"
@@ -35,7 +36,7 @@ func (r RoomController) GetRooms(c echo.Context) error {
 
 	for i, roomCmd := range roomCmds {
 		roomData, _ := roomCmd.Result()
-		db.Bind(roomData, &rooms[i])
+		utils.Bind(roomData, &rooms[i])
 	}
 
 	return c.JSON(http.StatusOK, rooms)

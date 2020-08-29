@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/go-redis/redis/v7"
+	"github.com/techx/playground/utils"
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
 )
@@ -17,26 +18,31 @@ type QueueSubscribePacket struct {
 	Characters []*models.Character `json:"characters"`
 }
 
-func NewQueueSubscribePacket(SponsorID string) *QueueSubscribePacket {
-	p := QueueSubscribePacket{}
-	p.SponsorID = SponsorID
+func NewQueueSubscribePacket(sponsorID string) *QueueSubscribePacket {
+	p := QueueSubscribePacket{		
+		BasePacket: BasePacket{
+			Type: "queue_subscribe",
+		},
+		SponsorID:  sponsorID,
+	}
 	
-	hackerIDs, _ := db.GetInstance().LRange("sponsor:" + SponsorID + ":hackerqueue", 0 , -1).Result()
+	hackerIDs, _ := db.GetInstance().LRange("sponsor:" + sponsorID + ":hackerqueue", 0 , -1).Result()
 
 	pip := db.GetInstance().Pipeline()
-	characterCmds := make([]*redis.StringStringMapCmd, len(hackerIDs))
-	
+	characterCmds := make([]*redis.StringStringMapCmd, len(hackerIDs))	
+	characters := make([]*models.Character, len(characterCmds))
+
 	for i, hackerID := range hackerIDs {
 		characterCmds[i] = pip.HGetAll("character:" + hackerID)
+		characters[i] = new(models.Character)
+		characters[i].ID = hackerID
 	}
 	
 	pip.Exec()
-	characters := make([]*models.Character, len(characterCmds))
 	
 	for i, characterCmd := range characterCmds {
 		characterRes, _ := characterCmd.Result()
-		characters[i] = new(models.Character)
-		db.Bind(characterRes, characters[i])
+		utils.Bind(characterRes, characters[i])
 	}
 
 	p.Characters = characters
