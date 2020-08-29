@@ -105,17 +105,17 @@ func ListenForUpdates(callback func(msg []byte)) {
 }
 
 func MonitorLeader() {
-	// Set our name so we can identify this client as an ingest
-	cmd := redis.NewStringCmd("client", "setname", ingestID)
-	instance.Process(cmd)
-
 	i := 0
 
 	for range time.NewTicker(time.Second).C {
-		// Get list of clients connected to Redis
-		clientsRes, _ := instance.ClientList().Result()
+		// Set our name so we can identify this client as an ingest
+		// Not sure why, but the client names occasionally get reset -- let's do it every second
+		pip := instance.Pipeline()
+		pip.Process(redis.NewStringCmd("client", "setname", ingestID))
+		clientsCmd := instance.ClientList()
+		pip.Exec()
 
-		// The leader is the first client -- the oldest connection
+		clientsRes, _ := clientsCmd.Result()
 		clients := strings.Split(clientsRes, "\n")
 
 		connectedIngestIDs := mapset.NewSet()
@@ -150,15 +150,6 @@ func MonitorLeader() {
 
 		// If we're not the leader, don't do any leader actions
 		if leaderID != ingestID {
-			if leader {
-				// In theory, you should never be able to become the leader and then lose leadership status
-				// without disconnecting from Redis. If this happens, make sure our name is set correctly,
-				// because sometimes Redis seems to reset our name for no reason
-				cmd := redis.NewStringCmd("client", "setname", ingestID)
-				instance.Process(cmd)
-				fmt.Println("resetting name")
-			}
-
 			fmt.Println("not leader")
 			continue
 		}
