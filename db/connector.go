@@ -1,12 +1,14 @@
 package db
 
 import (
-	"encoding"
+	"encoding/json"
+	"fmt"
+	"math/rand"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db/models"
 	"github.com/techx/playground/utils"
@@ -18,7 +20,7 @@ import (
 const ingestClientName string = "ingest"
 
 var (
-	ingestID int
+	ingestID string
 	instance *redis.Client
 	psc      *redis.PubSub
 )
@@ -43,23 +45,24 @@ func Init(reset bool) {
 		})
 	}
 
-	pip := instance.Pipeline()
-
 	if reset {
 		instance.FlushDB()
 	}
 
 	// Save our ingest ID
-	ingestRes, _ := instance.ClientID().Result()
-	ingestID = int(ingestRes)
+	ingestID = uuid.New().String()
 
 	// Initialize jukebox
 	// TODO: Make sure this works correctly when there are multiple ingests
-	pip.HSet("queuestatus", utils.StructToMap(models.QueueStatus{SongEnd: time.Now()}))
-	pip.Exec()
+	instance.HSet("queuestatus", utils.StructToMap(models.QueueStatus{SongEnd: time.Now()}))
+
+	// Update TIM the beaver
+	character := *models.NewTIMCharacter()
+	instance.HSet("character:tim", utils.StructToMap(character))
+	instance.SAdd("room:home:characters", "tim")
 }
 
-func GetIngestID() int {
+func GetIngestID() string {
 	return ingestID
 }
 
@@ -68,20 +71,20 @@ func GetInstance() *redis.Client {
 }
 
 func ListenForUpdates(callback func(msg []byte)) {
-	ingests, err := instance.SMembers("ingests").Result()
+	ingests, err := instance.LRange("ingests", 0, -1).Result()
 
 	if err != nil {
 		panic(err)
 	}
 
 	// Let other ingest servers know about this one
-	instance.Publish("ingest", strconv.Itoa(ingestID))
+	instance.Publish("ingest", ingestID)
 
 	// subscribe to existing ingests, send id to master
-	psc = instance.Subscribe(append(ingests, "ingest")...)
+	psc = instance.Subscribe(append(ingests, "ingest", "all")...)
 
 	// Add this ingest to the ingests set
-	instance.SAdd("ingests", ingestID)
+	instance.RPush("ingests", ingestID)
 
 	for {
 		msg, err := psc.ReceiveMessage()
@@ -102,8 +105,10 @@ func ListenForUpdates(callback func(msg []byte)) {
 
 func MonitorLeader() {
 	// Set our name so we can identify this client as an ingest
-	cmd := redis.NewStringCmd("client", "setname", ingestClientName)
+	cmd := redis.NewStringCmd("client", "setname", ingestID)
 	instance.Process(cmd)
+
+	i := 0
 
 	for range time.NewTicker(time.Second).C {
 		// Get list of clients connected to Redis
@@ -111,9 +116,6 @@ func MonitorLeader() {
 
 		// The leader is the first client -- the oldest connection
 		clients := strings.Split(clientsRes, "\n")
-
-		var leaderID int
-		foundLeader := false
 
 		connectedIngestIDs := mapset.NewSet()
 
@@ -127,25 +129,27 @@ func MonitorLeader() {
 
 			clientName := strings.Split(clientParts[3], "=")[1]
 
-			if clientName != ingestClientName {
-				// This redis client is something else, probably redis-cli
+			if len(clientName) != 36 {
+				// This isn't a uuid, not an ingest
 				continue
 			}
 
-			clientID := strings.Split(clientParts[0], "=")[1]
-			connectedIngestIDs.Add(clientID)
+			connectedIngestIDs.Add(clientName)
+		}
 
-			// Only save the leader ID for the first ingest server
-			if foundLeader {
-				continue
+		var leaderID string
+		ingestIDs, _ := instance.LRange("ingests", 0, -1).Result()
+
+		for _, ingestID := range ingestIDs {
+			if connectedIngestIDs.Contains(ingestID) {
+				leaderID = ingestID
+				break
 			}
-
-			leaderID, _ = strconv.Atoi(clientID)
-			foundLeader = true
 		}
 
 		// If we're not the leader, don't do any leader actions
 		if leaderID != ingestID {
+			fmt.Println("not leader")
 			continue
 		}
 
@@ -154,16 +158,16 @@ func MonitorLeader() {
 		//////////////////////////////////////////////
 
 		// Take care of ingest servers that got disconnected
-		savedIngestIDs, _ := instance.SMembers("ingests").Result()
-
-		for _, id := range savedIngestIDs {
-			if connectedIngestIDs.Contains(id) {
+		for _, ingestID := range ingestIDs {
+			if connectedIngestIDs.Contains(ingestID) {
 				// This ingest is currently connected to Redis
 				continue
 			}
 
+			fmt.Println("removing", ingestID)
+
 			// Remove characters connected to this ingest from their rooms
-			characters, _ := instance.SMembers("ingest:" + id + ":characters").Result()
+			characters, _ := instance.SMembers("ingest:" + ingestID + ":characters").Result()
 
 			pip := instance.Pipeline()
 			roomCmds := make([]*redis.StringCmd, len(characters))
@@ -183,7 +187,7 @@ func MonitorLeader() {
 			pip.Exec()
 
 			// Ingest has been taken care of, remove from set
-			instance.SRem("ingests", id)
+			instance.LRem("ingests", 0, ingestID)
 		}
 
 		// Get song queue status
@@ -211,9 +215,88 @@ func MonitorLeader() {
 				instance.HSet("queuestatus", utils.StructToMap(newStatus))
 			}
 		}
+
+		if i%15 == 0 {
+			characterRes, _ := instance.HGetAll("character:tim").Result()
+			var tim models.Character
+			tim.ID = "tim"
+			utils.Bind(characterRes, &tim)
+
+			whatToDo := rand.Float64()
+
+			if whatToDo < 0.33 {
+				hallwaysRes, _ := instance.SMembers("room:" + tim.Room + ":hallways").Result()
+				hallwayID := hallwaysRes[rand.Intn(len(hallwaysRes))]
+
+				hallwayRes, _ := instance.HGetAll("hallway:" + hallwayID).Result()
+				var hallway models.Hallway
+				utils.Bind(hallwayRes, &hallway)
+
+				movePacket := map[string]interface{}{
+					"type": "move",
+					"id":   "tim",
+					"room": tim.Room,
+					"x":    hallway.X,
+					"y":    hallway.Y,
+				}
+				data, _ := json.Marshal(movePacket)
+
+				pip := instance.Pipeline()
+				pip.HSet("character:tim", "x", hallway.X)
+				pip.HSet("character:tim", "y", hallway.Y)
+				pip.Publish("all", data)
+				pip.Exec()
+
+				time.AfterFunc(4*time.Second, func() {
+					pip := instance.Pipeline()
+					pip.SRem("room:"+tim.Room+":characters", "tim")
+					pip.SAdd("room:"+hallway.To+":characters", "tim")
+					pip.HSet("character:tim", "room", hallway.To)
+					pip.HSet("character:tim", "x", hallway.ToX)
+					pip.HSet("character:tim", "y", hallway.ToY)
+
+					timData, _ := tim.MarshalBinary()
+					var newTimData map[string]interface{}
+					json.Unmarshal(timData, &newTimData)
+
+					teleportPacket := map[string]interface{}{
+						"type":      "teleport",
+						"character": newTimData,
+						"from":      tim.Room,
+						"to":        hallway.To,
+						"x":         hallway.ToX,
+						"y":         hallway.ToY,
+					}
+
+					data, _ = json.Marshal(teleportPacket)
+					pip.Publish("all", data)
+					pip.Exec()
+				})
+			} else {
+				x := rand.Float64()
+				y := rand.Float64()
+
+				movePacket := map[string]interface{}{
+					"type": "move",
+					"id":   "tim",
+					"room": tim.Room,
+					"x":    x,
+					"y":    y,
+				}
+				data, _ := json.Marshal(movePacket)
+
+				pip := instance.Pipeline()
+				pip.HSet("character:tim", "x", x)
+				pip.HSet("character:tim", "y", y)
+				pip.Publish("all", data)
+				pip.Exec()
+			}
+		}
+
+		i++
 	}
 }
 
-func Publish(msg encoding.BinaryMarshaler) {
-	instance.Publish(strconv.Itoa(ingestID), msg)
+func Publish(msg interface{}) {
+	instance.Publish(ingestID, msg)
 }

@@ -56,7 +56,7 @@ func (h *Hub) disconnectClient(client *Client) {
 		pip := db.GetInstance().Pipeline()
 		pip.Del("character:" + client.character.ID + ":active")
 		pip.HDel("character:"+client.character.ID, "ingest")
-		pip.SRem("ingest:"+strconv.Itoa(db.GetIngestID())+":characters", client.character.ID)
+		pip.SRem("ingest:"+db.GetIngestID()+":characters", client.character.ID)
 		teammatesCmd := pip.SMembers("character:" + client.character.ID + ":teammates")
 		friendsCmd := pip.SMembers("character:" + client.character.ID + ":friends")
 		pip.Exec()
@@ -318,7 +318,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		// Add this character's id to this ingest in Redis
-		pip.SAdd("ingest:"+strconv.Itoa(character.Ingest)+":characters", character.ID)
+		pip.SAdd("ingest:"+character.Ingest+":characters", character.ID)
 
 		character.Ingest = db.GetIngestID()
 		pip.HSet("character:"+character.ID, "ingest", db.GetIngestID())
