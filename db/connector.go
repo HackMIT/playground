@@ -22,6 +22,7 @@ const ingestClientName string = "ingest"
 var (
 	ingestID string
 	instance *redis.Client
+	leader   bool
 	psc      *redis.PubSub
 )
 
@@ -149,6 +150,15 @@ func MonitorLeader() {
 
 		// If we're not the leader, don't do any leader actions
 		if leaderID != ingestID {
+			if leader {
+				// In theory, you should never be able to become the leader and then lose leadership status
+				// without disconnecting from Redis. If this happens, make sure our name is set correctly,
+				// because sometimes Redis seems to reset our name for no reason
+				cmd := redis.NewStringCmd("client", "setname", ingestID)
+				instance.Process(cmd)
+				fmt.Println("resetting name")
+			}
+
 			fmt.Println("not leader")
 			continue
 		}
@@ -156,6 +166,9 @@ func MonitorLeader() {
 		//////////////////////////////////////////////
 		// ALL CODE BELOW IS ONLY RUN ON THE LEADER //
 		//////////////////////////////////////////////
+
+		// Mark ourselves as the leader
+		leader = true
 
 		// Take care of ingest servers that got disconnected
 		for _, ingestID := range ingestIDs {
@@ -226,6 +239,11 @@ func MonitorLeader() {
 
 			if whatToDo < 0.33 {
 				hallwaysRes, _ := instance.SMembers("room:" + tim.Room + ":hallways").Result()
+
+				if len(hallwaysRes) == 0 {
+					continue
+				}
+
 				hallwayID := hallwaysRes[rand.Intn(len(hallwaysRes))]
 
 				hallwayRes, _ := instance.HGetAll("hallway:" + hallwayID).Result()

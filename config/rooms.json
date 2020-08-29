@@ -51,6 +51,43 @@
         "to": "nonprofits",
         "toX": 0.0194,
         "toY": 0.5099
+      },
+      {
+        "x": 0.2513,
+        "y": 0.6688,
+        "radius": 0.0729,
+        "to": "plat_sponsor_area",
+        "toX": 0.5,
+        "toY": 0.03
+      }
+    ]
+  },
+  {
+    "id": "plat_sponsor_area",
+    "background": "plat_sponsor_area.svg",
+    "sponsor": false,
+    "elements": [
+      {
+        "x": 0.7532,
+        "y": 0.3583,
+        "width": 0.1406,
+        "path": "intersystems_building.svg"
+      },
+      {
+        "x": 0.2431,
+        "y": 0.3618,
+        "width": 0.1496,
+        "path": "cambridge_telecom_building.svg"
+      }
+    ],
+    "hallways": [
+      {
+        "x": 0.5,
+        "y": 0.03,
+        "radius": 0.0641,
+        "to": "home",
+        "toX": 0.2513,
+        "toY": 0.6688
       }
     ]
   },
