@@ -18,6 +18,12 @@ type TeleportPacket struct {
 
 	// The room they're moving to
 	To string `json:"to"`
+
+	// The resulting X coordinate
+	X float64 `json:"x"`
+
+	// The resulting Y coordinate
+	Y float64 `json:"y"`
 }
 
 func NewTeleportPacket(character *models.Character, from, to string) *TeleportPacket {
@@ -26,6 +32,8 @@ func NewTeleportPacket(character *models.Character, from, to string) *TeleportPa
 	p.From = from
 	p.To = to
 	p.Character = character
+	p.X = 0.5
+	p.Y = 0.5
 	return p
 }
 

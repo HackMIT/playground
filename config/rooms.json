@@ -40,7 +40,54 @@
         "x": 0.8272,
         "y": 0.4319,
         "radius": 0.0341,
-        "to": "nightclub"
+        "to": "nightclub",
+        "toX": 0.75,
+        "toY": 0.6938
+      },
+      {
+        "x": 0.7268,
+        "y": 0.68,
+        "radius": 0.0717,
+        "to": "nonprofits",
+        "toX": 0.0194,
+        "toY": 0.5099
+      },
+      {
+        "x": 0.2513,
+        "y": 0.6688,
+        "radius": 0.0729,
+        "to": "plat_sponsor_area",
+        "toX": 0.5,
+        "toY": 0.03
+      }
+    ]
+  },
+  {
+    "id": "plat_sponsor_area",
+    "background": "plat_sponsor_area.svg",
+    "sponsor": false,
+    "elements": [
+      {
+        "x": 0.7532,
+        "y": 0.3583,
+        "width": 0.1406,
+        "path": "intersystems_building.svg"
+      },
+      {
+        "x": 0.2431,
+        "y": 0.3618,
+        "width": 0.1496,
+        "path": "cambridge_telecom_building.svg"
+      }
+    ],
+    "hallways": [
+      {
+        "x": 0.5,
+        "y": 0.03,
+        "radius": 0.0641,
+        "to": "home",
+        "toX": 0.2513,
+        "toY": 0.6688
       }
     ]
   },
@@ -50,28 +97,170 @@
     "sponsor": false,
     "elements": [
       {
-        "x": 0.5,
-        "y": 0.5,
-        "width": 0.1,
+        "x": 0.3624,
+        "y": 0.2837,
+        "width": 0.1303,
         "path": "tent.svg"
       },
       {
-        "x": 0.5,
-        "y": 0.5,
-        "width": 0.1,
+        "x": 0.2111,
+        "y": 0.117,
+        "width": 0.1303,
+        "path": "tent.svg"
+      },
+      {
+        "x": 0.1194,
+        "y": 0.3195,
+        "width": 0.1303,
+        "path": "tent.svg"
+      },
+      {
+        "x": 0.2881,
+        "y": 0.6652,
+        "width": 0.1303,
+        "path": "tent.svg"
+      },
+      {
+        "x": 0.0923,
+        "y": 0.7652,
+        "width": 0.1303,
+        "path": "tent.svg"
+      },
+      {
+        "x": 0.3462,
+        "y": 0.8261,
+        "width": 0.0509,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.1788,
+        "y": 0.9088,
+        "width": 0.0509,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.1695,
+        "y": 0.5841,
+        "width": 0.0509,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.3933,
+        "y": 0.0854,
+        "width": 0.0509,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.0537,
+        "y": 0.1545,
+        "width": 0.0509,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.5453,
+        "y": 0.7705,
+        "width": 0.0509,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.8104,
+        "y": 0.9199,
+        "width": 0.0509,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.8605,
+        "y": 0.673,
+        "width": 0.0509,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.614,
+        "y": 0.3817,
+        "width": 0.0509,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.8146,
+        "y": 0.089,
+        "width": 0.0509,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.9224,
+        "y": 0.3375,
+        "width": 0.0232,
         "path": "pile_of_logs.svg"
       },
       {
-        "x": 0.5,
-        "y": 0.5,
-        "width": 0.1,
+        "x": 0.6361,
+        "y": 0.2501,
+        "width": 0.0253,
         "path": "campfire.svg"
       },
       {
-        "x": 0.5,
-        "y": 0.5,
-        "width": 0.1,
+        "x": 0.6995,
+        "y": 0.1315,
+        "width": 0.1303,
+        "path": "tent_flipped.svg"
+      },
+      {
+        "x": 0.7597,
+        "y": 0.3242,
+        "width": 0.1303,
+        "path": "tent_flipped.svg"
+      },
+      {
+        "x": 0.9056,
+        "y": 0.181,
+        "width": 0.1303,
+        "path": "tent_flipped.svg"
+      },
+      {
+        "x": 0.9008,
+        "y": 0.8291,
+        "width": 0.1303,
+        "path": "tent_flipped.svg"
+      },
+      {
+        "x": 0.6987,
+        "y": 0.7204,
+        "width": 0.1303,
+        "path": "tent_flipped.svg"
+      },
+      {
+        "x": 0.2111,
+        "y": 0.7797,
+        "width": 0.0253,
+        "path": "campfire.svg"
+      },
+      {
+        "x": 0.2777,
+        "y": 0.3734,
+        "width": 0.0428,
         "path": "signpost.svg"
+      },
+      {
+        "x": 0.2263,
+        "y": 0.2752,
+        "width": 0.0705,
+        "path": "picnic_table.svg"
+      },
+      {
+        "x": 0.6299,
+        "y": 0.8567,
+        "width": 0.0702,
+        "path": "picnic_table_flipped.svg"
+      }
+    ],
+    "hallways": [
+      {
+        "x": 0.0141,
+        "y": 0.5042,
+        "radius": 0.0613,
+        "to": "home",
+        "toX": 0.7167,
+        "toY": 0.6815
       }
     ]
   },
@@ -147,7 +336,9 @@
         "x": 0.7576,
         "y": 0.6749,
         "radius": 0.0333,
-        "to": "home"
+        "to": "home",
+        "toX": 0.8326,
+        "toY": 0.4383
       }
     ]
   },

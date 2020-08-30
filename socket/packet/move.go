@@ -21,6 +21,18 @@ type MovePacket struct {
 	Y float64 `json:"y"`
 }
 
+func NewMovePacket(id, room string, x, y float64) *MovePacket {
+	return &MovePacket{
+		BasePacket: BasePacket{
+			Type: "move",
+		},
+		ID:   id,
+		Room: room,
+		X:    x,
+		Y:    y,
+	}
+}
+
 func (p MovePacket) MarshalBinary() ([]byte, error) {
 	return json.Marshal(p)
 }
