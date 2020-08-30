@@ -767,7 +767,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			homeExists, _ := db.GetInstance().SIsMember("rooms", "home:"+m.sender.character.ID).Result()
 
 			if !homeExists {
-				models.CreateHomeRoom(pip, m.sender.character.ID)
+				db.CreateRoom("home:"+m.sender.character.ID, "personal")
 			}
 
 			res.From = m.sender.character.Room
