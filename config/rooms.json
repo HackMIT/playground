@@ -1,6 +1,6 @@
 [
   {
-    "id": "home",
+    "id": "home2",
     "background": "town_square.svg",
     "sponsor": false,
     "elements": [
@@ -63,10 +63,136 @@
     ]
   },
   {
-    "id": "plat_sponsor_area",
+    "id": "home",
     "background": "plat_sponsor_area.svg",
     "sponsor": false,
     "elements": [
+      {
+        "x": 0.6118,
+        "y": 0.2776,
+        "width": 0.0412,
+        "path": "tree2.svg"
+      },
+      {
+        "x": 0.6778,
+        "y": 0.1727,
+        "width": 0.0412,
+        "path": "tree2.svg"
+      },
+      {
+        "x": 0.0988,
+        "y": 0.1272,
+        "width": 0.08,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.1628,
+        "y": 0.2679,
+        "width": 0.08,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.3016,
+        "y": 0.3976,
+        "width": 0.08,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.3996,
+        "y": 0.1877,
+        "width": 0.08,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.6205,
+        "y": 0.0494,
+        "width": 0.08,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.658,
+        "y": 0.3111,
+        "width": 0.08,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.8309,
+        "y": 0.1087,
+        "width": 0.08,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.9239,
+        "y": 0.184,
+        "width": 0.08,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.8517,
+        "y": 0.5025,
+        "width": 0.08,
+        "path": "tree.svg"
+      },
+      {
+        "x": 0.0953,
+        "y": 0.2974,
+        "width": 0.0412,
+        "path": "tree2.svg"
+      },
+      {
+        "x": 0.1278,
+        "y": 0.4949,
+        "width": 0.0412,
+        "path": "tree2.svg"
+      },
+      {
+        "x": 0.0688,
+        "y": 0.7221,
+        "width": 0.0412,
+        "path": "tree2.svg"
+      },
+      {
+        "x": 0.3133,
+        "y": 0.106,
+        "width": 0.0412,
+        "path": "tree2.svg"
+      },
+      {
+        "x": 0.3535,
+        "y": 0.2678,
+        "width": 0.0412,
+        "path": "tree2.svg"
+      },
+      {
+        "x": 0.889,
+        "y": 0.053,
+        "width": 0.0412,
+        "path": "tree2.svg"
+      },
+      {
+        "x": 0.8765,
+        "y": 0.3196,
+        "width": 0.0412,
+        "path": "tree2.svg"
+      },
+      {
+        "x": 0.9341,
+        "y": 0.6258,
+        "width": 0.0412,
+        "path": "tree2.svg"
+      },
+      {
+        "x": 0.0368,
+        "y": 0.2382,
+        "width": 0.0509,
+        "path": "tree2.svg"
+      },
+      {
+        "x": 0.0471,
+        "y": 0.5147,
+        "width": 0.0412,
+        "path": "tree2.svg"
+      },
       {
         "x": 0.7532,
         "y": 0.3583,
@@ -78,6 +204,78 @@
         "y": 0.3618,
         "width": 0.1496,
         "path": "cambridge_telecom_building.svg"
+      },
+      {
+        "x": 0.4547,
+        "y": 0.6668,
+        "width": 0.0223,
+        "path": "street_lamp.svg"
+      },
+      {
+        "x": 0.345,
+        "y": 0.5544,
+        "width": 0.0223,
+        "path": "street_lamp.svg"
+      },
+      {
+        "x": 0.2695,
+        "y": 0.626,
+        "width": 0.0223,
+        "path": "street_lamp.svg"
+      },
+      {
+        "x": 0.6575,
+        "y": 0.5532,
+        "width": 0.0223,
+        "path": "street_lamp.svg"
+      },
+      {
+        "x": 0.5444,
+        "y": 0.668,
+        "width": 0.0223,
+        "path": "street_lamp.svg"
+      },
+      {
+        "x": 0.7283,
+        "y": 0.6273,
+        "width": 0.0223,
+        "path": "street_lamp.svg"
+      },
+      {
+        "x": 0.6795,
+        "y": 0.7406,
+        "width": 0.0483,
+        "path": "bench.svg"
+      },
+      {
+        "x": 0.3156,
+        "y": 0.9369,
+        "width": 0.0483,
+        "path": "bench.svg"
+      },
+      {
+        "x": 0.3233,
+        "y": 0.7431,
+        "width": 0.0483,
+        "path": "bench_flipped.svg"
+      },
+      {
+        "x": 0.6802,
+        "y": 0.9381,
+        "width": 0.0483,
+        "path": "bench_flipped.svg"
+      },
+      {
+        "x": 0.6181,
+        "y": 0.7957,
+        "width": 0.0157,
+        "path": "recycling_bin.svg"
+      },
+      {
+        "x": 0.5,
+        "y": 0.8254,
+        "width": 0.0879,
+        "path": "fountain.svg"
       }
     ],
     "hallways": [
