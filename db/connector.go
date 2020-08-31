@@ -26,6 +26,7 @@ var (
 	psc      *redis.PubSub
 )
 
+// Init creates the database connection
 func Init(shouldReset bool) {
 	config := config.GetConfig()
 

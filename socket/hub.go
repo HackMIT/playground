@@ -27,19 +27,18 @@ import (
 
 const youtubeAPIKey = "AIzaSyBbKVxrxksLlxJYno6ZG_TzHvIpXU2O3eM"
 
-// Hub maintains the set of active clients and broadcasts messages to the
-// clients.
+// Hub maintains the set of active clients and broadcasts messages to the clients
 type Hub struct {
-	// Registered clients.
+	// Registered clients
 	clients map[string]*Client
 
-	// Inbound messages from the clients.
+	// Inbound messages from the clients
 	broadcast chan *SocketMessage
 
-	// Register requests from the clients.
+	// Register requests from the clients
 	register chan *Client
 
-	// Unregister requests from clients.
+	// Unregister requests from clients
 	unregister chan *Client
 }
 
@@ -767,7 +766,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			homeExists, _ := db.GetInstance().SIsMember("rooms", "home:"+m.sender.character.ID).Result()
 
 			if !homeExists {
-				db.CreateRoom("home:"+m.sender.character.ID, "personal")
+				db.CreateRoom("home:"+m.sender.character.ID, db.Personal)
 			}
 
 			res.From = m.sender.character.Room

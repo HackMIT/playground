@@ -7,8 +7,29 @@ import (
 	"github.com/google/uuid"
 )
 
-func CreateRoom(id, filename string) {
-	dat, err := ioutil.ReadFile("config/rooms/" + filename + ".json")
+// RoomType is an enum representing all possible room templates
+type RoomType string
+
+const (
+	// Home is the room that everyone spawns in, otherwise known as town square
+	Home RoomType = "home"
+
+	// Nightclub is the club, accessible from town square
+	Nightclub = "nightclub"
+
+	// Nonprofits is the campground with all of the nonprofit tents
+	Nonprofits = "nonprofits"
+
+	// Personal is a template for someone's personal room
+	Personal = "personal"
+
+	// PlatArea is the area accessible from town square with the two plat sponsor buildings
+	PlatArea = "plat_area"
+)
+
+// CreateRoom builds a room with the given ID from a template file
+func CreateRoom(id string, roomType RoomType) {
+	dat, err := ioutil.ReadFile("config/rooms/" + string(roomType) + ".json")
 
 	if err != nil {
 		return
@@ -76,8 +97,8 @@ func CreateRoom(id, filename string) {
 
 func reset() {
 	instance.FlushDB()
-	CreateRoom("home", "home")
-	CreateRoom("nightclub", "nightclub")
-	CreateRoom("nonprofits", "nonprofits")
-	CreateRoom("plat_area", "plat_area")
+	CreateRoom("home", Home)
+	CreateRoom("nightclub", Nightclub)
+	CreateRoom("nonprofits", Nonprofits)
+	CreateRoom("plat_area", PlatArea)
 }
