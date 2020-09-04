@@ -818,17 +818,17 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.CharacterID = characterIDRes
 		subscriberIDs, _ := subscribers.Result()
 		data, _ := res.MarshalBinary()
-		
+
 		// TODO @ Jack: make sure SendBytes sends to characters over all ingest servers
-		for _ , id := range subscriberIDs {
-			h.SendBytes("character:" + id, data)
+		for _, id := range subscriberIDs {
+			h.SendBytes("character:"+id, data)
 		}
 	case "queue_push":
 		res := packet.QueuePushPacket{}
 		json.Unmarshal(m.msg, &res)
 
 		pip := db.GetInstance().Pipeline()
-		pip.RPush("sponsor:" + res.SponsorID + ":hackerqueue", m.sender.character.ID)
+		pip.RPush("sponsor:"+res.SponsorID+":hackerqueue", m.sender.character.ID)
 		characterCmd := pip.HGetAll("character:" + m.sender.character.ID)
 		subscribers := pip.SMembers("sponsor:" + res.SponsorID + ":subscribed")
 		pip.Exec()
@@ -842,45 +842,41 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		data, _ := res.MarshalBinary()
 
 		// TODO @ Jack: make sure SendBytes sends to characters over all ingest servers
-		for _ , id := range subscriberIDs {
+		for _, id := range subscriberIDs {
 			h.SendBytes("character:"+id, data)
 		}
 	case "queue_remove":
 		res := packet.QueueRemovePacket{}
-		res.CharacterID = m.sender.character.ID
 		json.Unmarshal(m.msg, &res)
+		res.CharacterID = m.sender.character.ID
 
 		pip := db.GetInstance().Pipeline()
-		pip.LRem("sponsor:" + res.SponsorID + ":hackerqueue", 0, res.CharacterID)
+		pip.LRem("sponsor:"+res.SponsorID+":hackerqueue", 0, res.CharacterID)
 		subscribers := pip.SMembers("sponsor:" + res.SponsorID + ":subscribed")
 		pip.Exec()
 
 		subscriberIDs, _ := subscribers.Result()
 		data, _ := res.MarshalBinary()
-		
+
 		// TODO @ Jack: make sure SendBytes sends to characters over all ingest servers
-		for _ , id := range subscriberIDs {
+		for _, id := range subscriberIDs {
 			h.SendBytes("character:"+id, data)
 		}
 	case "queue_subscribe":
 		res := packet.QueueSubscribePacket{}
 		json.Unmarshal(m.msg, &res)
 
-		pip := db.GetInstance().Pipeline()
-		pip.SAdd("sponsor:" + res.SponsorID + ":subscribed", m.sender.character.ID)
-		pip.Exec()
+		db.GetInstance().SAdd("sponsor:"+res.SponsorID+":subscribed", m.sender.character.ID)
 
 		resp := packet.NewQueueSubscribePacket(res.SponsorID)
 		data, _ := resp.MarshalBinary()
-		
+
 		h.SendBytes("character:"+m.sender.character.ID, data)
 	case "queue_unsubscribe":
 		res := packet.QueueUnsubscribePacket{}
 		json.Unmarshal(m.msg, &res)
 
-		pip := db.GetInstance().Pipeline()
-		pip.SRem("sponsor:" + res.SponsorID + ":subscribed", m.sender.character.ID)
-		pip.Exec()
+		db.GetInstance().SRem("sponsor:"+res.SponsorID+":subscribed", m.sender.character.ID)
 	case "update_map":
 		// Parse update packet
 		res := packet.UpdateMapPacket{}
