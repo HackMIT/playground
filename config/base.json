@@ -9,5 +9,9 @@
   },
   "jwt": {
     "secret": "asdf"
+  },
+  "webpush": {
+    "public_key": "BB584OYloNsGGb3p4lIv4hb0J4ZPgd3WlqhEVA_e9DuZsJ2XMaBOplUlnPIAXSna8gDchIHtF9_MNzMfd9jTEtQ",
+    "private_key": "UHZ4QPdkoq6o3pCvbIRNh4NWBJ_lYAFXBIAF78ETLH0"
   }
 }

@@ -8,10 +8,12 @@ import (
 	"hash/fnv"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/SherClockHolmes/webpush-go"
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
@@ -184,7 +186,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		return
 	}
 
-	if m.sender.character == nil && (res.Type != "auth" && res.Type != "join") {
+	if m.sender.character == nil && (res.Type != "auth" && res.Type != "email_code" && res.Type != "join") {
 		// No packets allowed until we've signed in
 		return
 	}
@@ -303,6 +305,33 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			utils.Bind(characterRes, character)
 			character.ID = characterID
+		} else if res.Email != "" {
+			isValidLoginRequest, _ := db.GetInstance().SIsMember("login_requests", res.Email+","+strconv.Itoa(res.Code)).Result()
+
+			if !isValidLoginRequest {
+				return
+			}
+
+			// Load this client's character
+			characterID, err := db.GetInstance().HGet("emailToCharacter", res.Email).Result()
+
+			if err != nil {
+				// Never seen this character before, create a new one
+				character = models.NewCharacter("Player")
+				character.ID = uuid.New().String()
+
+				// Add character to database
+				pip.HSet("character:"+character.ID, utils.StructToMap(character))
+				pip.HSet("emailToCharacter", res.Email, character.ID)
+			} else {
+				// This person has logged in before, fetch from Redis
+				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
+				utils.Bind(characterRes, &character)
+				character.ID = characterID
+			}
+
+			res.Email = ""
+			res.Code = 0
 		} else {
 			// Client provided no authentication data
 			return
@@ -432,6 +461,23 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Publish event to other ingest servers
 		h.Send(res)
+	case "email_code":
+		// Parse email code packet
+		res := packet.EmailCodePacket{}
+		json.Unmarshal(m.msg, &res)
+
+		// Make sure this email exists in our database
+		isValidEmail, _ := db.GetInstance().SIsMember("emails", res.Email).Result()
+
+		if !isValidEmail {
+			return
+		}
+
+		code := rand.Intn(1000000)
+		db.GetInstance().SAdd("login_requests", res.Email+","+strconv.Itoa(code))
+
+		// TODO (starter task): Send a nice email to this person with their code
+		fmt.Println(code)
 	case "event":
 		// Parse event packet
 		res := packet.EventPacket{}
@@ -642,6 +688,26 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.ID = m.sender.character.ID
 
 		h.Send(res)
+	case "register":
+		// Parse register packet
+		res := packet.RegisterPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		fmt.Println("sending")
+
+		resp, err := webpush.SendNotification([]byte("Test"), res.BrowserSubscription, &webpush.Options{
+			Subscriber:      "jbcook418@gmail.com",
+			VAPIDPublicKey:  config.GetConfig().GetString("webpush.public_key"),
+			VAPIDPrivateKey: config.GetConfig().GetString("webpush.private_key"),
+			TTL:             30,
+		})
+
+		if err != nil {
+			fmt.Println("Error sending browser notification:")
+			fmt.Println(err)
+		}
+
+		defer resp.Body.Close()
 	case "room_add":
 		// Parse room add packet
 		res := packet.RoomAddPacket{}
