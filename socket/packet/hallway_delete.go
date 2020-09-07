@@ -2,17 +2,24 @@ package packet
 
 import (
 	"encoding/json"
+
+	"github.com/techx/playground/db/models"
 )
 
 // Sent by clients when they're deleting a hallway
 type HallwayDeletePacket struct {
 	BasePacket
+	Packet
 
 	// The room being updated
 	Room string `json:"room"`
 
 	// The ID of the hallway being deleted
 	ID string `json:"id"`
+}
+
+func (p HallwayDeletePacket) PermissionCheck(characterID string, role models.Role) bool {
+	return role == models.Organizer
 }
 
 func (p HallwayDeletePacket) MarshalBinary() ([]byte, error) {

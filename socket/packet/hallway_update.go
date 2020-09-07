@@ -9,6 +9,7 @@ import (
 // Sent by clients when they're updating a hallway
 type HallwayUpdatePacket struct {
 	BasePacket
+	Packet
 
 	// The room being updated
 	Room string `json:"room"`
@@ -18,6 +19,10 @@ type HallwayUpdatePacket struct {
 
 	// The updated hallway
 	Hallway models.Hallway `json:"hallway"`
+}
+
+func (p HallwayUpdatePacket) PermissionCheck(characterID string, role models.Role) bool {
+	return role == models.Organizer
 }
 
 func (p HallwayUpdatePacket) MarshalBinary() ([]byte, error) {

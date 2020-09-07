@@ -6,6 +6,15 @@ import (
 	"github.com/google/uuid"
 )
 
+type Role int
+
+const (
+	Organizer Role = iota
+	SponsorRep
+	Mentor
+	Hacker
+)
+
 // Character is the digital representation of a client
 type Character struct {
 	ID             string  `json:"id" redis:"-"`

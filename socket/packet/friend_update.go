@@ -21,6 +21,7 @@ type Friend struct {
 
 type FriendUpdatePacket struct {
 	BasePacket
+	Packet
 
 	Friend Friend `json:"friend"`
 }

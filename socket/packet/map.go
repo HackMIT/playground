@@ -11,6 +11,7 @@ import (
 
 type MapPacket struct {
 	BasePacket
+	Packet
 
 	Locations []*models.Location `json:"locations"`
 }

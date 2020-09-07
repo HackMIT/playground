@@ -10,6 +10,7 @@ import (
 // server, and in turn other clients
 type JoinPacket struct {
 	BasePacket
+	Packet
 
 	// Client attributes
 	Name       string `json:"name,omitempty"`
@@ -28,6 +29,10 @@ func NewJoinPacket(character *models.Character) *JoinPacket {
 	p.BasePacket = BasePacket{Type: "join"}
 	p.Character = character
 	return p
+}
+
+func (p JoinPacket) PermissionCheck(characterID string, role models.Role) bool {
+	return true
 }
 
 func (p JoinPacket) MarshalBinary() ([]byte, error) {

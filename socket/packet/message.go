@@ -8,7 +8,12 @@ import (
 
 type MessagePacket struct {
 	BasePacket
+	Packet
 	*models.Message
+}
+
+func (p MessagePacket) PermissionCheck(characterID string, role models.Role) bool {
+	return true
 }
 
 func (p MessagePacket) MarshalBinary() ([]byte, error) {

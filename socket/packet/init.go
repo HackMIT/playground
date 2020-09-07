@@ -20,6 +20,7 @@ import (
 // world that they load into
 type InitPacket struct {
 	BasePacket
+	Packet
 
 	Character *models.Character `json:"character"`
 
