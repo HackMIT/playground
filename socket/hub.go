@@ -8,10 +8,12 @@ import (
 	"hash/fnv"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/SherClockHolmes/webpush-go"
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
@@ -27,19 +29,18 @@ import (
 
 const youtubeAPIKey = "AIzaSyBbKVxrxksLlxJYno6ZG_TzHvIpXU2O3eM"
 
-// Hub maintains the set of active clients and broadcasts messages to the
-// clients.
+// Hub maintains the set of active clients and broadcasts messages to the clients
 type Hub struct {
-	// Registered clients.
+	// Registered clients
 	clients map[string]*Client
 
-	// Inbound messages from the clients.
+	// Inbound messages from the clients
 	broadcast chan *SocketMessage
 
-	// Register requests from the clients.
+	// Register requests from the clients
 	register chan *Client
 
-	// Unregister requests from clients.
+	// Unregister requests from clients
 	unregister chan *Client
 }
 
@@ -51,6 +52,45 @@ func (h *Hub) Init() *Hub {
 	return h
 }
 
+func (h *Hub) disconnectClient(client *Client) {
+	if client.character != nil {
+		pip := db.GetInstance().Pipeline()
+		pip.Del("character:" + client.character.ID + ":active")
+		pip.HDel("character:"+client.character.ID, "ingest")
+		pip.SRem("ingest:"+db.GetIngestID()+":characters", client.character.ID)
+		teammatesCmd := pip.SMembers("character:" + client.character.ID + ":teammates")
+		friendsCmd := pip.SMembers("character:" + client.character.ID + ":friends")
+		pip.Exec()
+
+		// Remove this client from the room
+		room, _ := db.GetInstance().HGet("character:"+client.character.ID, "room").Result()
+		db.GetInstance().SRem("room:"+room+":characters", client.character.ID)
+
+		// Notify others that this client left
+		leavePacket := packet.NewLeavePacket(client.character, room)
+		h.Send(leavePacket)
+
+		// Tell their friends that they're offline now
+		teammateIDs, _ := teammatesCmd.Result()
+		friendIDs, _ := friendsCmd.Result()
+
+		res := packet.NewStatusPacket(client.character.ID, false)
+		data, _ := res.MarshalBinary()
+
+		// TODO: This will not work with multiple ingest servers
+		for _, id := range teammateIDs {
+			h.SendBytes("character:"+id, data)
+		}
+
+		for _, id := range friendIDs {
+			h.SendBytes("character:"+id, data)
+		}
+	}
+
+	delete(h.clients, client.id)
+	close(client.send)
+}
+
 // Listens for messages from websocket clients
 func (h *Hub) Run() {
 	for {
@@ -58,21 +98,7 @@ func (h *Hub) Run() {
 		case client := <-h.register:
 			h.clients[client.id] = client
 		case client := <-h.unregister:
-			// When a client disconnects, remove them from our clients map
-			delete(h.clients, client.id)
-			close(client.send)
-
-			if client.character == nil {
-				continue
-			}
-
-			// Remove this client from the room
-			room, _ := db.GetInstance().HGet("character:"+client.character.ID, "room").Result()
-			db.GetInstance().SRem("room:"+room+":characters", client.character.ID)
-
-			// Notify others that this client left
-			packet := packet.NewLeavePacket(client.character, room)
-			h.Send(packet)
+			h.disconnectClient(client)
 		case message := <-h.broadcast:
 			// Process incoming messages from clients
 			h.processMessage(message)
@@ -160,7 +186,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		return
 	}
 
-	if m.sender.character == nil && (res.Type != "auth" && res.Type != "join") {
+	if m.sender.character == nil && (res.Type != "auth" && res.Type != "email_code" && res.Type != "join") {
 		// No packets allowed until we've signed in
 		return
 	}
@@ -176,6 +202,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		character := new(models.Character)
 		var initPacket *packet.InitPacket
+		firstTime := false
 
 		pip := db.GetInstance().Pipeline()
 
@@ -185,14 +212,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			// Add character to database
 			character.Ingest = db.GetIngestID()
 			db.GetInstance().HSet("character:"+character.ID, utils.StructToMap(character))
-
-			if res.Type == "join" {
-				// Generate init packet before new character is added to room
-				initPacket = packet.NewInitPacket(character.ID, character.Room, true)
-
-				// Add to room:home at (0.5, 0.5)
-				pip.SAdd("room:home:characters", character.ID)
-			}
 		} else if res.QuillToken != "" {
 			// Fetch data from Quill
 			quillValues := map[string]string{
@@ -229,7 +248,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			if err != nil {
 				// Never seen this character before, create a new one
 				character = models.NewCharacterFromQuill(quillData)
-				character.ID = characterID
+				character.ID = uuid.New().String()
 
 				// Add character to database
 				pip.HSet("character:"+character.ID, utils.StructToMap(character))
@@ -279,6 +298,36 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			utils.Bind(characterRes, character)
 			character.ID = characterID
+		} else if res.Email != "" {
+			isValidLoginRequest, _ := db.GetInstance().SIsMember("login_requests", res.Email+","+strconv.Itoa(res.Code)).Result()
+
+			if !isValidLoginRequest {
+				return
+			}
+
+			// Load this client's character
+			characterID, err := db.GetInstance().HGet("emailToCharacter", res.Email).Result()
+
+			if err != nil {
+				// Never seen this character before, create a new one
+				character = models.NewCharacter("Player")
+				character.ID = uuid.New().String()
+
+				// Add character to database
+				pip.HSet("character:"+character.ID, utils.StructToMap(character))
+				pip.HSet("emailToCharacter", res.Email, character.ID)
+
+				// Make sure they get the account setup screen
+				firstTime = true
+			} else {
+				// This person has logged in before, fetch from Redis
+				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
+				utils.Bind(characterRes, &character)
+				character.ID = characterID
+			}
+
+			res.Email = ""
+			res.Code = 0
 		} else {
 			// Client provided no authentication data
 			return
@@ -287,19 +336,49 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		if res.Type == "join" {
 			// Generate init packet before new character is added to room
 			initPacket = packet.NewInitPacket(character.ID, character.Room, true)
+			initPacket.FirstTime = firstTime
 
 			// Add to whatever room they were in
 			pip.SAdd("room:"+character.Room+":characters", character.ID)
 		}
 
 		// Add this character's id to this ingest in Redis
-		pip.SAdd("ingest:"+strconv.Itoa(character.Ingest)+":characters", character.ID)
+		pip.SAdd("ingest:"+character.Ingest+":characters", character.ID)
 
 		character.Ingest = db.GetIngestID()
 		pip.HSet("character:"+character.ID, "ingest", db.GetIngestID())
 
+		// Make sure character ID isn't an empty string
+		if character.ID == "" {
+			fmt.Println("ERROR: Empty character ID on join")
+			return
+		}
+
+		// Set this character's status to active
+		pip.Set("character:"+character.ID+":active", "true", 0)
+
+		// Get info for friends notification
+		teammatesCmd := pip.SMembers("character:" + character.ID + ":teammates")
+		friendsCmd := pip.SMembers("character:" + character.ID + ":friends")
+
 		// Wrap up
 		pip.Exec()
+
+		// Tell their friends that they're online now
+		teammateIDs, _ := teammatesCmd.Result()
+		friendIDs, _ := friendsCmd.Result()
+
+		statusRes := packet.NewStatusPacket(character.ID, true)
+		statusData, _ := statusRes.MarshalBinary()
+
+		// TODO: This will not work with multiple ingest servers
+		for _, id := range teammateIDs {
+			h.SendBytes("character:"+id, statusData)
+		}
+
+		for _, id := range friendIDs {
+			h.SendBytes("character:"+id, statusData)
+		}
 
 		// Authenticate the user on our end
 		m.sender.character = character
@@ -379,6 +458,23 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Publish event to other ingest servers
 		h.Send(res)
+	case "email_code":
+		// Parse email code packet
+		res := packet.EmailCodePacket{}
+		json.Unmarshal(m.msg, &res)
+
+		// Make sure this email exists in our database
+		isValidEmail, _ := db.GetInstance().SIsMember("emails", res.Email).Result()
+
+		if !isValidEmail {
+			return
+		}
+
+		code := rand.Intn(1000000)
+		db.GetInstance().SAdd("login_requests", res.Email+","+strconv.Itoa(code))
+
+		// TODO (starter task): Send a nice email to this person with their code
+		fmt.Println(code)
 	case "event":
 		// Parse event packet
 		res := packet.EventPacket{}
@@ -404,6 +500,43 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			resp := packet.NewAchievementNotificationPacket("events")
 			data, _ := resp.MarshalBinary()
 			h.SendBytes("character:"+m.sender.character.ID, data)
+		}
+	case "friend_request":
+		// Parse friend request packet
+		res := packet.FriendRequestPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		if res.RecipientID == res.SenderID {
+			return
+		}
+
+		res.SenderID = m.sender.character.ID
+
+		// Check if the other person has also sent a friend request
+		isExistingRequest, _ := db.GetInstance().SIsMember("character:"+m.sender.character.ID+":requests", res.RecipientID).Result()
+
+		if isExistingRequest {
+			pip := db.GetInstance().Pipeline()
+			pip.SRem("character:"+m.sender.character.ID+":requests", res.RecipientID)
+			pip.SAdd("character:"+m.sender.character.ID+":friends", res.RecipientID)
+			pip.SAdd("character:"+res.RecipientID+":friends", m.sender.character.ID)
+			pip.Exec()
+
+			// TODO: This will not work with more than one ingest server
+			firstUpdate := packet.NewFriendUpdatePacket(res.RecipientID, m.sender.character.ID)
+			data, _ := firstUpdate.MarshalBinary()
+			h.SendBytes("character:"+res.RecipientID, data)
+
+			secondUpdate := packet.NewFriendUpdatePacket(m.sender.character.ID, res.RecipientID)
+			data, _ = secondUpdate.MarshalBinary()
+			h.SendBytes("character:"+m.sender.character.ID, data)
+		} else {
+			db.GetInstance().SAdd("character:"+res.RecipientID+":requests", m.sender.character.ID)
+
+			// TODO: This will not work with more than one ingest server
+			friendUpdate := packet.NewFriendUpdatePacket(res.RecipientID, m.sender.character.ID)
+			data, _ := friendUpdate.MarshalBinary()
+			h.SendBytes("character:"+res.RecipientID, data)
 		}
 	case "get_achievements":
 		// Send achievements back to client
@@ -552,6 +685,44 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res.ID = m.sender.character.ID
 
 		h.Send(res)
+	case "register":
+		// Parse register packet
+		res := packet.RegisterPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		pip := db.GetInstance().Pipeline()
+
+		if res.Name != "" {
+			pip.HSet("character:"+m.sender.character.ID, "name", res.Name)
+		}
+
+		if res.PhoneNumber != "" {
+			pip.HSet("character:"+m.sender.character.ID+":settings", "phoneNumber", res.PhoneNumber)
+		}
+
+		if res.BrowserSubscription != nil {
+			resp, err := webpush.SendNotification([]byte("Test"), res.BrowserSubscription, &webpush.Options{
+				Subscriber:      "jbcook418@gmail.com",
+				VAPIDPublicKey:  config.GetConfig().GetString("webpush.public_key"),
+				VAPIDPrivateKey: config.GetConfig().GetString("webpush.private_key"),
+				TTL:             30,
+			})
+
+			if err != nil {
+				fmt.Println("Error sending browser notification:")
+				fmt.Println(err)
+			}
+
+			defer resp.Body.Close()
+		}
+
+		roomCmd := pip.HGet("character:"+m.sender.character.ID, "room")
+		pip.Exec()
+		room, _ := roomCmd.Result()
+
+		initPacket := packet.NewInitPacket(m.sender.character.ID, room, true)
+		data, _ := initPacket.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
 	case "room_add":
 		// Parse room add packet
 		res := packet.RoomAddPacket{}
@@ -624,11 +795,51 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		h.Send(res)
+	case "status":
+		// Parse status packet
+		res := packet.StatusPacket{}
+		json.Unmarshal(m.msg, &res)
+		res.ID = m.sender.character.ID
+		res.Online = true
+
+		pip := db.GetInstance().Pipeline()
+
+		if res.Active {
+			pip.Set("character:"+m.sender.character.ID+":active", "true", 0)
+		} else {
+			pip.Set("character:"+m.sender.character.ID+":active", "false", 0)
+		}
+
+		teammatesCmd := pip.SMembers("character:" + m.sender.character.ID + ":teammates")
+		friendsCmd := pip.SMembers("character:" + m.sender.character.ID + ":friends")
+		pip.Exec()
+
+		teammateIDs, _ := teammatesCmd.Result()
+		friendIDs, _ := friendsCmd.Result()
+
+		data, _ := res.MarshalBinary()
+
+		// TODO: This will not work with multiple ingest servers
+		for _, id := range teammateIDs {
+			h.SendBytes("character:"+id, data)
+		}
+
+		for _, id := range friendIDs {
+			h.SendBytes("character:"+id, data)
+		}
 	case "teleport", "teleport_home":
 		// Parse teleport packet
 		res := packet.TeleportPacket{}
 		json.Unmarshal(m.msg, &res)
 		res.From = m.sender.character.Room
+
+		if res.X <= 0 || res.X >= 1 {
+			res.X = 0.5
+		}
+
+		if res.Y <= 0 || res.Y >= 1 {
+			res.Y = 0.5
+		}
 
 		pip := db.GetInstance().Pipeline()
 
@@ -636,7 +847,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			homeExists, _ := db.GetInstance().SIsMember("rooms", "home:"+m.sender.character.ID).Result()
 
 			if !homeExists {
-				models.CreateHomeRoom(pip, m.sender.character.ID)
+				db.CreateRoom("home:"+m.sender.character.ID, db.Personal)
 			}
 
 			res.From = m.sender.character.Room
@@ -646,8 +857,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Update this character's room
 		pip.HSet("character:"+m.sender.character.ID, map[string]interface{}{
 			"room": res.To,
-			"x":    0.5,
-			"y":    0.5,
+			"x":    res.X,
+			"y":    res.Y,
 		})
 
 		// Remove this character from the previous room

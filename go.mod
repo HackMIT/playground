@@ -3,6 +3,7 @@ module github.com/techx/playground
 go 1.14
 
 require (
+	github.com/SherClockHolmes/webpush-go v1.1.2
 	github.com/aws/aws-sdk-go v1.34.6
 	github.com/deckarep/golang-set v1.7.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible

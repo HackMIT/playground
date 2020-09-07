@@ -1,0 +1,37 @@
+{
+  "background": "personal_room.svg",
+  "sponsor": false,
+  "elements": [
+    {
+      "x": 0.341,
+      "y": 0.65,
+      "width": 0.2514,
+      "path": "bed.svg"
+    },
+    {
+      "x": 0.7089,
+      "y": 0.5792,
+      "width": 0.1709,
+      "path": "desk.svg"
+    },
+    {
+      "x": 0.3979,
+      "y": 0.4486,
+      "width": 0.0259,
+      "path": "plant.svg"
+    },
+    {
+      "x": 0.6821,
+      "y": 0.6696,
+      "width": 0.0559,
+      "path": "chair.svg"
+    },
+    {
+      "x": 0.5183,
+      "y": 0.9012,
+      "width": 0.0907,
+      "path": "shelf.svg"
+    }
+  ],
+  "hallways": []
+}

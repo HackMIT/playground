@@ -1,6 +1,10 @@
 # Database Schema
 
 - `character:<character_id>` (hash)
+  - `character:<character_id>:teammates` (set)
+  - `character:<character_id>:friends` (set)
+  - `character:<character_id>:requests` (set)
+    - List of IDs of people who have added this person as a friend, but this character has not added back yet
 - `conversation:<character_id>:<character_id>` (list)
   - Ordering of character IDs comes from a hash of each ID -- check `socket/hub.go` for more details
   - List of message IDs (in chronological order)
