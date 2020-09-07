@@ -202,6 +202,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		character := new(models.Character)
 		var initPacket *packet.InitPacket
+		firstTime := false
 
 		pip := db.GetInstance().Pipeline()
 
@@ -211,14 +212,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			// Add character to database
 			character.Ingest = db.GetIngestID()
 			db.GetInstance().HSet("character:"+character.ID, utils.StructToMap(character))
-
-			if res.Type == "join" {
-				// Generate init packet before new character is added to room
-				initPacket = packet.NewInitPacket(character.ID, character.Room, true)
-
-				// Add to room:home at (0.5, 0.5)
-				pip.SAdd("room:home:characters", character.ID)
-			}
 		} else if res.QuillToken != "" {
 			// Fetch data from Quill
 			quillValues := map[string]string{
@@ -323,6 +316,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				// Add character to database
 				pip.HSet("character:"+character.ID, utils.StructToMap(character))
 				pip.HSet("emailToCharacter", res.Email, character.ID)
+
+				// Make sure they get the account setup screen
+				firstTime = true
 			} else {
 				// This person has logged in before, fetch from Redis
 				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
@@ -340,6 +336,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		if res.Type == "join" {
 			// Generate init packet before new character is added to room
 			initPacket = packet.NewInitPacket(character.ID, character.Room, true)
+			initPacket.FirstTime = firstTime
 
 			// Add to whatever room they were in
 			pip.SAdd("room:"+character.Room+":characters", character.ID)

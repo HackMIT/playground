@@ -39,7 +39,8 @@ type InitPacket struct {
 	Friends []Friend `json:"friends"`
 
 	// Settings
-	Settings *models.Settings `json:"settings"`
+	Settings  *models.Settings `json:"settings"`
+	FirstTime bool             `json:"firstTime"`
 }
 
 func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
