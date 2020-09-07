@@ -690,21 +690,39 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.RegisterPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		fmt.Println("sending")
+		pip := db.GetInstance().Pipeline()
 
-		resp, err := webpush.SendNotification([]byte("Test"), res.BrowserSubscription, &webpush.Options{
-			Subscriber:      "jbcook418@gmail.com",
-			VAPIDPublicKey:  config.GetConfig().GetString("webpush.public_key"),
-			VAPIDPrivateKey: config.GetConfig().GetString("webpush.private_key"),
-			TTL:             30,
-		})
-
-		if err != nil {
-			fmt.Println("Error sending browser notification:")
-			fmt.Println(err)
+		if res.Name != "" {
+			pip.HSet("character:"+m.sender.character.ID, "name", res.Name)
 		}
 
-		defer resp.Body.Close()
+		if res.PhoneNumber != "" {
+			pip.HSet("character:"+m.sender.character.ID+":settings", "phoneNumber", res.PhoneNumber)
+		}
+
+		if res.BrowserSubscription != nil {
+			resp, err := webpush.SendNotification([]byte("Test"), res.BrowserSubscription, &webpush.Options{
+				Subscriber:      "jbcook418@gmail.com",
+				VAPIDPublicKey:  config.GetConfig().GetString("webpush.public_key"),
+				VAPIDPrivateKey: config.GetConfig().GetString("webpush.private_key"),
+				TTL:             30,
+			})
+
+			if err != nil {
+				fmt.Println("Error sending browser notification:")
+				fmt.Println(err)
+			}
+
+			defer resp.Body.Close()
+		}
+
+		roomCmd := pip.HGet("character:"+m.sender.character.ID, "room")
+		pip.Exec()
+		room, _ := roomCmd.Result()
+
+		initPacket := packet.NewInitPacket(m.sender.character.ID, room, true)
+		data, _ := initPacket.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
 	case "room_add":
 		// Parse room add packet
 		res := packet.RoomAddPacket{}

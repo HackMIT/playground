@@ -9,6 +9,8 @@ import (
 type RegisterPacket struct {
 	BasePacket
 
+	Name                string                `json:"name"`
+	PhoneNumber         string                `json:"phoneNumber"`
 	BrowserSubscription *webpush.Subscription `json:"browserSubscription"`
 }
 
