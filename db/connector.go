@@ -220,6 +220,16 @@ func MonitorLeader() {
 				instance.HSet("queuestatus", utils.StructToMap(newStatus))
 
 				// Send song packet to ingests
+				songPacket := map[string]interface{}{
+					"type": "song",
+					"song": song,
+					"playing": true,
+					"endTime": endTime,
+				}
+
+				data, _ := json.Marshal(songPacket)
+				pip.Publish("all", data)
+				pip.Exec()
 				// p := packet.SongPacket{Song: song, Playing: true, EndTime: endTime}
 				// h.Send(p)
 			}
