@@ -13,6 +13,9 @@ type EmailCodePacket struct {
 
 	// The email address to check and send the code to
 	Email string `json:"email"`
+
+	// The role this user is signing up for (see models.Role)
+	Role int `json:"role"`
 }
 
 func (p EmailCodePacket) PermissionCheck(characterID string, role models.Role) bool {

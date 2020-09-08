@@ -13,6 +13,10 @@ func ParsePacket(data []byte) (Packet, error) {
 	}
 
 	switch res.Type {
+	case "add_email":
+		p := AddEmailPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	case "auth", "join":
 		p := JoinPacket{}
 		json.Unmarshal(data, &p)
