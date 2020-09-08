@@ -2,13 +2,20 @@ package packet
 
 import (
 	"encoding/json"
+
+	"github.com/techx/playground/db/models"
 )
 
 type FriendRequestPacket struct {
 	BasePacket
+	Packet
 
 	SenderID    string `json:"senderId"`
 	RecipientID string `json:"recipientId"`
+}
+
+func (p FriendRequestPacket) PermissionCheck(characterID string, role models.Role) bool {
+	return true
 }
 
 func (p FriendRequestPacket) MarshalBinary() ([]byte, error) {

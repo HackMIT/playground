@@ -1,0 +1,62 @@
+{
+  "background": "town_square.svg",
+  "sponsor": false,
+  "elements": [
+    {
+      "x": 0.3076,
+      "y": 0.2648,
+      "width": 0.3222,
+      "path": "hacker_arena.svg"
+    },
+    {
+      "x": 0.6895,
+      "y": 0.2531,
+      "width": 0.3306,
+      "path": "shopping_mall.svg"
+    },
+    {
+      "x": 0.7432,
+      "y": 0.5994,
+      "width": 0.0596,
+      "path": "non_profit_sign.svg"
+    },
+    {
+      "x": 0.249,
+      "y": 0.6,
+      "width": 0.0713,
+      "path": "sponsor_town_sign.svg"
+    },
+    {
+      "x": 0.3186,
+      "y": 0.5398,
+      "width": 0.0436,
+      "path": "billboard.svg"
+    }
+  ],
+  "hallways": [
+    {
+      "x": 0.8272,
+      "y": 0.4319,
+      "radius": 0.0341,
+      "to": "nightclub",
+      "toX": 0.75,
+      "toY": 0.6938
+    },
+    {
+      "x": 0.7268,
+      "y": 0.68,
+      "radius": 0.0717,
+      "to": "nonprofits",
+      "toX": 0.0194,
+      "toY": 0.5099
+    },
+    {
+      "x": 0.2513,
+      "y": 0.6688,
+      "radius": 0.0729,
+      "to": "plat_area",
+      "toX": 0.5,
+      "toY": 0.03
+    }
+  ]
+}

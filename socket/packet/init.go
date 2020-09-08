@@ -20,6 +20,7 @@ import (
 // world that they load into
 type InitPacket struct {
 	BasePacket
+	Packet
 
 	Character *models.Character `json:"character"`
 
@@ -40,6 +41,12 @@ type InitPacket struct {
 
 	// Settings
 	Settings *models.Settings `json:"settings"`
+
+	// True if the feedback window should open
+	OpenFeedback bool `json:"openFeedback"`
+
+	// True if the user needs to register
+	FirstTime bool `json:"firstTime"`
 }
 
 func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
@@ -136,6 +143,12 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	p := new(InitPacket)
 	p.BasePacket = BasePacket{Type: "init"}
 	p.Character = character
+
+	if !character.FeedbackOpened {
+		p.OpenFeedback = true
+		db.GetInstance().HSet("character:"+characterID, "feedbackOpened", true)
+	}
+
 	p.Room = room
 
 	// Set friends

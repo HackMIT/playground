@@ -18,6 +18,10 @@ type QueueSubscribePacket struct {
 	Characters []*models.Character `json:"characters"`
 }
 
+func (p QueueSubscribePacket) PermissionCheck(characterID string, role models.Role) bool {
+	return len(characterID) > 0
+}
+
 func NewQueueSubscribePacket(sponsorID string) *QueueSubscribePacket {
 	p := QueueSubscribePacket{
 		BasePacket: BasePacket{

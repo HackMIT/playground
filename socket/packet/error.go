@@ -6,6 +6,7 @@ import (
 
 type ErrorPacket struct {
 	BasePacket
+	Packet
 
 	Code int `json:"code"`
 }

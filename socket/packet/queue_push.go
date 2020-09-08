@@ -2,7 +2,7 @@ package packet
 
 import (
 	"encoding/json"
-	
+
 	"github.com/techx/playground/db/models"
 )
 
@@ -13,6 +13,10 @@ type QueuePushPacket struct {
 	SponsorID string `json:"sponsorId"`
 
 	Character *models.Character `json:"character"`
+}
+
+func (p QueuePushPacket) PermissionCheck(characterID string, role models.Role) bool {
+	return len(characterID) > 0
 }
 
 func (p QueuePushPacket) MarshalBinary() ([]byte, error) {
