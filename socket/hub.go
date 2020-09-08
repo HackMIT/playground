@@ -731,6 +731,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		h.Send(p)
 	case packet.StatusPacket:
+		if m.sender.character == nil {
+			return
+		}
+
 		p.ID = m.sender.character.ID
 		p.Online = true
 
