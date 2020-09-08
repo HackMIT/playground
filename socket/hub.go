@@ -27,8 +27,6 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-const youtubeAPIKey = "AIzaSyBbKVxrxksLlxJYno6ZG_TzHvIpXU2O3eM"
-
 // Hub maintains the set of active clients and broadcasts messages to the clients
 type Hub struct {
 	// Registered clients
@@ -683,7 +681,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 	case packet.SongPacket:
 		// Make the YouTube API call
 		youtubeClient, _ := youtube.New(&http.Client{
-			Transport: &transport.APIKey{Key: youtubeAPIKey},
+			Transport: &transport.APIKey{Key: config.GetSecret(config.YouTubeKey)},
 		})
 
 		call := youtubeClient.Videos.List([]string{"snippet", "contentDetails"}).
