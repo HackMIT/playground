@@ -144,7 +144,9 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	p.BasePacket = BasePacket{Type: "init"}
 	p.Character = character
 
-	if !character.FeedbackOpened {
+	feedbackOpen := time.Unix(config.GetConfig().GetInt64("feedback_open"), 0)
+
+	if !character.FeedbackOpened && time.Now().After(feedbackOpen) {
 		p.OpenFeedback = true
 		db.GetInstance().HSet("character:"+characterID, "feedbackOpened", true)
 	}

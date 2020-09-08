@@ -7,6 +7,7 @@
     "password": "",
     "db": 0
   },
+  "feedback_open": 1600621200,
   "jwt": {
     "secret": "asdf"
   },
