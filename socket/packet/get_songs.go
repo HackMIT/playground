@@ -2,13 +2,15 @@ package packet
 
 import (
 	"encoding/json"
+
+	"github.com/techx/playground/db/models"
 )
 
 type GetSongsPacket struct {
 	BasePacket
 }
 
-func (p SongPacket) PermissionCheck(characterID string, role models.Role) bool {
+func (p GetSongsPacket) PermissionCheck(characterID string, role models.Role) bool {
 	return true
 }
 
