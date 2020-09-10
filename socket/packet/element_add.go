@@ -9,6 +9,7 @@ import (
 // Sent by clients when they're adding an element
 type ElementAddPacket struct {
 	BasePacket
+	Packet
 
 	// The room being updated
 	Room string `json:"room"`
@@ -18,6 +19,10 @@ type ElementAddPacket struct {
 
 	// The new element
 	Element models.Element `json:"element"`
+}
+
+func (p ElementAddPacket) PermissionCheck(characterID string, role models.Role) bool {
+	return role == models.Organizer
 }
 
 func (p ElementAddPacket) MarshalBinary() ([]byte, error) {

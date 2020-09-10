@@ -8,7 +8,12 @@ import (
 
 type UpdateMapPacket struct {
 	BasePacket
+	Packet
 	*models.Location `json:"location"`
+}
+
+func (p UpdateMapPacket) PermissionCheck(characterID string, role models.Role) bool {
+	return true
 }
 
 func (p UpdateMapPacket) MarshalBinary() ([]byte, error) {

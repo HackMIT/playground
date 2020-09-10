@@ -2,11 +2,14 @@ package packet
 
 import (
 	"encoding/json"
+
+	"github.com/techx/playground/db/models"
 )
 
 // Sent by clients when they move around
 type MovePacket struct {
 	BasePacket
+	Packet
 
 	// The id of the client who is moving
 	ID string `json:"id"`
@@ -31,6 +34,10 @@ func NewMovePacket(id, room string, x, y float64) *MovePacket {
 		X:    x,
 		Y:    y,
 	}
+}
+
+func (p MovePacket) PermissionCheck(characterID string, role models.Role) bool {
+	return true
 }
 
 func (p MovePacket) MarshalBinary() ([]byte, error) {

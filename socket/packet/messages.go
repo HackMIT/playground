@@ -8,6 +8,7 @@ import (
 
 type MessagesPacket struct {
 	BasePacket
+	Packet
 
 	Messages  []*models.Message `json:"messages"`
 	Recipient string            `json:"recipient"`

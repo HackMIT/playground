@@ -9,6 +9,7 @@ import (
 // Sent by ingests when a client changes rooms
 type TeleportPacket struct {
 	BasePacket
+	Packet
 
 	// The charcater who is teleporting
 	Character *models.Character `json:"character"`
@@ -35,6 +36,10 @@ func NewTeleportPacket(character *models.Character, from, to string) *TeleportPa
 	p.X = 0.5
 	p.Y = 0.5
 	return p
+}
+
+func (p TeleportPacket) PermissionCheck(characterID string, role models.Role) bool {
+	return true
 }
 
 func (p TeleportPacket) MarshalBinary() ([]byte, error) {

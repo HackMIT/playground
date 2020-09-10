@@ -5,9 +5,9 @@ import (
 )
 
 type Sponsor struct {
-	Name  string `json:"name"`
-	Id    string `json:"id"`
-	Color string `json:"color"`
+	Name  string `json:"name" redis:"name"`
+	Zoom    string `json:"zoom" redis:"zoom"`
+	ID    string `json:"id" redis:"-"`
 }
 
 func (s Sponsor) MarshalBinary() ([]byte, error) {

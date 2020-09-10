@@ -9,9 +9,14 @@ import (
 // Sent by clients when settings are changed
 type SettingsPacket struct {
 	BasePacket
+	Packet
 
 	// The client's new settings
 	Settings *models.Settings `json:"settings"`
+}
+
+func (p SettingsPacket) PermissionCheck(characterID string, role models.Role) bool {
+	return true
 }
 
 func (p SettingsPacket) MarshalBinary() ([]byte, error) {

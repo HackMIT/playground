@@ -10,6 +10,7 @@ import (
 
 type AchievementsPacket struct {
 	BasePacket
+	Packet
 	*models.Achivements `json:"achievements"`
 
 	// The id of the client who we're getting achievements for

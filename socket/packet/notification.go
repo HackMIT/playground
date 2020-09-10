@@ -25,6 +25,7 @@ const (
 
 type NotificationPacket struct {
 	BasePacket
+	Packet
 
 	NotificationType NotificationType       `json:"notificationType"`
 	Data             map[string]interface{} `json:"data"`

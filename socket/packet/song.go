@@ -10,6 +10,7 @@ import (
 // Sent by ingests when a song is added to queue
 type SongPacket struct {
 	BasePacket
+	Packet
 	*models.Song
 	RequiresWarning bool `json:"requiresWarning"`
 	Remove bool `json:"remove"`
@@ -25,6 +26,10 @@ func (p *SongPacket) Init(song *models.Song) *SongPacket {
 	p.Remove = false
 	p.Playing = false
 	return p
+}
+
+func (p SongPacket) PermissionCheck(characterID string, role models.Role) bool {
+	return true
 }
 
 func (p SongPacket) MarshalBinary() ([]byte, error) {

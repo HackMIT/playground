@@ -6,16 +6,26 @@ import (
 	"github.com/google/uuid"
 )
 
+type Role int
+
+const (
+	Organizer Role = iota
+	SponsorRep
+	Mentor
+	Hacker
+)
+
 // Character is the digital representation of a client
 type Character struct {
-	ID       string  `json:"id" redis:"-"`
-	Name     string  `json:"name" redis:"name"`
-	School   string  `json:"school" redis:"school"`
-	GradYear int     `json:"gradYear" redis:"gradYear"`
-	X        float64 `json:"x" redis:"x"`
-	Y        float64 `json:"y" redis:"y"`
-	Room     string  `json:"room" redis:"room"`
-	Ingest   string  `json:"ingest" redis:"ingest"`
+	ID             string  `json:"id" redis:"-"`
+	Name           string  `json:"name" redis:"name"`
+	School         string  `json:"school" redis:"school"`
+	GradYear       int     `json:"gradYear" redis:"gradYear"`
+	X              float64 `json:"x" redis:"x"`
+	Y              float64 `json:"y" redis:"y"`
+	Room           string  `json:"room" redis:"room"`
+	Ingest         string  `json:"ingest" redis:"ingest"`
+	FeedbackOpened bool    `json:"feedbackOpened" redis:"feedbackOpened"`
 }
 
 func NewCharacter(name string) *Character {

@@ -5,6 +5,7 @@
 # binary
 bin/
 playground
+playground.exe
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

@@ -26,7 +26,8 @@ var (
 	psc      *redis.PubSub
 )
 
-func Init(reset bool) {
+// Init creates the database connection
+func Init(shouldReset bool) {
 	config := config.GetConfig()
 
 	dbAddr := os.Getenv("DATABASE_ADDR")
@@ -46,8 +47,8 @@ func Init(reset bool) {
 		})
 	}
 
-	if reset {
-		instance.FlushDB()
+	if shouldReset {
+		reset()
 	}
 
 	// Save our ingest ID
