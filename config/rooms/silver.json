@@ -1,0 +1,49 @@
+{
+  "background": "silver.svg",
+  "sponsor": false,
+  "elements": [
+    {
+      "x": 0.652,
+      "y": 0.4814,
+      "width": 0.219,
+      "path": "desk.svg"
+    },
+    {
+      "x": 0.5654,
+      "y": 0.7142,
+      "width": 0.0368,
+      "path": "plant_blue.svg"
+    },
+    {
+      "x": 0.4164,
+      "y": 0.4608,
+      "width": 0.1159,
+      "path": "shelf_yellow.svg"
+    },
+    {
+      "x": 0.5598,
+      "y": 0.297,
+      "width": 0.0319,
+      "path": "plant_brown.svg"
+    },
+    {
+      "x": 0.3092,
+      "y": 0.6434,
+      "width": 0.1577,
+      "path": "sofa_front.svg"
+    },
+    {
+      "x": 0.3858,
+      "y": 0.7356,
+      "width": 0.1112,
+      "path": "coffee_table.svg"
+    },
+    {
+      "x": 0.4688,
+      "y": 0.8247,
+      "width": 0.1744,
+      "path": "sofa_back.svg"
+    }
+  ],
+  "hallways": []
+}

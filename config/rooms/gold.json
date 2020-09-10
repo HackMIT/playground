@@ -1,0 +1,55 @@
+{
+  "background": "gold.svg",
+  "sponsor": false,
+  "elements": [
+    {
+      "x": 0.2144,
+      "y": 0.7769,
+      "width": 0.1951,
+      "path": "desk.svg"
+    },
+    {
+      "x": 0.4381,
+      "y": 0.406,
+      "width": 0.0301,
+      "path": "plant_blue.svg"
+    },
+    {
+      "x": 0.39,
+      "y": 0.4541,
+      "width": 0.0846,
+      "path": "bookshelf.svg"
+    },
+    {
+      "x": 0.8913,
+      "y": 0.7306,
+      "width": 0.0319,
+      "path": "plant_brown.svg"
+    },
+    {
+      "x": 0.6006,
+      "y": 0.6201,
+      "width": 0.2041,
+      "path": "sofa_front.svg"
+    },
+    {
+      "x": 0.6801,
+      "y": 0.7181,
+      "width": 0.1312,
+      "path": "coffee_table.svg"
+    },
+    {
+      "x": 0.782,
+      "y": 0.8231,
+      "width": 0.2041,
+      "path": "sofa_back.svg"
+    },
+    {
+      "x": 0.727,
+      "y": 0.9023,
+      "width": 0.0319,
+      "path": "plant_brown.svg"
+    }
+  ],
+  "hallways": []
+}

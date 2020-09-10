@@ -1,0 +1,31 @@
+{
+  "background": "bronze.svg",
+  "sponsor": false,
+  "elements": [
+    {
+      "x": 0.6163,
+      "y": 0.5395,
+      "width": 0.1922,
+      "path": "desk.svg"
+    },
+    {
+      "x": 0.4787,
+      "y": 0.3544,
+      "width": 0.0992,
+      "path": "bronze_shelf_1.svg"
+    },
+    {
+      "x": 0.4007,
+      "y": 0.7725,
+      "width": 0.199,
+      "path": "sofa_back_flipped.svg"
+    },
+    {
+      "x": 0.5241,
+      "y": 0.869,
+      "width": 0.1112,
+      "path": "bronze_shelf_2.svg"
+    }
+  ],
+  "hallways": []
+}
