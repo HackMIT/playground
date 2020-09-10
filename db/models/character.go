@@ -9,7 +9,7 @@ import (
 type Role int
 
 const (
-	Organizer Role = iota
+	Organizer Role = iota + 1
 	SponsorRep
 	Mentor
 	Hacker
@@ -26,6 +26,10 @@ type Character struct {
 	Room           string  `json:"room" redis:"room"`
 	Ingest         string  `json:"ingest" redis:"ingest"`
 	FeedbackOpened bool    `json:"feedbackOpened" redis:"feedbackOpened"`
+	Role           int     `json:"role" redis:"role"`
+
+	// If this character is a sponsor rep, this is their company's ID
+	SponsorID string `json:"sponsorId,omitempty" redis:"sponsorId"`
 }
 
 func NewCharacter(name string) *Character {
@@ -36,6 +40,7 @@ func NewCharacter(name string) *Character {
 	c.X = 0.5
 	c.Y = 0.5
 	c.Room = "home"
+	c.Role = int(Organizer)
 	return c
 }
 
@@ -48,6 +53,7 @@ func NewTIMCharacter() *Character {
 	c.X = 0.5
 	c.Y = 0.5
 	c.Room = "home"
+	c.Role = int(Organizer)
 	return c
 }
 
@@ -61,6 +67,7 @@ func NewCharacterFromQuill(quillData map[string]interface{}) *Character {
 	c.X = 0.5
 	c.Y = 0.5
 	c.Room = "home"
+	c.Role = int(Hacker)
 	return c
 }
 

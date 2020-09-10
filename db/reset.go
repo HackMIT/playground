@@ -25,6 +25,15 @@ const (
 
 	// PlatArea is the area accessible from town square with the two plat sponsor buildings
 	PlatArea = "plat_area"
+
+	// Gold is a gold-tier sponsor's room
+	Gold = "gold"
+
+	// Silver is a silver-tier sponsor's room
+	Silver = "silver"
+
+	// Bronze is a bronze-tier sponsor's room
+	Bronze = "bronze"
 )
 
 // CreateRoom builds a room with the given ID from a template file

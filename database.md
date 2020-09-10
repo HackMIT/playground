@@ -13,6 +13,11 @@
 - `locations` (set)
 - `location:<location_id>` (hash)
 - `message:<message_id>` (hash)
+- `emailToCharacter` (hash)
+  - Mapping of email addresses to Playground character IDs
+  - Used for all non-hackers (sponsors, mentors, organizers)
+- `emailToSponsor` (hash)
+  - Mapping of email addresses to sponsor IDs, if the email corresponds to a company rep
 - `quillToCharacter` (hash)
   - Mapping of Quill user IDs to Playground character IDs
 - `room:<room_id>` (hash)

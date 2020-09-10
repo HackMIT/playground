@@ -28,8 +28,6 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-const youtubeAPIKey = "AIzaSyBbKVxrxksLlxJYno6ZG_TzHvIpXU2O3eM"
-
 // Hub maintains the set of active clients and broadcasts messages to the clients
 type Hub struct {
 	// Registered clients
@@ -199,6 +197,26 @@ func (h *Hub) processMessage(m *SocketMessage) {
 	}
 
 	switch p := p.(type) {
+	case packet.AddEmailPacket:
+		var emailsKey string
+
+		switch models.Role(p.Role) {
+		case models.SponsorRep:
+			emailsKey = "sponsor_emails"
+			db.GetInstance().HSet("emailToSponsor", p.Email, p.SponsorID)
+		case models.Mentor:
+			emailsKey = "mentor_emails"
+		case models.Organizer:
+			emailsKey = "organizer_emails"
+		default:
+			break
+		}
+
+		if emailsKey == "" {
+			return
+		}
+
+		db.GetInstance().SAdd(emailsKey, strings.TrimSpace(p.Email))
 	case packet.ChatPacket:
 		// Check for non-ASCII characters
 		if !utils.IsASCII(p.Message) {
@@ -228,8 +246,19 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Publish event to other ingest servers
 		h.Send(p)
 	case packet.EmailCodePacket:
+		isValidEmail := false
+
 		// Make sure this email exists in our database
-		isValidEmail, _ := db.GetInstance().SIsMember("emails", p.Email).Result()
+		switch models.Role(p.Role) {
+		case models.SponsorRep:
+			isValidEmail, _ = db.GetInstance().SIsMember("sponsor_emails", p.Email).Result()
+		case models.Mentor:
+			isValidEmail, _ = db.GetInstance().SIsMember("mentor_emails", p.Email).Result()
+		case models.Organizer:
+			isValidEmail, _ = db.GetInstance().SIsMember("organizer_emails", p.Email).Result()
+		default:
+			break
+		}
 
 		if !isValidEmail {
 			return
@@ -496,6 +525,29 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				character = models.NewCharacter("Player")
 				character.ID = uuid.New().String()
 
+				// Check this character's role
+				rolePip := db.GetInstance().Pipeline()
+				sponsorCmd := rolePip.SIsMember("sponsor_emails", p.Email)
+				sponsorIDCmd := rolePip.HGet("emailToSponsor", p.Email)
+				mentorCmd := rolePip.SIsMember("mentor_emails", p.Email)
+				organizerCmd := rolePip.SIsMember("organizer_emails", p.Email)
+				rolePip.Exec()
+
+				isSponsor, _ := sponsorCmd.Result()
+				isMentor, _ := mentorCmd.Result()
+				isOrganizer, _ := organizerCmd.Result()
+
+				if isSponsor {
+					character.Role = int(models.SponsorRep)
+
+					sponsorID, _ := sponsorIDCmd.Result()
+					character.SponsorID = sponsorID
+				} else if isMentor {
+					character.Role = int(models.Mentor)
+				} else if isOrganizer {
+					character.Role = int(models.Organizer)
+				}
+
 				// Add character to database
 				pip.HSet("character:"+character.ID, utils.StructToMap(character))
 				pip.HSet("emailToCharacter", p.Email, character.ID)
@@ -743,7 +795,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Make the YouTube API call
 		youtubeClient, _ := youtube.New(&http.Client{
-			Transport: &transport.APIKey{Key: youtubeAPIKey},
+			Transport: &transport.APIKey{Key: config.GetSecret(config.YouTubeKey)},
 		})
 
 		call := youtubeClient.Videos.List([]string{"snippet", "contentDetails"}).

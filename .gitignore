@@ -1,6 +1,7 @@
 # misc
 .DS_Store
 *.swp
+.env
 
 # binary
 bin/
