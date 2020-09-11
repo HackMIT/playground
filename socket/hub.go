@@ -772,6 +772,28 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		data, _ := initPacket.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.SettingsPacket:
+		if len(p.Settings.TwitterHandle) > 0 && p.CheckTwitter {
+			url := "https://api.twitter.com/2/tweets/search/recent?query=from:" + p.Settings.TwitterHandle + "&tweet.fields=entities"
+			method := "GET"
+
+			var bearer = "Bearer "+ config.GetSecret("TWITTER_API_KEY")
+			client := &http.Client {
+			}
+			req, err := http.NewRequest(method, url, nil)
+
+			req.Header.Add("Authorization", bearer)
+			if err != nil {
+				fmt.Println("errror", err)
+			}
+			res, err := client.Do(req)
+			defer res.Body.Close()
+			body, err := ioutil.ReadAll(res.Body)
+
+			strings.Contains(strings.ToLower(string(body)), "#hackmit")
+			fmt.Println(string(body))
+
+		}
+
 		db.GetInstance().HSet("character:"+m.sender.character.ID+":settings", utils.StructToMap(p.Settings))
 		h.SendBytes("character:"+m.sender.character.ID, m.msg)
 	case packet.SongPacket:
