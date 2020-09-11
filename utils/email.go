@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -91,5 +92,9 @@ func SendConfirmationEmail(recipient string, code int) {
 	}
 
 	// Attempt to send the email.
-	svc.SendEmail(input)
+	_, err := svc.SendEmail(input)
+
+	if err != nil {
+		fmt.Println(err)
+	}
 }
