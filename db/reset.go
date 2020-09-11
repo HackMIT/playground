@@ -93,6 +93,18 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 			elementData["changingImagePath"] = true
 			elementData["changingPaths"] = "tiles/blue1.svg,tiles/blue2.svg,tiles/blue3.svg,tiles/blue4.svg,tiles/green1.svg,tiles/green2.svg,tiles/pink1.svg,tiles/pink2.svg,tiles/pink3.svg,tiles/pink4.svg,tiles/yellow1.svg"
 			elementData["changingInterval"] = 2000
+			elementData["changingRandomly"] = true
+		}
+
+		if _, ok := elementData["campfire"]; ok {
+			// If this is a campfire, animate it
+			delete(elementData, "campfire")
+			elementData["width"] = 0.0253
+			elementData["path"] = "campfire/campfire1.svg"
+			elementData["changingImagePath"] = true
+			elementData["changingPaths"] = "campfire/campfire1.svg,campfire/campfire2.svg,campfire/campfire3.svg,campfire/campfire4.svg,campfire/campfire5.svg"
+			elementData["changingInterval"] = 350
+			elementData["changingRandomly"] = false
 		}
 
 		if _, ok := elementData["toggleable"]; ok {

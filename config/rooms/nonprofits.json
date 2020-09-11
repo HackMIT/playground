@@ -101,8 +101,7 @@
     {
       "x": 0.6361,
       "y": 0.2501,
-      "width": 0.0253,
-      "path": "campfire.svg"
+      "campfire": true
     },
     {
       "x": 0.6995,
@@ -137,8 +136,7 @@
     {
       "x": 0.2111,
       "y": 0.7797,
-      "width": 0.0253,
-      "path": "campfire.svg"
+      "campfire": true
     },
     {
       "x": 0.2777,
