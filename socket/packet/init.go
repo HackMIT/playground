@@ -66,6 +66,7 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	room := new(models.Room).Init()
 	roomRes, _ := roomCmd.Result()
 	utils.Bind(roomRes, room)
+	room.ID = roomID
 
 	character := new(models.Character)
 	characterRes, _ := characterCmd.Result()

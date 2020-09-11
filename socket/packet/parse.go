@@ -73,12 +73,8 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := MovePacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
-	case "queue_pop":
-		p := QueuePopPacket{}
-		json.Unmarshal(data, &p)
-		return p, nil
-	case "queue_push":
-		p := QueuePushPacket{}
+	case "queue_join":
+		p := QueueJoinPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
 	case "queue_remove":

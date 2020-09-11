@@ -9,7 +9,8 @@ import (
 type Role int
 
 const (
-	Organizer Role = iota + 1
+	Guest Role = iota
+	Organizer
 	SponsorRep
 	Mentor
 	Hacker

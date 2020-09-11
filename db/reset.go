@@ -130,5 +130,9 @@ func reset() {
 	CreateRoom("nightclub", Nightclub)
 	CreateRoom("nonprofits", Nonprofits)
 	CreateRoom("plat_area", PlatArea)
+	CreateRoom("sponsor:cmt", Gold)
 	createSponsors()
+
+	instance.SAdd("sponsor_emails", "cookj@mit.edu")
+	instance.HSet("emailToSponsor", "cookj@mit.edu", "cmt")
 }

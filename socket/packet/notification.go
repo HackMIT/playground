@@ -21,6 +21,7 @@ type NotificationType string
 
 const (
 	Achievement NotificationType = "achievement"
+	Message                      = "message"
 )
 
 type NotificationPacket struct {
@@ -46,6 +47,12 @@ func newNotificationPacket(notificationType NotificationType, level Notification
 func NewAchievementNotificationPacket(id string) *NotificationPacket {
 	return newNotificationPacket(Achievement, Low, map[string]interface{}{
 		"id": id,
+	})
+}
+
+func NewMessageNotificationPacket(text string) *NotificationPacket {
+	return newNotificationPacket(Message, Low, map[string]interface{}{
+		"text": text,
 	})
 }
 
