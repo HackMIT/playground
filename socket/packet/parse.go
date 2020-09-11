@@ -25,6 +25,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := ChatPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
+	case "element_toggle":
+		p := ElementTogglePacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	case "element_update":
 		p := ElementUpdatePacket{}
 		json.Unmarshal(data, &p)

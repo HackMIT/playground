@@ -273,6 +273,25 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		p.Room = m.sender.character.Room
 		p.ID = m.sender.character.ID
 		h.Send(p)
+	case packet.ElementTogglePacket:
+		elementRes, _ := db.GetInstance().HGetAll("element:" + p.ID).Result()
+		var element models.Element
+		utils.Bind(elementRes, &element)
+		element.ID = p.ID
+
+		numStates := strings.Count(element.Path, ",") + 1
+
+		if element.State < numStates-1 {
+			element.State = element.State + 1
+		} else {
+			element.State = 0
+		}
+
+		db.GetInstance().HSet("element:"+p.ID, "state", element.State)
+
+		// Publish update to other ingest servers
+		update := packet.NewElementUpdatePacket(m.sender.character.Room, p.ID, element)
+		h.Send(update)
 	case packet.ElementUpdatePacket:
 		p.Room = m.sender.character.Room
 

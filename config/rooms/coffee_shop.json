@@ -53,7 +53,8 @@
       "x": 0.2577,
       "y": 0.477,
       "width": 0.1826,
-      "path": "wall_map.svg"
+      "path": "wall_map.svg",
+      "action": 2
     },
     {
       "x": 0.4016,

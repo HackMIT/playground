@@ -25,7 +25,8 @@
       "x": 0.5837,
       "y": 0.5273,
       "width": 0.2146,
-      "path": "bar_closed.svg"
+      "path": "bar_closed.svg",
+      "toggleable": true
     },
     {
       "x": 0.427,

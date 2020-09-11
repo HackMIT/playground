@@ -95,7 +95,20 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 			elementData["changingInterval"] = 2000
 		}
 
-		instance.HSet("element:"+elementID, val)
+		if _, ok := elementData["toggleable"]; ok {
+			switch elementData["path"] {
+			case "street_lamp.svg":
+				elementData["path"] = "street_lamp.svg,street_lamp_off.svg"
+			case "bar_closed.svg":
+				elementData["path"] = "bar_closed.svg,bar_open.svg"
+			default:
+				break
+			}
+
+			elementData["state"] = 0
+		}
+
+		instance.HSet("element:"+elementID, elementData)
 		instance.RPush("room:"+id+":elements", elementID)
 	}
 

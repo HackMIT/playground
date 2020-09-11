@@ -21,4 +21,7 @@ type Element struct {
 	ChangingInterval int `json:"changingInterval" redis:"changingInterval"`
 
 	Action int `json:"action" redis:"action"`
+
+	Toggleable bool `json:"toggleable" redis:"toggleable"`
+	State      int  `json:"state" redis:"state"`
 }

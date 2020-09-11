@@ -144,37 +144,43 @@
       "x": 0.4547,
       "y": 0.6668,
       "width": 0.0223,
-      "path": "street_lamp.svg"
+      "path": "street_lamp.svg",
+      "toggleable": true
     },
     {
       "x": 0.345,
       "y": 0.5544,
       "width": 0.0223,
-      "path": "street_lamp.svg"
+      "path": "street_lamp.svg",
+      "toggleable": true
     },
     {
       "x": 0.2695,
       "y": 0.626,
       "width": 0.0223,
-      "path": "street_lamp.svg"
+      "path": "street_lamp.svg",
+      "toggleable": true
     },
     {
       "x": 0.6575,
       "y": 0.5532,
       "width": 0.0223,
-      "path": "street_lamp.svg"
+      "path": "street_lamp.svg",
+      "toggleable": true
     },
     {
       "x": 0.5444,
       "y": 0.668,
       "width": 0.0223,
-      "path": "street_lamp.svg"
+      "path": "street_lamp.svg",
+      "toggleable": true
     },
     {
       "x": 0.7283,
       "y": 0.6273,
       "width": 0.0223,
-      "path": "street_lamp.svg"
+      "path": "street_lamp.svg",
+      "toggleable": true
     },
     {
       "x": 0.6795,
