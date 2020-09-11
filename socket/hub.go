@@ -771,14 +771,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		initPacket := packet.NewInitPacket(m.sender.character.ID, room, true)
 		data, _ := initPacket.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
-	case packet.RoomAddPacket:
-		pip := db.GetInstance().Pipeline()
-		pip.SAdd("rooms", p.ID)
-		pip.HSet("room:"+p.ID, utils.StructToMap(models.NewRoom(p.ID, p.Background, p.Sponsor)))
-		pip.Exec()
-
-		data, _ := p.MarshalBinary()
-		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.SettingsPacket:
 		db.GetInstance().HSet("character:"+m.sender.character.ID+":settings", utils.StructToMap(p.Settings))
 		h.SendBytes("character:"+m.sender.character.ID, m.msg)
@@ -939,6 +931,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		pip := db.GetInstance().Pipeline()
 		pip.RPush("sponsor:"+p.SponsorID+":hackerqueue", m.sender.character.ID)
+		pip.HSet("character:"+m.sender.character.ID, "queueId", p.SponsorID)
 
 		subscriber := models.NewQueueSubscriber(m.sender.character)
 		pip.HSet("subscriber:"+m.sender.character.ID, utils.StructToMap(subscriber))
@@ -946,7 +939,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		h.sendSponsorQueueUpdate(p.SponsorID)
 	case packet.QueueRemovePacket:
-		db.GetInstance().LRem("sponsor:"+p.SponsorID+":hackerqueue", 0, p.CharacterID)
+		pip := db.GetInstance().Pipeline()
+		pip.LRem("sponsor:"+p.SponsorID+":hackerqueue", 0, p.CharacterID)
+		pip.HSet("character:"+p.CharacterID, "queueId", "")
+		pip.Exec()
+
 		h.sendSponsorQueueUpdate(p.SponsorID)
 
 		if m.sender.character.Role == int(models.SponsorRep) {

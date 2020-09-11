@@ -37,7 +37,7 @@ const (
 )
 
 // CreateRoom builds a room with the given ID from a template file
-func CreateRoom(id string, roomType RoomType) {
+func createRoomWithData(id string, roomType RoomType, data map[string]interface{}) {
 	dat, err := ioutil.ReadFile("config/rooms/" + string(roomType) + ".json")
 
 	if err != nil {
@@ -46,11 +46,9 @@ func CreateRoom(id string, roomType RoomType) {
 
 	var roomData map[string]interface{}
 	json.Unmarshal(dat, &roomData)
+	data["background"] = roomData["background"]
 
-	instance.HSet("room:"+id, map[string]interface{}{
-		"background": roomData["background"],
-		"sponsor":    roomData["sponsor"],
-	})
+	instance.HSet("room:"+id, data)
 
 	elements := roomData["elements"].([]interface{})
 
@@ -124,6 +122,10 @@ func createSponsors() {
 	}
 }
 
+func CreateRoom(id string, roomType RoomType) {
+	createRoomWithData(id, roomType, map[string]interface{}{})
+}
+
 func reset() {
 	instance.FlushDB()
 	CreateRoom("home", Home)
@@ -131,6 +133,11 @@ func reset() {
 	CreateRoom("nonprofits", Nonprofits)
 	CreateRoom("plat_area", PlatArea)
 	CreateRoom("sponsor:cmt", Gold)
+
+	createRoomWithData("sponsor:cmt", Gold, map[string]interface{}{
+		"sponsorId": "cmt",
+	})
+
 	createSponsors()
 
 	instance.SAdd("sponsor_emails", "cookj@mit.edu")

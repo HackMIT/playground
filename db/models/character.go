@@ -29,6 +29,9 @@ type Character struct {
 	FeedbackOpened bool    `json:"feedbackOpened" redis:"feedbackOpened"`
 	Role           int     `json:"role" redis:"role"`
 
+	// If this character is in a queue, this is the sponsor ID of the queue they're in
+	QueueID string `json:"queueId" redis:"queueId"`
+
 	// If this character is a sponsor rep, this is their company's ID
 	SponsorID string `json:"sponsorId,omitempty" redis:"sponsorId"`
 }

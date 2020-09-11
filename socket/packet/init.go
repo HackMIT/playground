@@ -118,6 +118,12 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 		requestCmds[i] = pip.HGetAll("character:" + id)
 	}
 
+	var sponsorCmd *redis.StringStringMapCmd
+
+	if len(room.SponsorID) > 0 {
+		sponsorCmd = pip.HGetAll("sponsor:" + room.SponsorID)
+	}
+
 	pip.Exec()
 
 	for i, characterCmd := range characterCmds {
@@ -138,6 +144,14 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 		hallwayRes, _ := hallwayCmd.Result()
 		room.Hallways[hallwayIDs[i]] = new(models.Hallway)
 		utils.Bind(hallwayRes, room.Hallways[hallwayIDs[i]])
+	}
+
+	if len(room.SponsorID) > 0 {
+		sponsorRes, _ := sponsorCmd.Result()
+		sponsor := new(models.Sponsor)
+		utils.Bind(sponsorRes, sponsor)
+		sponsor.ID = room.SponsorID
+		room.Sponsor = sponsor
 	}
 
 	// Set data and return

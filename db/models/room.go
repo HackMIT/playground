@@ -11,17 +11,19 @@ type Room struct {
 
 	Background string `json:"background" redis:"background"`
 	ID         string `json:"id" redis:"id"`
-	Sponsor    bool   `json:"sponsor" redis:"sponsor"`
+	SponsorID  string `json:"sponsorId" redis:"sponsorId"`
+
+	Sponsor *Sponsor `json:"sponsor,omitempty"`
 }
 
-func NewRoom(id, background string, sponsor bool) *Room {
+func NewRoom(id, background string, sponsorID string) *Room {
 	return &Room{
 		Characters: map[string]*Character{},
 		Elements:   []*Element{},
 		Hallways:   map[string]*Hallway{},
 		Background: background,
 		ID:         id,
-		Sponsor:    sponsor,
+		SponsorID:  sponsorID,
 	}
 }
 
