@@ -197,7 +197,7 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 		if res["to"].(string) != res["from"].(string) {
 			h.SendBytes("character:"+res["from"].(string), msg)
 		}
-	case "chat", "move", "leave":
+	case "chat", "dance", "move", "leave":
 		h.SendBytes(res["room"].(string), msg)
 	case "join":
 		h.SendBytes(res["character"].(map[string]interface{})["room"].(string), msg)
@@ -270,6 +270,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		// Publish chat event to other clients
+		p.Room = m.sender.character.Room
+		p.ID = m.sender.character.ID
+		h.Send(p)
+	case packet.DancePacket:
+		// Publish dance event to other clients
 		p.Room = m.sender.character.Room
 		p.ID = m.sender.character.ID
 		h.Send(p)
