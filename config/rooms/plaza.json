@@ -1,0 +1,251 @@
+{
+  "background": "plaza.svg",
+  "elements": [
+    {
+      "x": 0.1737,
+      "y": 0.4672,
+      "width": 0.2015,
+      "path": "coffee_shop.svg"
+    },
+    {
+      "x": 0.3526,
+      "y": 0.3155,
+      "width": 0.1549,
+      "path": "misti_truck.svg"
+    },
+    {
+      "x": 0.887,
+      "y": 0.1314,
+      "width": 0.3928,
+      "path": "stadium.svg"
+    },
+    {
+      "x": 0.0561,
+      "y": 0.6435,
+      "width": 0.0523,
+      "path": "outdoor_dining_table.svg"
+    },
+    {
+      "x": 0.5005,
+      "y": 0.8824,
+      "width": 0.0536,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.7915,
+      "y": 0.3392,
+      "width": 0.0536,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.977,
+      "y": 0.3342,
+      "width": 0.0536,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.5005,
+      "y": 0.8824,
+      "width": 0.0536,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.2431,
+      "y": 0.2651,
+      "width": 0.0536,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.3327,
+      "y": 0.1577,
+      "width": 0.0536,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.9436,
+      "y": 0.7666,
+      "width": 0.0536,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.8931,
+      "y": 0.8836,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.0282,
+      "y": 0.7768,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.0838,
+      "y": 0.7151,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.2567,
+      "y": 0.7867,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.1026,
+      "y": 0.9398,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.1561,
+      "y": 0.8867,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.2067,
+      "y": 0.8361,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.4949,
+      "y": 0.1817,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.4199,
+      "y": 0.1126,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.4734,
+      "y": 0.0657,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.5282,
+      "y": 0.0113,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.5811,
+      "y": -0.0442,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.754,
+      "y": 0.2743,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.547,
+      "y": 0.1311,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.6012,
+      "y": 0.0768,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.6589,
+      "y": 0.02,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.1387,
+      "y": 0.662,
+      "width": 0.0327,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.6234,
+      "y": 0.4228,
+      "width": 0.3401,
+      "path": "arcade.svg"
+    },
+    {
+      "x": 0.3615,
+      "y": 0.5731,
+      "width": 0.0436,
+      "path": "bench.svg"
+    },
+    {
+      "x": 0.4264,
+      "y": 0.6472,
+      "width": 0.0906,
+      "path": "fountain.svg"
+    },
+    {
+      "x": 0.4885,
+      "y": 0.7571,
+      "width": 0.0436,
+      "path": "bench.svg"
+    },
+    {
+      "x": 0.3557,
+      "y": 0.7546,
+      "width": 0.0436,
+      "path": "bench_flipped.svg"
+    },
+    {
+      "x": 0.4981,
+      "y": 0.5806,
+      "width": 0.0436,
+      "path": "bench_flipped.svg"
+    },
+    {
+      "x": 0.0579,
+      "y": 0.8025,
+      "width": 0.0264,
+      "path": "bench_smol.svg"
+    },
+    {
+      "x": 0.2323,
+      "y": 0.8716,
+      "width": 0.0264,
+      "path": "bench_smol.svg"
+    },
+    {
+      "x": 0.4577,
+      "y": 0.4198,
+      "width": 0.0353,
+      "path": "tree_smol.svg"
+    },
+    {
+      "x": 0.6819,
+      "y": 0.6495,
+      "width": 0.0353,
+      "path": "tree_smol.svg"
+    }
+  ],
+  "hallways": [
+    {
+      "x": 0.2034,
+      "y": 0.5945,
+      "radius": 0.0429,
+      "to": "coffee_shop",
+      "toX": 0.6637,
+      "toY": 0.283
+    },
+    {
+      "x": 0.0544,
+      "y": 0.9247,
+      "radius": 0.0885,
+      "to": "plat_area",
+      "toX": 0.5,
+      "toY": 0.5
+    }
+  ]
+}

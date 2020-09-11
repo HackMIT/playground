@@ -1,0 +1,75 @@
+{
+  "background": "coffee_shop.svg",
+  "elements": [
+    {
+      "x": 0.3868,
+      "y": 0.9271,
+      "width": 0.0791,
+      "path": "coffee_shop_table.svg"
+    },
+    {
+      "x": 0.3416,
+      "y": 0.8501,
+      "width": 0.1198,
+      "path": "coffee_shop_sofa.svg"
+    },
+    {
+      "x": 0.7078,
+      "y": 0.4424,
+      "width": 0.1826,
+      "path": "coffee_shop_counter.svg"
+    },
+    {
+      "x": 0.5339,
+      "y": 0.338,
+      "width": 0.0568,
+      "path": "trash_recycling.svg"
+    },
+    {
+      "x": 0.4346,
+      "y": 0.8374,
+      "width": 0.0256,
+      "path": "plant_white.svg"
+    },
+    {
+      "x": 0.4976,
+      "y": 0.3608,
+      "width": 0.0256,
+      "path": "plant_white.svg"
+    },
+    {
+      "x": 0.2301,
+      "y": 0.7329,
+      "width": 0.1018,
+      "path": "left_table.svg"
+    },
+    {
+      "x": 0.5008,
+      "y": 0.7201,
+      "width": 0.0984,
+      "path": "lower_table.svg"
+    },
+    {
+      "x": 0.2577,
+      "y": 0.477,
+      "width": 0.1826,
+      "path": "wall_map.svg"
+    },
+    {
+      "x": 0.4016,
+      "y": 0.5534,
+      "width": 0.0993,
+      "path": "upper_table.svg"
+    }
+  ],
+  "hallways": [
+    {
+      "x": 0.6637,
+      "y": 0.283,
+      "radius": 0.0407,
+      "to": "plaza",
+      "toX": 0.2278,
+      "toY": 0.6469
+    }
+  ]
+}

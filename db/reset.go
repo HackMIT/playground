@@ -14,8 +14,14 @@ const (
 	// Home is the room that everyone spawns in, otherwise known as town square
 	Home RoomType = "home"
 
+	// Plaza is the room where you can get to the coffee shop, arcade, and stadium
+	Plaza = "plaza"
+
 	// Nightclub is the club, accessible from town square
 	Nightclub = "nightclub"
+
+	// CoffeeShop is the coffee shop, accessible from plaza
+	CoffeeShop = "coffee_shop"
 
 	// Nonprofits is the campground with all of the nonprofit tents
 	Nonprofits = "nonprofits"
@@ -132,10 +138,15 @@ func reset() {
 	CreateRoom("nightclub", Nightclub)
 	CreateRoom("nonprofits", Nonprofits)
 	CreateRoom("plat_area", PlatArea)
-	CreateRoom("sponsor:cmt", Gold)
+	CreateRoom("plaza", Plaza)
+	CreateRoom("coffee_shop", CoffeeShop)
 
 	createRoomWithData("sponsor:cmt", Gold, map[string]interface{}{
 		"sponsorId": "cmt",
+	})
+
+	createRoomWithData("sponsor:intersystems", Gold, map[string]interface{}{
+		"sponsorId": "intersystems",
 	})
 
 	createSponsors()

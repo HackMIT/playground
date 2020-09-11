@@ -229,6 +229,14 @@
       "to": "sponsor:cmt",
       "toX": 0.5,
       "toY": 0.5
+    },
+    {
+      "x": 0.7402,
+      "y": 0.5717,
+      "radius": 0.056,
+      "to": "sponsor:intersystems",
+      "toX": 0.5,
+      "toY": 0.5
     }
   ]
 }
