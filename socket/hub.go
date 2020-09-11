@@ -336,8 +336,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		code := rand.Intn(1000000)
 		db.GetInstance().SAdd("login_requests", p.Email+","+strconv.Itoa(code))
 
-		// TODO (starter task): Send a nice email to this person with their code
-		fmt.Println(code)
+		// Send email to person trying to log in
+		utils.SendConfirmationEmail(p.Email, code)
 	case packet.EventPacket:
 		// Parse event packet
 		res := packet.EventPacket{}

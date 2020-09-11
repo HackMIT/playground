@@ -12,6 +12,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/joho/godotenv v1.3.0
 	github.com/labstack/echo/v4 v4.1.16
+	github.com/matcornic/hermes/v2 v2.1.0
 	github.com/spf13/viper v1.7.1
 	google.golang.org/api v0.30.0
 )
