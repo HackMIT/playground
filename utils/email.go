@@ -10,9 +10,8 @@ import (
 )
 
 const (
-	// Replace sender@example.com with your "From" address.
-	// This address must be verified with Amazon SES.
-	Sender = "noreply@hackmit.org"
+	// Sender
+	Sender = "HackMIT<noreply@hackmit.org>"
 
 	// The subject line for the email.
 	Subject = "HackMIT Playground Confirmation"
@@ -23,15 +22,14 @@ const (
 
 func SendConfirmationEmail(recipient string, code int, name string) {
 	paddedCode := fmt.Sprintf("%06d", code)
+	ReplyTo := "help@hackmit.org"
+
 	h := hermes.Hermes{
-		// Optional Theme
 		Theme: new(hermes.Default),
 		Product: hermes.Product{
-			// Appears in header & footer of e-mails
 			Name: "HackMIT",
 			Link: "https://hackmit.org",
-			// Optional product logo
-			Logo: "https://hackmit-playground-2020.s3.amazonaws.com/utils/logo.png?fbclid=IwAR17B0II1-CuC3Ix3ZIs2as9jf62dnKydrTMhT4oKXeAHh8CEYmvqwoxs-Q",
+			Logo: "https://hackmit-playground-2020.s3.amazonaws.com/utils/logo.png",
 		},
 	}
 
@@ -44,8 +42,7 @@ func SendConfirmationEmail(recipient string, code int, name string) {
 			Actions: []hermes.Action{
 				{
 					Instructions: "Please copy your invite code:",
-					// Make sure this is 6 digits (zero-pad on left)
-					InviteCode: paddedCode,
+					InviteCode:   paddedCode,
 				},
 			},
 			Outros: []string{
@@ -89,7 +86,8 @@ func SendConfirmationEmail(recipient string, code int, name string) {
 				Data:    aws.String(Subject),
 			},
 		},
-		Source: aws.String(Sender),
+		ReplyToAddresses: []*string{aws.String(ReplyTo)},
+		Source:           aws.String(Sender),
 	}
 
 	// Attempt to send the email.
