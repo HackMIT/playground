@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -16,27 +15,29 @@ const (
 	Sender = "noreply@hackmit.org"
 
 	// The subject line for the email.
-	Subject = "Amazon SES Test (AWS SDK for Go)"
+	Subject = "HackMIT Playground Confirmation"
 
 	// The character encoding for the email.
 	CharSet = "UTF-8"
 )
 
-func SendConfirmationEmail(recipient string, code int) {
+func SendConfirmationEmail(recipient string, code int, name string) {
+	paddedCode := fmt.Sprintf("%06d", code)
 	h := hermes.Hermes{
 		// Optional Theme
-		// Theme: new(Default)
+		Theme: new(hermes.Default),
 		Product: hermes.Product{
 			// Appears in header & footer of e-mails
-			Name: "Hermes",
-			Link: "https://example-hermes.com/",
+			Name: "HackMIT",
+			Link: "https://hackmit.org",
 			// Optional product logo
-			Logo: "http://www.duchess-france.org/wp-content/uploads/2016/01/gopher.png",
+			Logo: "https://hackmit-playground-2020.s3.amazonaws.com/utils/logo.png?fbclid=IwAR17B0II1-CuC3Ix3ZIs2as9jf62dnKydrTMhT4oKXeAHh8CEYmvqwoxs-Q",
 		},
 	}
 
 	email := hermes.Email{
 		Body: hermes.Body{
+			Name: name,
 			Intros: []string{
 				"Welcome to the HackMIT playground! We're very excited to have you this weekend.",
 			},
@@ -44,11 +45,11 @@ func SendConfirmationEmail(recipient string, code int) {
 				{
 					Instructions: "Please copy your invite code:",
 					// Make sure this is 6 digits (zero-pad on left)
-					InviteCode: strconv.Itoa(code),
+					InviteCode: paddedCode,
 				},
 			},
 			Outros: []string{
-				"Need help, or have questions? Just reply to this email, we'd love to help.",
+				"Any questions? Email help@hackmit.org",
 			},
 		},
 	}

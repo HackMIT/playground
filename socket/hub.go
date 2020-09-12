@@ -316,11 +316,12 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		h.Send(p)
 	case packet.EmailCodePacket:
 		isValidEmail := false
-
+		name := "mentor"
 		// Make sure this email exists in our database
 		switch models.Role(p.Role) {
 		case models.SponsorRep:
 			isValidEmail, _ = db.GetInstance().SIsMember("sponsor_emails", p.Email).Result()
+			name = "sponsor"
 		case models.Mentor:
 			isValidEmail, _ = db.GetInstance().SIsMember("mentor_emails", p.Email).Result()
 		case models.Organizer:
@@ -337,7 +338,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		db.GetInstance().SAdd("login_requests", p.Email+","+strconv.Itoa(code))
 
 		// Send email to person trying to log in
-		utils.SendConfirmationEmail(p.Email, code)
+		utils.SendConfirmationEmail(p.Email, code, name)
+
 	case packet.EventPacket:
 		// Parse event packet
 		res := packet.EventPacket{}
