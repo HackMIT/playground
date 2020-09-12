@@ -103,7 +103,7 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 			elementData["path"] = "campfire/campfire1.svg"
 			elementData["changingImagePath"] = true
 			elementData["changingPaths"] = "campfire/campfire1.svg,campfire/campfire2.svg,campfire/campfire3.svg,campfire/campfire4.svg,campfire/campfire5.svg"
-			elementData["changingInterval"] = 350
+			elementData["changingInterval"] = 250
 			elementData["changingRandomly"] = false
 		}
 

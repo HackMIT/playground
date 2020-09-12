@@ -61,6 +61,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := GetMessagesPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
+	case "get_sponsor":
+		p := GetSponsorPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	case "hallway_add":
 		p := HallwayAddPacket{}
 		json.Unmarshal(data, &p)
@@ -123,6 +127,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		return p, nil
 	case "update_map":
 		p := UpdateMapPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
+	case "update_sponsor":
+		p := UpdateSponsorPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
 	default:

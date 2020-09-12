@@ -451,6 +451,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		resp := packet.NewMessagesPacket(messages, p.Recipient)
 		data, _ := resp.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
+	case packet.GetSponsorPacket:
+		sponsorPacket := packet.NewSponsorPacket(p.SponsorID)
+		data, _ := sponsorPacket.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.HallwayAddPacket:
 		p.Room = m.sender.character.Room
 		p.ID = uuid.New().String()
@@ -999,5 +1003,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		resp := packet.NewMapPacket()
 		data, _ := resp.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
+	case packet.UpdateSponsorPacket:
+		db.GetInstance().HSet("sponsor:"+m.sender.character.SponsorID, utils.StructToMap(p.Sponsor))
 	}
 }
