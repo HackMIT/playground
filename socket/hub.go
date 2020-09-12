@@ -27,6 +27,13 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
+type ErrorCode int
+
+const (
+	BadLogin ErrorCode = iota + 1
+	HighSchoolNightClub
+)
+
 // Hub maintains the set of active clients and broadcasts messages to the clients
 type Hub struct {
 	// Registered clients
@@ -523,7 +530,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				return
 			}
 
-			schoolLevel := quillData["profile"].(map[string]interface{})["schoolLevel"]
+			schoolLevel := quillData["profile"].(map[string]interface{})["schoolLevel"].(string)
 			isCollege := (schoolLevel != "high")
 
 			// Load this client's character
@@ -557,7 +564,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			})
 
 			if err != nil {
-				errorPacket := packet.NewErrorPacket(1)
+				errorPacket := packet.NewErrorPacket(int(BadLogin))
 				data, _ := json.Marshal(errorPacket)
 				m.sender.send <- data
 				return
@@ -576,7 +583,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			characterRes, err := db.GetInstance().HGetAll("character:" + characterID).Result()
 
 			if err != nil || len(characterRes) == 0 {
-				errorPacket := packet.NewErrorPacket(1)
+				errorPacket := packet.NewErrorPacket(int(BadLogin))
 				data, _ := json.Marshal(errorPacket)
 				m.sender.send <- data
 				return
@@ -918,7 +925,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		if p.To == "nightclub" && !m.sender.character.IsCollege {
-			errorPacket := packet.NewErrorPacket(2)
+			errorPacket := packet.NewErrorPacket(int(HighSchoolNightClub))
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
 			return
