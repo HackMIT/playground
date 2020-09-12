@@ -20,5 +20,10 @@ type Element struct {
 	// How often to update the image, in milliseconds
 	ChangingInterval int `json:"changingInterval" redis:"changingInterval"`
 
+	ChangingRandomly bool `json:"changingRandomly" redis:"changingRandomly"`
+
 	Action int `json:"action" redis:"action"`
+
+	Toggleable bool `json:"toggleable" redis:"toggleable"`
+	State      int  `json:"state" redis:"state"`
 }

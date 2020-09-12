@@ -14,8 +14,14 @@ const (
 	// Home is the room that everyone spawns in, otherwise known as town square
 	Home RoomType = "home"
 
+	// Plaza is the room where you can get to the coffee shop, arcade, and stadium
+	Plaza = "plaza"
+
 	// Nightclub is the club, accessible from town square
 	Nightclub = "nightclub"
+
+	// CoffeeShop is the coffee shop, accessible from plaza
+	CoffeeShop = "coffee_shop"
 
 	// Nonprofits is the campground with all of the nonprofit tents
 	Nonprofits = "nonprofits"
@@ -37,7 +43,7 @@ const (
 )
 
 // CreateRoom builds a room with the given ID from a template file
-func CreateRoom(id string, roomType RoomType) {
+func createRoomWithData(id string, roomType RoomType, data map[string]interface{}) {
 	dat, err := ioutil.ReadFile("config/rooms/" + string(roomType) + ".json")
 
 	if err != nil {
@@ -46,11 +52,9 @@ func CreateRoom(id string, roomType RoomType) {
 
 	var roomData map[string]interface{}
 	json.Unmarshal(dat, &roomData)
+	data["background"] = roomData["background"]
 
-	instance.HSet("room:"+id, map[string]interface{}{
-		"background": roomData["background"],
-		"sponsor":    roomData["sponsor"],
-	})
+	instance.HSet("room:"+id, data)
 
 	elements := roomData["elements"].([]interface{})
 
@@ -89,9 +93,34 @@ func CreateRoom(id string, roomType RoomType) {
 			elementData["changingImagePath"] = true
 			elementData["changingPaths"] = "tiles/blue1.svg,tiles/blue2.svg,tiles/blue3.svg,tiles/blue4.svg,tiles/green1.svg,tiles/green2.svg,tiles/pink1.svg,tiles/pink2.svg,tiles/pink3.svg,tiles/pink4.svg,tiles/yellow1.svg"
 			elementData["changingInterval"] = 2000
+			elementData["changingRandomly"] = true
 		}
 
-		instance.HSet("element:"+elementID, val)
+		if _, ok := elementData["campfire"]; ok {
+			// If this is a campfire, animate it
+			delete(elementData, "campfire")
+			elementData["width"] = 0.0253
+			elementData["path"] = "campfire/campfire1.svg"
+			elementData["changingImagePath"] = true
+			elementData["changingPaths"] = "campfire/campfire1.svg,campfire/campfire2.svg,campfire/campfire3.svg,campfire/campfire4.svg,campfire/campfire5.svg"
+			elementData["changingInterval"] = 350
+			elementData["changingRandomly"] = false
+		}
+
+		if _, ok := elementData["toggleable"]; ok {
+			switch elementData["path"] {
+			case "street_lamp.svg":
+				elementData["path"] = "street_lamp.svg,street_lamp_off.svg"
+			case "bar_closed.svg":
+				elementData["path"] = "bar_closed.svg,bar_open.svg"
+			default:
+				break
+			}
+
+			elementData["state"] = 0
+		}
+
+		instance.HSet("element:"+elementID, elementData)
 		instance.RPush("room:"+id+":elements", elementID)
 	}
 
@@ -124,11 +153,29 @@ func createSponsors() {
 	}
 }
 
+func CreateRoom(id string, roomType RoomType) {
+	createRoomWithData(id, roomType, map[string]interface{}{})
+}
+
 func reset() {
 	instance.FlushDB()
 	CreateRoom("home", Home)
 	CreateRoom("nightclub", Nightclub)
 	CreateRoom("nonprofits", Nonprofits)
 	CreateRoom("plat_area", PlatArea)
+	CreateRoom("plaza", Plaza)
+	CreateRoom("coffee_shop", CoffeeShop)
+
+	createRoomWithData("sponsor:cmt", Gold, map[string]interface{}{
+		"sponsorId": "cmt",
+	})
+
+	createRoomWithData("sponsor:intersystems", Gold, map[string]interface{}{
+		"sponsorId": "intersystems",
+	})
+
 	createSponsors()
+
+	instance.SAdd("sponsor_emails", "cookj@mit.edu")
+	instance.HSet("emailToSponsor", "cookj@mit.edu", "cmt")
 }

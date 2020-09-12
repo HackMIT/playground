@@ -142,6 +142,50 @@ func (h *Hub) SendBytes(room string, msg []byte) {
 	}
 }
 
+func (h *Hub) sendSponsorQueueUpdate(sponsorID string) {
+	pip := db.GetInstance().Pipeline()
+	hackerSubscribersCmd := pip.LRange("sponsor:"+sponsorID+":hackerqueue", 0, -1)
+	sponsorSubscribersCmd := pip.SMembers("sponsor:" + sponsorID + ":subscribed")
+	pip.Exec()
+
+	hackerIDs, _ := hackerSubscribersCmd.Result()
+	sponsorIDs, _ := sponsorSubscribersCmd.Result()
+	hackerCmds := make([]*redis.StringStringMapCmd, len(hackerIDs))
+
+	pip = db.GetInstance().Pipeline()
+
+	for i, hackerID := range hackerIDs {
+		hackerCmds[i] = pip.HGetAll("subscriber:" + hackerID)
+	}
+
+	pip.Exec()
+
+	subscribers := make([]*models.QueueSubscriber, len(hackerIDs))
+
+	for i, hackerCmd := range hackerCmds {
+		// Populate subscribers array
+		subscriberRes, _ := hackerCmd.Result()
+		subscribers[i] = new(models.QueueSubscriber)
+		utils.Bind(subscriberRes, subscribers[i])
+		subscribers[i].ID = hackerIDs[i]
+
+		// Send queue update to each hacker
+		hackerUpdatePacket := packet.NewQueueUpdateHackerPacket(sponsorID, i+1, "")
+		data, _ := hackerUpdatePacket.MarshalBinary()
+
+		// TODO: Fix with multiple ingests
+		h.SendBytes("character:"+hackerIDs[i], data)
+	}
+
+	sponsorUpdatePacket := packet.NewQueueUpdateSponsorPacket(subscribers)
+	data, _ := sponsorUpdatePacket.MarshalBinary()
+
+	for _, sponsorID := range sponsorIDs {
+		// TODO: Fix with multiple ingests
+		h.SendBytes("character:"+sponsorID, data)
+	}
+}
+
 // Processes an incoming message from Redis
 func (h *Hub) ProcessRedisMessage(msg []byte) {
 	var res map[string]interface{}
@@ -154,7 +198,7 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 		if res["to"].(string) != res["from"].(string) {
 			h.SendBytes("character:"+res["from"].(string), msg)
 		}
-	case "chat", "move", "leave":
+	case "chat", "dance", "move", "leave":
 		h.SendBytes(res["room"].(string), msg)
 	case "join":
 		h.SendBytes(res["character"].(map[string]interface{})["room"].(string), msg)
@@ -186,12 +230,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 	}
 
 	var characterID string
+	role := models.Guest
 
 	if m.sender.character != nil {
 		characterID = m.sender.character.ID
+		role = models.Role(m.sender.character.Role)
 	}
 
-	if !p.PermissionCheck(characterID, models.Organizer) {
+	if !p.PermissionCheck(characterID, role) {
 		println("no permission")
 		return
 	}
@@ -228,6 +274,30 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		p.Room = m.sender.character.Room
 		p.ID = m.sender.character.ID
 		h.Send(p)
+	case packet.DancePacket:
+		// Publish dance event to other clients
+		p.Room = m.sender.character.Room
+		p.ID = m.sender.character.ID
+		h.Send(p)
+	case packet.ElementTogglePacket:
+		elementRes, _ := db.GetInstance().HGetAll("element:" + p.ID).Result()
+		var element models.Element
+		utils.Bind(elementRes, &element)
+		element.ID = p.ID
+
+		numStates := strings.Count(element.Path, ",") + 1
+
+		if element.State < numStates-1 {
+			element.State = element.State + 1
+		} else {
+			element.State = 0
+		}
+
+		db.GetInstance().HSet("element:"+p.ID, "state", element.State)
+
+		// Publish update to other ingest servers
+		update := packet.NewElementUpdatePacket(m.sender.character.Room, p.ID, element)
+		h.Send(update)
 	case packet.ElementUpdatePacket:
 		p.Room = m.sender.character.Room
 
@@ -714,6 +784,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		p.ID = m.sender.character.ID
 
 		h.Send(p)
+
+		// notif := packet.NewMessageNotificationPacket("testing")
+		// data, _ := notif.MarshalBinary()
+		// h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.RegisterPacket:
 		pip := db.GetInstance().Pipeline()
 
@@ -747,14 +821,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		initPacket := packet.NewInitPacket(m.sender.character.ID, room, true)
 		data, _ := initPacket.MarshalBinary()
-		h.SendBytes("character:"+m.sender.character.ID, data)
-	case packet.RoomAddPacket:
-		pip := db.GetInstance().Pipeline()
-		pip.SAdd("rooms", p.ID)
-		pip.HSet("room:"+p.ID, utils.StructToMap(models.NewRoom(p.ID, p.Background, p.Sponsor)))
-		pip.Exec()
-
-		data, _ := p.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.SettingsPacket:
 		db.GetInstance().HSet("character:"+m.sender.character.ID+":settings", utils.StructToMap(p.Settings))
@@ -911,14 +977,21 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip := db.GetInstance().Pipeline()
 
 		if p.Type == "teleport_home" {
-			homeExists, _ := db.GetInstance().SIsMember("rooms", "home:"+m.sender.character.ID).Result()
-
-			if !homeExists {
-				db.CreateRoom("home:"+m.sender.character.ID, db.Personal)
-			}
-
 			p.From = m.sender.character.Room
-			p.To = "home:" + m.sender.character.ID
+
+			if m.sender.character.SponsorID != "" {
+				// If this character is a sponsor rep, send them to their sponsor room
+				p.To = "sponsor:" + m.sender.character.SponsorID
+			} else {
+				// Otherwise, send them to their personal room
+				homeExists, _ := db.GetInstance().SIsMember("rooms", "home:"+m.sender.character.ID).Result()
+
+				if !homeExists {
+					db.CreateRoom("home:"+m.sender.character.ID, db.Personal)
+				}
+
+				p.To = "home:" + m.sender.character.ID
+			}
 		}
 
 		// Update this character's room
@@ -952,62 +1025,45 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Publish event to other ingest servers
 		p.Character = &character
 		h.Send(p)
-	case packet.QueuePopPacket:
-		pip := db.GetInstance().Pipeline()
-		characterIDCmd := pip.LPop("sponsor:" + p.SponsorID + ":hackerqueue")
-		subscribers := pip.SMembers("sponsor:" + p.SponsorID + ":subscribed")
-		pip.Exec()
+	case packet.QueueJoinPacket:
+		hackerIDs, _ := db.GetInstance().LRange("sponsor:"+p.SponsorID+":hackerqueue", 0, -1).Result()
 
-		characterIDRes, _ := characterIDCmd.Result()
-		p.CharacterID = characterIDRes
-		subscriberIDs, _ := subscribers.Result()
-		data, _ := p.MarshalBinary()
-
-		// TODO @ Jack: make sure SendBytes sends to characters over all ingest servers
-		for _, id := range subscriberIDs {
-			h.SendBytes("character:"+id, data)
+		for _, hackerID := range hackerIDs {
+			if hackerID == m.sender.character.ID {
+				// This hacker is already in the queue
+				return
+			}
 		}
-	case packet.QueuePushPacket:
+
 		pip := db.GetInstance().Pipeline()
 		pip.RPush("sponsor:"+p.SponsorID+":hackerqueue", m.sender.character.ID)
-		characterCmd := pip.HGetAll("character:" + m.sender.character.ID)
-		subscribers := pip.SMembers("sponsor:" + p.SponsorID + ":subscribed")
+		pip.HSet("character:"+m.sender.character.ID, "queueId", p.SponsorID)
+
+		subscriber := models.NewQueueSubscriber(m.sender.character)
+		pip.HSet("subscriber:"+m.sender.character.ID, utils.StructToMap(subscriber))
 		pip.Exec()
 
-		characterRes, _ := characterCmd.Result()
-		var character models.Character
-		utils.Bind(characterRes, &character)
-		character.ID = m.sender.character.ID
-		p.Character = &character
-		subscriberIDs, _ := subscribers.Result()
-		data, _ := p.MarshalBinary()
-
-		// TODO @ Jack: make sure SendBytes sends to characters over all ingest servers
-		for _, id := range subscriberIDs {
-			h.SendBytes("character:"+id, data)
-		}
+		h.sendSponsorQueueUpdate(p.SponsorID)
 	case packet.QueueRemovePacket:
-		p.CharacterID = m.sender.character.ID
-
 		pip := db.GetInstance().Pipeline()
 		pip.LRem("sponsor:"+p.SponsorID+":hackerqueue", 0, p.CharacterID)
-		subscribers := pip.SMembers("sponsor:" + p.SponsorID + ":subscribed")
+		pip.HSet("character:"+p.CharacterID, "queueId", "")
 		pip.Exec()
 
-		subscriberIDs, _ := subscribers.Result()
-		data, _ := p.MarshalBinary()
+		h.sendSponsorQueueUpdate(p.SponsorID)
 
-		// TODO @ Jack: make sure SendBytes sends to characters over all ingest servers
-		for _, id := range subscriberIDs {
-			h.SendBytes("character:"+id, data)
+		if m.sender.character.Role == int(models.SponsorRep) {
+			// If a sponsor took a hacker off the queue, send them the sponsor's URL
+			// TODO: Replace this with the sponsor's actual URL
+			hackerUpdatePacket := packet.NewQueueUpdateHackerPacket(p.SponsorID, 0, "https://google.com")
+			data, _ := hackerUpdatePacket.MarshalBinary()
+			h.SendBytes("character:"+p.CharacterID, data)
 		}
 	case packet.QueueSubscribePacket:
 		db.GetInstance().SAdd("sponsor:"+p.SponsorID+":subscribed", m.sender.character.ID)
 
-		resp := packet.NewQueueSubscribePacket(p.SponsorID)
-		data, _ := resp.MarshalBinary()
-
-		h.SendBytes("character:"+m.sender.character.ID, data)
+		// TODO: This is inefficient, we should just send the update to the newly subscribed sponsor
+		h.sendSponsorQueueUpdate(p.SponsorID)
 	case packet.QueueUnsubscribePacket:
 		db.GetInstance().SRem("sponsor:"+p.SponsorID+":subscribed", m.sender.character.ID)
 	case packet.UpdateMapPacket:

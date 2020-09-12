@@ -37,7 +37,7 @@ func NewMovePacket(id, room string, x, y float64) *MovePacket {
 }
 
 func (p MovePacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }
 
 func (p MovePacket) MarshalBinary() ([]byte, error) {

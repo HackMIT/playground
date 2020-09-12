@@ -21,6 +21,17 @@ type ElementUpdatePacket struct {
 	Element models.Element `json:"element"`
 }
 
+func NewElementUpdatePacket(room, id string, element models.Element) *ElementUpdatePacket {
+	return &ElementUpdatePacket{
+		BasePacket: BasePacket{
+			Type: "element_update",
+		},
+		Room:    room,
+		ID:      id,
+		Element: element,
+	}
+}
+
 func (p ElementUpdatePacket) PermissionCheck(characterID string, role models.Role) bool {
 	return role == models.Organizer
 }

@@ -1,6 +1,6 @@
 {
   "background": "gold.svg",
-  "sponsor": false,
+  "sponsor": true,
   "elements": [
     {
       "x": 0.2144,

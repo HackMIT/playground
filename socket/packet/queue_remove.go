@@ -16,7 +16,13 @@ type QueueRemovePacket struct {
 }
 
 func (p QueueRemovePacket) PermissionCheck(characterID string, role models.Role) bool {
-	return len(characterID) > 0
+	if len(characterID) == 0 {
+		// User is not signed in
+		return false
+	}
+
+	// Can remove if the hacker is removing themself, or if the sponsor is taking them off the queue
+	return role == models.SponsorRep || characterID == p.CharacterID
 }
 
 func (p QueueRemovePacket) MarshalBinary() ([]byte, error) {
