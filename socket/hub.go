@@ -523,6 +523,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				return
 			}
 
+			schoolLevel := quillData["profile"].(map[string]interface{})["schoolLevel"]
+			isCollege := (schoolLevel != "high")
+
 			// Load this client's character
 			characterID, err := db.GetInstance().HGet("quillToCharacter", quillData["id"].(string)).Result()
 
@@ -530,6 +533,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				// Never seen this character before, create a new one
 				character = models.NewCharacterFromQuill(quillData)
 				character.ID = uuid.New().String()
+				character.IsCollege = isCollege
 
 				// Add character to database
 				pip.HSet("character:"+character.ID, utils.StructToMap(character))
@@ -539,6 +543,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
 				utils.Bind(characterRes, &character)
 				character.ID = characterID
+				character.IsCollege = isCollege
 			}
 		} else if p.Token != "" {
 			// TODO: Error handling
@@ -910,6 +915,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 				p.To = "home:" + m.sender.character.ID
 			}
+		}
+
+		if p.To == "nightclub" && !m.sender.character.IsCollege {
+			errorPacket := packet.NewErrorPacket(2)
+			data, _ := json.Marshal(errorPacket)
+			m.sender.send <- data
+			return
 		}
 
 		// Update this character's room

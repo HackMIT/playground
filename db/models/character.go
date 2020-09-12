@@ -28,6 +28,7 @@ type Character struct {
 	Ingest         string  `json:"ingest" redis:"ingest"`
 	FeedbackOpened bool    `json:"feedbackOpened" redis:"feedbackOpened"`
 	Role           int     `json:"role" redis:"role"`
+	IsCollege      bool    `json:"isCollege" redis:"isCollege"`
 
 	// If this character is in a queue, this is the sponsor ID of the queue they're in
 	QueueID string `json:"queueId" redis:"queueId"`
