@@ -5,6 +5,7 @@ import (
 )
 
 type Sponsor struct {
+	Challenges  string `json:"challenges" redis:"challenges"`
 	Description string `json:"description" redis:"description"`
 	URL         string `json:"url" redis:"url"`
 	Name        string `json:"name" redis:"name"`

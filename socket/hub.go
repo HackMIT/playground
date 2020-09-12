@@ -1004,6 +1004,20 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		data, _ := resp.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.UpdateSponsorPacket:
-		db.GetInstance().HSet("sponsor:"+m.sender.character.SponsorID, utils.StructToMap(p.Sponsor))
+		pip := db.GetInstance().Pipeline()
+
+		if len(p.Sponsor.Challenges) > 0 {
+			pip.HSet("sponsor:"+m.sender.character.SponsorID, "challenges", p.Sponsor.Challenges)
+		}
+
+		if len(p.Sponsor.Description) > 0 {
+			pip.HSet("sponsor:"+m.sender.character.SponsorID, "description", p.Sponsor.Description)
+		}
+
+		if len(p.Sponsor.URL) > 0 {
+			pip.HSet("sponsor:"+m.sender.character.SponsorID, "url", p.Sponsor.URL)
+		}
+
+		pip.Exec()
 	}
 }
