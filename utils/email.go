@@ -11,18 +11,19 @@ import (
 
 const (
 	// Sender
-	Sender = "HackMIT<noreply@hackmit.org>"
+	Sender = "HackMIT <noreply@hackmit.org>"
 
 	// The subject line for the email.
 	Subject = "HackMIT Playground Confirmation"
 
 	// The character encoding for the email.
 	CharSet = "UTF-8"
+
+	ReplyTo = "help@hackmit.org"
 )
 
 func SendConfirmationEmail(recipient string, code int, name string) {
 	paddedCode := fmt.Sprintf("%06d", code)
-	ReplyTo := "help@hackmit.org"
 
 	h := hermes.Hermes{
 		Theme: new(hermes.Default),
