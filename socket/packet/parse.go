@@ -53,6 +53,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := GetMessagesPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
+	case "get_songs":
+		p := GetSongsPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	case "hallway_add":
 		p := HallwayAddPacket{}
 		json.Unmarshal(data, &p)

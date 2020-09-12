@@ -209,6 +209,7 @@ func MonitorLeader() {
 
 			if queueLength > 0 {
 				// Pop the next song off the queue
+				fmt.Println("queue length > 0")
 				songID, _ := instance.LPop("songs").Result()
 
 				songRes, _ := instance.HGetAll("song:" + songID).Result()
@@ -228,11 +229,10 @@ func MonitorLeader() {
 					"endTime": endTime,
 				}
 
+				fmt.Println("about to send")
 				data, _ := json.Marshal(songPacket)
 				pip.Publish("all", data)
 				pip.Exec()
-				// p := packet.SongPacket{Song: song, Playing: true, EndTime: endTime}
-				// h.Send(p)
 			}
 		}
 

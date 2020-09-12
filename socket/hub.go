@@ -772,28 +772,29 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			return
 		}
 
-		var jukeboxTimestamp time.Time
+		// var jukeboxTimestamp time.Time
 		jukeboxQuery := "character:" + m.sender.character.ID + ":jukeboxTimestamp"
-		jukeboxKeyExists, _ := db.GetInstance().Exists(jukeboxQuery).Result()
-		// User has never added a song to queue
-		if (jukeboxKeyExists != 1) {
-			jukeboxTimestamp = time.Now()
-			res.RequiresWarning = true
-		} else {
-			timestampString, _ := db.GetInstance().Get(jukeboxQuery).Result()
-			var _ error
-			jukeboxTimestamp, _ = time.Parse(time.RFC3339, timestampString)
-		}
+		// jukeboxKeyExists, _ := db.GetInstance().Exists(jukeboxQuery).Result()
+		// // User has never added a song to queue
+		// if (jukeboxKeyExists != 1) {
+		// 	jukeboxTimestamp = time.Now()
+		// 	res.RequiresWarning = true
+		// } else {
+		// 	timestampString, _ := db.GetInstance().Get(jukeboxQuery).Result()
+		// 	var _ error
+		// 	jukeboxTimestamp, _ = time.Parse(time.RFC3339, timestampString)
+		// }
 
 		// 15 minutes has not yet passed since user last submitted a song
-		if jukeboxTimestamp.After(time.Now()) {
-			errorPacket := packet.NewErrorPacket(401)
-			data, _ := json.Marshal(errorPacket)
-			m.sender.send <- data
-			return
-		}
+		// if jukeboxTimestamp.After(time.Now()) {
+		// 	errorPacket := packet.NewErrorPacket(401)
+		// 	data, _ := json.Marshal(errorPacket)
+		// 	m.sender.send <- data
+		// 	return
+		// }
 
 		// Make the YouTube API call
+		fmt.Println(config.GetSecret(config.YouTubeKey))
 		youtubeClient, _ := youtube.New(&http.Client{
 			Transport: &transport.APIKey{Key: config.GetSecret(config.YouTubeKey)},
 		})
