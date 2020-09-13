@@ -14,6 +14,11 @@ const (
 	SponsorRep
 	Mentor
 	Hacker
+
+	defaultEyeColor   = "#634e34"
+	defaultSkinColor  = "#e0ac69"
+	defaultShirtColor = "#d6e2f8"
+	defaultPantsColor = "#ecf0f1"
 )
 
 // Character is the digital representation of a client
@@ -34,6 +39,12 @@ type Character struct {
 
 	// If this character is a sponsor rep, this is their company's ID
 	SponsorID string `json:"sponsorId,omitempty" redis:"sponsorId"`
+
+	// Clothes
+	EyeColor   string `json:"eyeColor" redis:"eyeColor"`
+	SkinColor  string `json:"skinColor" redis:"skinColor"`
+	ShirtColor string `json:"shirtColor" redis:"shirtColor"`
+	PantsColor string `json:"pantsColor" redis:"pantsColor"`
 }
 
 func NewCharacter(name string) *Character {
@@ -45,6 +56,10 @@ func NewCharacter(name string) *Character {
 	c.Y = 0.5
 	c.Room = "home"
 	c.Role = int(Organizer)
+	c.EyeColor = defaultEyeColor
+	c.SkinColor = defaultSkinColor
+	c.ShirtColor = defaultShirtColor
+	c.PantsColor = defaultPantsColor
 	return c
 }
 
@@ -72,6 +87,10 @@ func NewCharacterFromQuill(quillData map[string]interface{}) *Character {
 	c.Y = 0.5
 	c.Room = "home"
 	c.Role = int(Hacker)
+	c.EyeColor = defaultEyeColor
+	c.SkinColor = defaultSkinColor
+	c.ShirtColor = defaultShirtColor
+	c.PantsColor = defaultPantsColor
 	return c
 }
 

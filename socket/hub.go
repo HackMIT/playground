@@ -197,7 +197,7 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 		if res["to"].(string) != res["from"].(string) {
 			h.SendBytes("character:"+res["from"].(string), msg)
 		}
-	case "chat", "dance", "move", "leave":
+	case "chat", "dance", "move", "leave", "wardrobe_change":
 		h.SendBytes(res["room"].(string), msg)
 	case "join":
 		h.SendBytes(res["character"].(map[string]interface{})["room"].(string), msg)
@@ -1019,5 +1019,17 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		pip.Exec()
+	case packet.WardrobeChangePacket:
+		p.CharacterID = m.sender.character.ID
+		p.Room = m.sender.character.Room
+
+		db.GetInstance().HSet("character:"+m.sender.character.ID, map[string]interface{}{
+			"eyeColor":   p.EyeColor,
+			"skinColor":  p.SkinColor,
+			"shirtColor": p.ShirtColor,
+			"pantsColor": p.PantsColor,
+		})
+
+		h.Send(p)
 	}
 }

@@ -133,6 +133,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := UpdateSponsorPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
+	case "wardrobe_change":
+		p := WardrobeChangePacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	default:
 		return nil, errors.New("Invalid packet type: " + res.Type)
 	}
