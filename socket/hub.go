@@ -204,7 +204,7 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 		h.SendBytes(res["character"].(map[string]interface{})["room"].(string), msg)
 	case "element_add", "element_delete", "element_update", "hallway_add", "hallway_delete", "hallway_update":
 		h.SendBytes(res["room"].(string), msg)
-	case "song":
+	case "song", "playSong":
 		h.SendBytes("*", msg)
 	case "teleport", "teleport_home":
 		var p packet.TeleportPacket

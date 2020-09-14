@@ -2,11 +2,10 @@ package models
 
 import (
 	"encoding/json"
-	"time"
 )
 
 type QueueStatus struct {
-	SongEnd time.Time `json:"songend"`
+	SongEnd int64 `json:"songend"`
 }
 
 func (q *QueueStatus) Init() *QueueStatus {

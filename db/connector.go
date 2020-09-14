@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -56,7 +57,9 @@ func Init(shouldReset bool) {
 
 	// Initialize jukebox
 	// TODO: Make sure this works correctly when there are multiple ingests
-	instance.HSet("queuestatus", utils.StructToMap(models.QueueStatus{SongEnd: time.Now()}))
+	initialTime := time.Now().Unix()
+	// instance.HSet("queuestatus", utils.StructToMap(models.QueueStatus{SongEnd: initialTime}))
+	instance.Set("queuestatus", initialTime, 0)
 
 	// Update TIM the beaver
 	character := *models.NewTIMCharacter()
@@ -196,20 +199,17 @@ func MonitorLeader() {
 		}
 
 		// Get song queue status
-		queueRes, _ := instance.HGetAll("queuestatus").Result()
+		queueRes, _ := instance.Get("queuestatus").Result()
+		queueStatus, _ := strconv.ParseInt(queueRes, 10, 64)
 
-		var queueStatus models.QueueStatus
-		utils.Bind(queueRes, &queueStatus)
-
-		songEnd := queueStatus.SongEnd
+		songEnd := time.Unix(queueStatus, 0)
 
 		// If current song ended, start next song (if there is one)
 		if songEnd.Before(time.Now()) {
-			queueLength, _ := instance.SCard("songs").Result()
+			queueLength, _ := instance.LLen("songs").Result()
 
 			if queueLength > 0 {
 				// Pop the next song off the queue
-				fmt.Println("queue length > 0")
 				songID, _ := instance.LPop("songs").Result()
 
 				songRes, _ := instance.HGetAll("song:" + songID).Result()
@@ -217,20 +217,18 @@ func MonitorLeader() {
 				utils.Bind(songRes, &song)
 
 				// Update queue status to reflect new song
-				endTime := time.Now().Add(time.Second * time.Duration(song.Duration))
-				newStatus := models.QueueStatus{endTime}
-				instance.HSet("queuestatus", utils.StructToMap(newStatus))
+				endTime := (time.Now().Add(time.Second * time.Duration(song.Duration))).Unix()
+				instance.Set("queuestatus", endTime, 0)
 
 				// Send song packet to ingests
-				songPacket := map[string]interface{}{
-					"type": "song",
-					"song": song,
-					"playing": true,
-					"endTime": endTime,
+				playSongPacket := map[string]interface{}{
+					"type": "playSong",
+					"song": utils.StructToMap(song),
+					"start": 0,
+					"end": int(song.Duration),
 				}
 
-				fmt.Println("about to send")
-				data, _ := json.Marshal(songPacket)
+				data, _ := json.Marshal(playSongPacket)
 				pip.Publish("all", data)
 				pip.Exec()
 			}

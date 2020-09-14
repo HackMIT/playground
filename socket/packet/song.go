@@ -2,7 +2,6 @@ package packet
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/techx/playground/db/models"
 )
@@ -14,9 +13,6 @@ type SongPacket struct {
 	*models.Song
 	RequiresWarning bool `json:"requiresWarning"`
 	Remove bool `json:"remove"`
-	Playing bool `json:"playing"`
-	Start int `json:"start"`
-	EndTime time.Time `json:"endTime"`
 }
 
 func (p *SongPacket) Init(song *models.Song) *SongPacket {
@@ -24,7 +20,6 @@ func (p *SongPacket) Init(song *models.Song) *SongPacket {
 	p.Song = song
 	p.RequiresWarning = false
 	p.Remove = false
-	p.Playing = false
 	return p
 }
 
