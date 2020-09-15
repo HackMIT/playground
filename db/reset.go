@@ -186,6 +186,23 @@ func CreateRoom(id string, roomType RoomType) {
 	createRoomWithData(id, roomType, map[string]interface{}{})
 }
 
+func createEvents() {
+	dat, err := ioutil.ReadFile("config/events.json")
+
+	if err != nil {
+		return
+	}
+
+	var eventsData []map[string]interface{}
+	json.Unmarshal(dat, &eventsData)
+
+	for _, event := range eventsData {
+		eventID := uuid.New().String()[:4]
+		instance.HSet("event:"+eventID, event)
+		instance.SAdd("events", eventID)
+	}
+}
+
 func reset() {
 	instance.FlushDB()
 	CreateRoom("home", Home)
@@ -293,6 +310,7 @@ func reset() {
 		"toY":       0.4656,
 	})
 
+	createEvents()
 	createSponsors()
 
 	instance.SAdd("sponsor_emails", "cookj@mit.edu")
