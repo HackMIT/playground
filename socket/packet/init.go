@@ -58,6 +58,7 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	teammatesCmd := pip.SMembers("character:" + characterID + ":teammates")
 	friendsCmd := pip.SMembers("character:" + characterID + ":friends")
 	requestsCmd := pip.SMembers("character:" + characterID + ":requests")
+	projectIDCmd := pip.Get("character:" + characterID + ":project")
 	pip.Exec()
 
 	room := new(models.Room).Init()
@@ -267,6 +268,14 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	p.Settings = new(models.Settings)
 	settingsRes, _ := settingsCmd.Result()
 	utils.Bind(settingsRes, p.Settings)
+
+	// Get project
+	projectID, err := projectIDCmd.Result()
+
+	if err != nil && len(projectID) > 0 {
+		projectRes, _ := db.GetInstance().HGetAll("project:" + projectID).Result()
+		utils.Bind(projectRes, p.Character)
+	}
 
 	return p
 }

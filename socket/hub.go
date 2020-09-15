@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/SherClockHolmes/webpush-go"
 	"github.com/techx/playground/config"
@@ -32,6 +33,7 @@ type ErrorCode int
 const (
 	BadLogin ErrorCode = iota + 1
 	HighSchoolNightClub
+	MissingProjectForm
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the clients
@@ -346,7 +348,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Send email to person trying to log in
 		utils.SendConfirmationEmail(p.Email, code, name)
-
 	case packet.EventPacket:
 		// Parse event packet
 		res := packet.EventPacket{}
@@ -551,6 +552,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				// Add character to database
 				pip.HSet("character:"+character.ID, utils.StructToMap(character))
 				pip.HSet("quillToCharacter", quillData["id"].(string), character.ID)
+				pip.HSet("emailToCharacter", quillData["email"].(string), character.ID)
 			} else {
 				// This person has logged in before, fetch from Redis
 				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
@@ -779,6 +781,36 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// notif := packet.NewMessageNotificationPacket("testing")
 		// data, _ := notif.MarshalBinary()
 		// h.SendBytes("character:"+m.sender.character.ID, data)
+	case packet.ProjectFormPacket:
+		projectID := uuid.New().String()
+
+		pip := db.GetInstance().Pipeline()
+
+		characterIDCmds := make([]*redis.StringCmd, len(p.Teammates))
+
+		for i, email := range p.Teammates {
+			characterIDCmds[i] = pip.HGet("emailToCharacter", email)
+		}
+
+		pip.Exec()
+		pip = db.GetInstance().Pipeline()
+
+		p.Project.Challenges = strings.Join(p.Challenges, ",")
+		p.Project.Emails = strings.Join(append(p.Teammates, m.sender.character.Email), ",")
+		pip.HSet("project:"+projectID, p.Project)
+
+		for _, cmd := range characterIDCmds {
+			characterID, err := cmd.Result()
+
+			if err != nil || len(characterID) == 0 {
+				continue
+			}
+
+			pip.Set("character:"+characterID+":project", projectID, 0)
+		}
+
+		pip.Set("character:"+m.sender.character.ID+":project", projectID, 0)
+		pip.Exec()
 	case packet.RegisterPacket:
 		pip := db.GetInstance().Pipeline()
 
@@ -958,6 +990,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip = db.GetInstance().Pipeline()
 		characterCmd := pip.HGetAll("character:" + m.sender.character.ID)
 		pip.SAdd("room:"+p.To+":characters", m.sender.character.ID)
+		projectIDCmd := pip.Get("character:" + m.sender.character.ID + ":project")
 		pip.Exec()
 
 		characterRes, _ := characterCmd.Result()
@@ -967,6 +1000,22 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Publish event to other ingest servers
 		p.Character = &character
+
+		// If we're going to the hacker arena after 5pm, add the character's project
+		if strings.HasPrefix(p.To, "arena:") && time.Now().Unix() >= 1600549200 {
+			projectID, err := projectIDCmd.Result()
+
+			if err != nil || len(projectID) == 0 {
+				errorPacket := packet.NewErrorPacket(int(MissingProjectForm))
+				data, _ := json.Marshal(errorPacket)
+				m.sender.send <- data
+				return
+			}
+
+			projectRes, _ := db.GetInstance().HGetAll("project:" + projectID).Result()
+			utils.Bind(projectRes, p.Character.Project)
+		}
+
 		h.Send(p)
 	case packet.QueueJoinPacket:
 		hackerIDs, _ := db.GetInstance().LRange("sponsor:"+p.SponsorID+":hackerqueue", 0, -1).Result()

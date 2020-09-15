@@ -32,6 +32,7 @@ type Character struct {
 	Room           string  `json:"room" redis:"room"`
 	Ingest         string  `json:"ingest" redis:"ingest"`
 	FeedbackOpened bool    `json:"feedbackOpened" redis:"feedbackOpened"`
+	Email          string  `json:"email" redis:"email"`
 	Role           int     `json:"role" redis:"role"`
 	IsCollege      bool    `json:"isCollege" redis:"isCollege"`
 
@@ -40,6 +41,9 @@ type Character struct {
 
 	// If this character is a sponsor rep, this is their company's ID
 	SponsorID string `json:"sponsorId,omitempty" redis:"sponsorId"`
+
+	// This character's project, if they have one
+	Project *Project `json:"project" redis:"-"`
 
 	// Clothes
 	EyeColor   string `json:"eyeColor" redis:"eyeColor"`
