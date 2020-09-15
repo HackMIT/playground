@@ -3,50 +3,50 @@
   "sponsor": true,
   "elements": [
     {
-      "x": 0.2144,
-      "y": 0.7769,
-      "width": 0.1951,
+      "x": 0.2252,
+      "y": 0.7793,
+      "width": 0.2029,
       "path": "desk_<sponsor>.svg"
     },
     {
-      "x": 0.4381,
-      "y": 0.406,
+      "x": 0.439,
+      "y": 0.4095,
       "width": 0.0301,
       "path": "plant_<sponsor>.svg"
     },
     {
-      "x": 0.39,
-      "y": 0.4541,
+      "x": 0.3909,
+      "y": 0.4593,
       "width": 0.0846,
       "path": "shelf_<sponsor>.svg"
     },
     {
-      "x": 0.8913,
-      "y": 0.7306,
+      "x": 0.9075,
+      "y": 0.7289,
       "width": 0.0319,
       "path": "plant_brown.svg"
     },
     {
-      "x": 0.6006,
-      "y": 0.6201,
+      "x": 0.618,
+      "y": 0.6045,
       "width": 0.2041,
       "path": "sofa_front.svg"
     },
     {
-      "x": 0.6801,
-      "y": 0.7181,
+      "x": 0.7033,
+      "y": 0.7129,
       "width": 0.1312,
       "path": "coffee_table.svg"
     },
     {
-      "x": 0.782,
-      "y": 0.8231,
+      "x": 0.7973,
+      "y": 0.8248,
       "width": 0.2041,
       "path": "sofa_back.svg"
     },
     {
-      "x": 0.727,
-      "y": 0.9023,
+      "x": 0.7403,
+      "y": 0.904,
       "width": 0.0319,
       "path": "plant_brown.svg"
     },

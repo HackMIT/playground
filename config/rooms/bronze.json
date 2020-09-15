@@ -3,6 +3,12 @@
   "sponsor": false,
   "elements": [
     {
+      "x": 0.2699,
+      "y": 0.524,
+      "width": 0.0555,
+      "path": "door_flipped.svg"
+    },
+    {
       "x": 0.6163,
       "y": 0.5395,
       "width": 0.1922,
@@ -27,5 +33,14 @@
       "path": "small_shelf_<sponsor>.svg"
     }
   ],
-  "hallways": []
+  "hallways": [
+    {
+      "x": 0.2767,
+      "y": 0.6116,
+      "radius": 0.06,
+      "to": "left_field",
+      "toX": 0.5,
+      "toY": 0.5
+    }
+  ]
 }

@@ -3,6 +3,12 @@
   "sponsor": false,
   "elements": [
     {
+      "x": 0.5082,
+      "y": 0.2957,
+      "width": 0.0555,
+      "path": "door_flipped.svg"
+    },
+    {
       "x": 0.652,
       "y": 0.4814,
       "width": 0.219,
@@ -45,5 +51,14 @@
       "path": "sofa_back.svg"
     }
   ],
-  "hallways": []
+  "hallways": [
+    {
+      "x": 0.5107,
+      "y": 0.3836,
+      "radius": 0.0572,
+      "to": "left_field",
+      "toX": 0.5,
+      "toY": 0.5
+    }
+  ]
 }
