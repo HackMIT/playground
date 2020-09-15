@@ -9,9 +9,6 @@ import (
 	"github.com/techx/playground/db/models"
 	"github.com/techx/playground/utils"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-redis/redis/v7"
 )
@@ -235,32 +232,33 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 
 	// Find all of the possible paths
 	// TODO: Cache these
-	sess := session.Must(session.NewSession())
-	svc := s3.New(sess)
+	p.ElementNames = []string{}
+	// sess := session.Must(session.NewSession())
+	// svc := s3.New(sess)
 
-	input := &s3.ListObjectsV2Input{
-		Bucket: aws.String("hackmit-playground-2020"),
-		Prefix: aws.String("elements/"),
-	}
+	// input := &s3.ListObjectsV2Input{
+	// 	Bucket: aws.String("hackmit-playground-2020"),
+	// 	Prefix: aws.String("elements/"),
+	// }
 
-	result, err := svc.ListObjectsV2(input)
+	// result, err := svc.ListObjectsV2(input)
 
-	if err != nil {
-		p.ElementNames = []string{}
-	} else {
-		elementNames := make([]string, len(result.Contents)-1)
+	// if err != nil {
+	// 	p.ElementNames = []string{}
+	// } else {
+	// 	elementNames := make([]string, len(result.Contents)-1)
 
-		for i, item := range result.Contents {
-			if i == 0 {
-				// First key is the elements directory
-				continue
-			}
+	// 	for i, item := range result.Contents {
+	// 		if i == 0 {
+	// 			// First key is the elements directory
+	// 			continue
+	// 		}
 
-			elementNames[i-1] = (*item.Key)[9:]
-		}
+	// 		elementNames[i-1] = (*item.Key)[9:]
+	// 	}
 
-		p.ElementNames = elementNames
-	}
+	// 	p.ElementNames = elementNames
+	// }
 
 	// Get all room names
 	p.RoomNames, _ = db.GetInstance().SMembers("rooms").Result()
