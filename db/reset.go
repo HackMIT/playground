@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"io/ioutil"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -32,6 +33,9 @@ const (
 	// PlatArea is the area accessible from town square with the two plat sponsor buildings
 	PlatArea = "plat_area"
 
+	// Plat is a plat-tier sponsor's room
+	Plat = "plat"
+
 	// Gold is a gold-tier sponsor's room
 	Gold = "gold"
 
@@ -53,6 +57,10 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 	var roomData map[string]interface{}
 	json.Unmarshal(dat, &roomData)
 	data["background"] = roomData["background"]
+
+	if sponsorID, ok := data["sponsorId"].(string); ok {
+		data["background"] = strings.ReplaceAll(data["background"].(string), "<sponsor>", sponsorID)
+	}
 
 	instance.HSet("room:"+id, data)
 
@@ -120,6 +128,10 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 			elementData["state"] = 0
 		}
 
+		if sponsorID, ok := data["sponsorId"].(string); ok {
+			elementData["path"] = strings.ReplaceAll(elementData["path"].(string), "<sponsor>", sponsorID)
+		}
+
 		instance.HSet("element:"+elementID, elementData)
 		instance.RPush("room:"+id+":elements", elementID)
 	}
@@ -166,11 +178,11 @@ func reset() {
 	CreateRoom("plaza", Plaza)
 	CreateRoom("coffee_shop", CoffeeShop)
 
-	createRoomWithData("sponsor:cmt", Gold, map[string]interface{}{
+	createRoomWithData("sponsor:cmt", Plat, map[string]interface{}{
 		"sponsorId": "cmt",
 	})
 
-	createRoomWithData("sponsor:intersystems", Gold, map[string]interface{}{
+	createRoomWithData("sponsor:intersystems", Plat, map[string]interface{}{
 		"sponsorId": "intersystems",
 	})
 
