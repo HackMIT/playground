@@ -776,7 +776,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			url := "https://api.twitter.com/2/tweets/search/recent?query=from:" + p.Settings.TwitterHandle + "&tweet.fields=entities"
 			method := "GET"
 
-			var bearer = "Bearer "+ config.GetSecret("TWITTER_API_KEY")
+			bearer := "Bearer "+ config.GetSecret("TWITTER_API_KEY")
 			client := &http.Client {
 			}
 			req, err := http.NewRequest(method, url, nil)
