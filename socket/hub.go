@@ -353,26 +353,46 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		res := packet.EventPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		isValidEvent, err := db.GetInstance().SIsMember("events", res.ID).Result()
+		pip := db.GetInstance().Pipeline()
+		validCmd := pip.SIsMember("events", res.ID)
+		eventCmd := pip.HGetAll("event:" + res.ID)
+		pip.Exec()
+
+		isValidEvent, err := validCmd.Result()
 
 		if !isValidEvent || err != nil {
 			return
 		}
 
-		pip := db.GetInstance().Pipeline()
+		eventRes, _ := eventCmd.Result()
+		var event models.Event
+		utils.Bind(eventRes, &event)
+
+		pip = db.GetInstance().Pipeline()
 		pip.SAdd("event:"+res.ID+":attendees", m.sender.character.ID)
 		pip.SAdd("character:"+m.sender.character.ID+":events", res.ID)
-		pip.SCard("character:" + m.sender.character.ID + ":events")
-		numEventsCmd := pip.HIncrBy("character:"+m.sender.character.ID+":achievements", "events", 1)
+
+		var countCmd *redis.IntCmd
+
+		if event.Type == "workshop" {
+			countCmd = pip.HIncrBy("character:"+m.sender.character.ID, "numWorkshops", 1)
+		} else if event.Type == "mini_event" {
+			countCmd = pip.HIncrBy("character:"+m.sender.character.ID, "numMiniEvents", 1)
+		}
+
 		pip.Exec()
 
-		// Check achievement progress and update if necessary
-		numEvents, err := numEventsCmd.Result()
+		if countCmd == nil {
+			return
+		}
 
-		if numEvents == config.GetConfig().GetInt64("achievements.num_events") && err == nil {
-			resp := packet.NewAchievementNotificationPacket("events")
-			data, _ := resp.MarshalBinary()
-			h.SendBytes("character:"+m.sender.character.ID, data)
+		// Check achievement progress and update if necessary
+		numEvents, _ := countCmd.Result()
+
+		if event.Type == "workshop" && numEvents == config.GetConfig().GetInt64("achievements.num_workshops") {
+			db.GetInstance().HSet("character:"+m.sender.character.ID+":achievements", "workshops", true)
+		} else if event.Type == "mini_event" && numEvents == config.GetConfig().GetInt64("achievements.num_mini_events") {
+			db.GetInstance().HSet("character:"+m.sender.character.ID+":achievements", "miniEvents", true)
 		}
 	case packet.FriendRequestPacket:
 		// Parse friend request packet
@@ -393,6 +413,24 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			pip.SRem("character:"+m.sender.character.ID+":requests", res.RecipientID)
 			pip.SAdd("character:"+m.sender.character.ID+":friends", res.RecipientID)
 			pip.SAdd("character:"+res.RecipientID+":friends", m.sender.character.ID)
+			firstNumFriendsCmd := pip.SCard("character:" + m.sender.character.ID + ":friends")
+			secondNumFriendsCmd := pip.SCard("character:" + res.RecipientID + ":friends")
+			pip.Exec()
+
+			// Track achievement progress
+			firstNumFriends, _ := firstNumFriendsCmd.Result()
+			secondNumFriends, _ := secondNumFriendsCmd.Result()
+
+			pip = db.GetInstance().Pipeline()
+
+			if firstNumFriends == config.GetConfig().GetInt64("achievements.num_friends") {
+				pip.HSet("character:"+m.sender.character.ID+":achievements", "hangouts", true)
+			}
+
+			if secondNumFriends == config.GetConfig().GetInt64("achievements.num_friends") {
+				pip.HSet("character:"+res.RecipientID+":achievements", "hangouts", true)
+			}
+
 			pip.Exec()
 
 			// TODO: This will not work with more than one ingest server
@@ -807,9 +845,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 
 			pip.Set("character:"+characterID+":project", projectID, 0)
+			pip.HSet("character:"+characterID+":achievements", "trackCounter", true)
 		}
 
 		pip.Set("character:"+m.sender.character.ID+":project", projectID, 0)
+		pip.HSet("character:"+m.sender.character.ID+":achievements", "trackCounter", true)
 		pip.Exec()
 	case packet.RegisterPacket:
 		pip := db.GetInstance().Pipeline()
@@ -850,9 +890,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			url := "https://api.twitter.com/2/tweets/search/recent?query=from:" + p.Settings.TwitterHandle + "&tweet.fields=entities"
 			method := "GET"
 
-			bearer := "Bearer "+ config.GetSecret("TWITTER_API_KEY")
-			client := &http.Client {
-			}
+			bearer := "Bearer " + config.GetSecret("TWITTER_API_KEY")
+			client := &http.Client{}
 			req, err := http.NewRequest(method, url, nil)
 
 			req.Header.Add("Authorization", bearer)
@@ -863,9 +902,21 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			defer res.Body.Close()
 			body, err := ioutil.ReadAll(res.Body)
 
-			strings.Contains(strings.ToLower(string(body)), "#hackmit")
-			fmt.Println(string(body))
+			// Track achievements
+			usedHashtag := strings.Contains(strings.ToLower(string(body)), "#hackmit2020")
+			usedMemeHashtag := strings.Contains(strings.ToLower(string(body)), "#hackmitmemes")
 
+			pip := db.GetInstance().Pipeline()
+
+			if usedHashtag {
+				pip.HSet("character:"+m.sender.character.ID+":achievements", "socialMedia", true)
+			}
+
+			if usedMemeHashtag {
+				pip.HSet("character:"+m.sender.character.ID+":achievements", "memeLord", true)
+			}
+
+			pip.Exec()
 		}
 
 		db.GetInstance().HSet("character:"+m.sender.character.ID+":settings", utils.StructToMap(p.Settings))
@@ -1034,8 +1085,25 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				return
 			}
 
-			projectRes, _ := db.GetInstance().HGetAll("project:" + projectID).Result()
+			pip := db.GetInstance().Pipeline()
+
+			// Make sure they earn the peer expo achievement
+			pip.HSet("character:"+m.sender.character.ID+":achivements", "peerExpo", true)
+
+			projectCmd := db.GetInstance().HGetAll("project:" + projectID)
+			pip.Exec()
+
+			projectRes, _ := projectCmd.Result()
 			utils.Bind(projectRes, p.Character.Project)
+		}
+
+		// If we're entering a sponsor room, track achievement progress
+		if strings.HasPrefix(p.To, "sponsor:") {
+			numSponsors, _ := db.GetInstance().HIncrBy("character:"+m.sender.character.ID, "numSponsorsVisited", 1).Result()
+
+			if numSponsors == config.GetConfig().GetInt64("achievements.num_sponsors") {
+				pip.HSet("character:"+m.sender.character.ID+":achivements", "companyTour", true)
+			}
 		}
 
 		h.Send(p)
@@ -1055,6 +1123,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		subscriber := models.NewQueueSubscriber(m.sender.character)
 		pip.HSet("subscriber:"+m.sender.character.ID, utils.StructToMap(subscriber))
+
+		// Track achievements
+		pip.HSet("character:"+m.sender.character.ID+":achievements", "sponsorQueue", true)
 		pip.Exec()
 
 		h.sendSponsorQueueUpdate(p.SponsorID)
@@ -1087,6 +1158,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip := db.GetInstance().Pipeline()
 		pip.HSet("location:"+locationID, utils.StructToMap(p.Location))
 		pip.SAdd("locations", locationID)
+
+		// Track achievements
+		pip.HSet("character:"+m.sender.character.ID+":achievements", "sendLocation", true)
 		pip.Exec()
 
 		// Send locations back to client

@@ -7,5 +7,5 @@ type GetAchievementsPacket struct {
 }
 
 func (p GetAchievementsPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }

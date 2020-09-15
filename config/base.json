@@ -1,6 +1,9 @@
 {
   "achievements": {
-    "num_events": 2
+    "num_workshops": 2,
+    "num_mini_events": 1,
+    "num_sponsors": 4,
+    "num_friends": 5
   },
   "db": {
     "addr": "localhost:6379",

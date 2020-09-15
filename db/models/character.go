@@ -45,6 +45,12 @@ type Character struct {
 	// This character's project, if they have one
 	Project *Project `json:"project" redis:"-"`
 
+	// Used to track progress on certain achievements
+	NumSponsorsVisited int  `json:"numSponsorsVisited" redis:"numSponsorsVisited"`
+	VisitedNonprofits  bool `json:"visitedNonprofits" redis:"visitedNonprofits"`
+	NumWorkshops       int  `json:"numWorkshops" redis:"numWorkshops"`
+	NumMiniEvents      int  `json:"numMiniEvents" redis:"numMiniEvents"`
+
 	// Clothes
 	EyeColor   string `json:"eyeColor" redis:"eyeColor"`
 	SkinColor  string `json:"skinColor" redis:"skinColor"`
