@@ -1,5 +1,5 @@
 {
-  "background": "cmt.svg",
+  "background": "<sponsor>.svg",
   "elements": [
     {
       "x": 0.2879,
@@ -77,7 +77,7 @@
       "x": 0.7581,
       "y": 0.5396,
       "width": 0.0555,
-      "path": "plat_door.svg"
+      "path": "door.svg"
     },
     {
       "x": 0.3926,
@@ -104,5 +104,14 @@
       "path": "plat_glass_door.svg"
     }
   ],
-  "hallways": []
+  "hallways": [
+    {
+      "x": 0.7485,
+      "y": 0.6185,
+      "radius": 0.0539,
+      "to": "plat_area",
+      "toX": 0.5,
+      "toY": 0.5
+    }
+  ]
 }

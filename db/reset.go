@@ -33,6 +33,12 @@ const (
 	// PlatArea is the area accessible from town square with the two plat sponsor buildings
 	PlatArea = "plat_area"
 
+	// LeftField is the left sponsor area
+	LeftField = "left_field"
+
+	// RightField is the right sponsor area
+	RightField = "right_field"
+
 	// Plat is a plat-tier sponsor's room
 	Plat = "plat"
 
@@ -137,6 +143,17 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 	}
 
 	for _, val := range roomData["hallways"].([]interface{}) {
+		hallwayData := val.(map[string]interface{})
+
+		if _, ok := data["sponsorId"].(string); ok {
+			hallwayData["toX"] = data["toX"].(float64)
+			hallwayData["toY"] = data["toY"].(float64)
+
+			if val, ok := data["to"].(string); ok {
+				hallwayData["to"] = val
+			}
+		}
+
 		hallwayID := uuid.New().String()
 		instance.HSet("hallway:"+hallwayID, val)
 		instance.SAdd("room:"+id+":hallways", hallwayID)
@@ -175,15 +192,105 @@ func reset() {
 	CreateRoom("nightclub", Nightclub)
 	CreateRoom("nonprofits", Nonprofits)
 	CreateRoom("plat_area", PlatArea)
+	CreateRoom("left_field", LeftField)
+	CreateRoom("right_field", RightField)
 	CreateRoom("plaza", Plaza)
 	CreateRoom("coffee_shop", CoffeeShop)
 
 	createRoomWithData("sponsor:cmt", Plat, map[string]interface{}{
 		"sponsorId": "cmt",
+		"toX":       0.2685,
+		"toY":       0.5919,
 	})
 
 	createRoomWithData("sponsor:intersystems", Plat, map[string]interface{}{
 		"sponsorId": "intersystems",
+		"toX":       0.7402,
+		"toY":       0.5717,
+	})
+
+	createRoomWithData("sponsor:drw", Gold, map[string]interface{}{
+		"sponsorId": "drw",
+		"to":        "left_field",
+		"toX":       0.8215,
+		"toY":       0.4943,
+	})
+
+	createRoomWithData("sponsor:yext", Gold, map[string]interface{}{
+		"sponsorId": "yext",
+		"to":        "left_field",
+		"toX":       0.6128,
+		"toY":       0.702,
+	})
+
+	createRoomWithData("sponsor:facebook", Silver, map[string]interface{}{
+		"sponsorId": "facebook",
+		"to":        "left_field",
+		"toX":       0.3211,
+		"toY":       0.7636,
+	})
+
+	createRoomWithData("sponsor:arrowstreet", Silver, map[string]interface{}{
+		"sponsorId": "arrowstreet",
+		"to":        "left_field",
+		"toX":       0.2018,
+		"toY":       0.6347,
+	})
+
+	createRoomWithData("sponsor:oca", Bronze, map[string]interface{}{
+		"sponsorId": "oca",
+		"to":        "left_field",
+		"toX":       0.1148,
+		"toY":       0.5487,
+	})
+
+	createRoomWithData("sponsor:pega", Bronze, map[string]interface{}{
+		"sponsorId": "pega",
+		"to":        "left_field",
+		"toX":       0.0487,
+		"toY":       0.4728,
+	})
+
+	createRoomWithData("sponsor:ibm", Gold, map[string]interface{}{
+		"sponsorId": "ibm",
+		"to":        "right_field",
+		"toX":       0.1792,
+		"toY":       0.5072,
+	})
+
+	createRoomWithData("sponsor:nasdaq", Gold, map[string]interface{}{
+		"sponsorId": "nasdaq",
+		"to":        "right_field",
+		"toX":       0.3871,
+		"toY":       0.712,
+	})
+
+	createRoomWithData("sponsor:citadel", Silver, map[string]interface{}{
+		"sponsorId": "citadel",
+		"to":        "right_field",
+		"toX":       0.6788,
+		"toY":       0.755,
+	})
+
+	createRoomWithData("sponsor:goldman", Silver, map[string]interface{}{
+		"sponsorId": "goldman",
+		"to":        "right_field",
+		"toX":       0.7916,
+		"toY":       0.6347,
+	})
+
+	createRoomWithData("sponsor:linode", Silver, map[string]interface{}{
+		"sponsorId": "linode",
+		"to":        "right_field",
+		"toX":       0.8867,
+		"toY":       0.543,
+	})
+
+	createRoomWithData("sponsor:quantco", Bronze, map[string]interface{}{
+		"sponsorId": "quantco",
+		"to":        "right_field",
+		"toX":       0.9593,
+		"toY":       0.4656,
 	})
 
 	createSponsors()

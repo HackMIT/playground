@@ -1,24 +1,24 @@
 {
-  "background": "gold.svg",
+  "background": "<sponsor>.svg",
   "sponsor": true,
   "elements": [
     {
       "x": 0.2144,
       "y": 0.7769,
       "width": 0.1951,
-      "path": "desk.svg"
+      "path": "desk_<sponsor>.svg"
     },
     {
       "x": 0.4381,
       "y": 0.406,
       "width": 0.0301,
-      "path": "plant_blue.svg"
+      "path": "plant_<sponsor>.svg"
     },
     {
       "x": 0.39,
       "y": 0.4541,
       "width": 0.0846,
-      "path": "bookshelf.svg"
+      "path": "shelf_<sponsor>.svg"
     },
     {
       "x": 0.8913,
@@ -49,7 +49,22 @@
       "y": 0.9023,
       "width": 0.0319,
       "path": "plant_brown.svg"
+    },
+    {
+      "x": 0.5597,
+      "y": 0.3234,
+      "width": 0.0555,
+      "path": "door.svg"
     }
   ],
-  "hallways": []
+  "hallways": [
+    {
+      "x": 0.5416,
+      "y": 0.4214,
+      "radius": 0.0572,
+      "to": "plat_area",
+      "toX": 0.5,
+      "toY": 0.5
+    }
+  ]
 }

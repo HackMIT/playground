@@ -1,18 +1,18 @@
 {
-  "background": "silver.svg",
+  "background": "<sponsor>.svg",
   "sponsor": false,
   "elements": [
     {
       "x": 0.652,
       "y": 0.4814,
       "width": 0.219,
-      "path": "desk.svg"
+      "path": "desk_<sponsor>.svg"
     },
     {
       "x": 0.5654,
       "y": 0.7142,
       "width": 0.0368,
-      "path": "plant_blue.svg"
+      "path": "plant_<sponsor>.svg"
     },
     {
       "x": 0.4164,
