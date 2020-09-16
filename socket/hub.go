@@ -558,7 +558,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			defer resp.Body.Close()
 			body, _ := ioutil.ReadAll(resp.Body)
 
-			var quillData map[string]interface{}
+			// var quillData map[string]interface{}
+			var quillData models.QuillResponse
 			err := json.Unmarshal(body, &quillData)
 
 			if err != nil {
@@ -567,38 +568,33 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				return
 			}
 
-			admitted := quillData["status"].(map[string]interface{})["admitted"].(bool)
-			confirmed := quillData["status"].(map[string]interface{})["confirmed"].(bool)
-
-			if !admitted || !confirmed {
+			if !quillData.Status.Admitted || !quillData.Status.Confirmed {
 				// Don't allow non-admitted hackers to access Playground
 				// TODO: Send error packet
 				return
 			}
 
-			schoolLevel := quillData["profile"].(map[string]interface{})["schoolLevel"].(string)
-			isCollege := (schoolLevel != "high")
-
 			// Load this client's character
-			characterID, err := db.GetInstance().HGet("quillToCharacter", quillData["id"].(string)).Result()
+			characterID, err := db.GetInstance().HGet("quillToCharacter", quillData.ID).Result()
 
 			if err != nil {
 				// Never seen this character before, create a new one
-				character = models.NewCharacterFromQuill(quillData)
-				character.Email = quillData["email"].(string)
+				character = models.NewCharacterFromQuill(quillData.Profile)
+				character.Email = quillData.Email
 				character.ID = uuid.New().String()
-				character.IsCollege = isCollege
 
 				// Add character to database
 				pip.HSet("character:"+character.ID, utils.StructToMap(character))
-				pip.HSet("quillToCharacter", quillData["id"].(string), character.ID)
-				pip.HSet("emailToCharacter", quillData["email"].(string), character.ID)
+				pip.HSet("quillToCharacter", quillData.ID, character.ID)
+				pip.HSet("emailToCharacter", quillData.Email, character.ID)
+
+				// Make sure they get the account setup screen
+				firstTime = true
 			} else {
 				// This person has logged in before, fetch from Redis
 				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
 				utils.Bind(characterRes, &character)
 				character.ID = characterID
-				character.IsCollege = isCollege
 			}
 		} else if p.Token != "" {
 			// TODO: Error handling
@@ -702,6 +698,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		if p.Type == "join" {
+			pip.Exec()
+
 			// Generate init packet before new character is added to room
 			initPacket = packet.NewInitPacket(character.ID, character.Room, true)
 			initPacket.FirstTime = firstTime

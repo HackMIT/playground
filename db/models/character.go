@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/google/uuid"
 )
@@ -87,13 +88,32 @@ func NewTIMCharacter() *Character {
 	return c
 }
 
-func NewCharacterFromQuill(quillData map[string]interface{}) *Character {
+type QuillProfile struct {
+	Name        string `json:"name"`
+	School      string `json:"school"`
+	GradYear    string `json:"graduationYear"`
+	SchoolLevel string `json:"schoolLevel"`
+}
+
+type QuillStatus struct {
+	Admitted  bool `json:"admitted"`
+	Confirmed bool `json:"confirmed"`
+}
+
+type QuillResponse struct {
+	Email   string       `json:"email"`
+	ID      string       `json:"id"`
+	Profile QuillProfile `json:"profile"`
+	Status  QuillStatus  `json:"status"`
+}
+
+func NewCharacterFromQuill(profile QuillProfile) *Character {
 	c := new(Character)
 	c.ID = uuid.New().String()
-	c.Name = quillData["profile"].(map[string]interface{})["name"].(string)
-	c.School = quillData["profile"].(map[string]interface{})["school"].(string)
-	// TODO: Fix this
-	c.GradYear = 2022
+	c.Name = profile.Name
+	c.School = profile.School
+	c.IsCollege = profile.SchoolLevel != "high"
+	c.GradYear, _ = strconv.Atoi(profile.GradYear)
 	c.X = 0.5
 	c.Y = 0.5
 	c.Room = "home"
