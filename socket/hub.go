@@ -568,8 +568,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 
 			admitted := quillData["status"].(map[string]interface{})["admitted"].(bool)
+			confirmed := quillData["status"].(map[string]interface{})["confirmed"].(bool)
 
-			if !admitted {
+			if !admitted || !confirmed {
 				// Don't allow non-admitted hackers to access Playground
 				// TODO: Send error packet
 				return
