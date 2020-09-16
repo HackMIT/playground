@@ -109,6 +109,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := RegisterPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
+	case "report":
+		p := ReportPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	case "room_add":
 		p := RoomAddPacket{}
 		json.Unmarshal(data, &p)

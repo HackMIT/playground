@@ -1153,6 +1153,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		h.sendSponsorQueueUpdate(p.SponsorID)
 	case packet.QueueUnsubscribePacket:
 		db.GetInstance().SRem("sponsor:"+p.SponsorID+":subscribed", m.sender.character.ID)
+	case packet.ReportPacket:
+		json := []byte(`{"text": "` + m.sender.character.Name + `: ` + `(` + p.CharacterID + `): ` + p.Text + `"}`)
+		body := bytes.NewBuffer(json)
+
+		client := &http.Client{}
+		req, _ := http.NewRequest("POST", config.GetSecret("SLACK_WEBHOOK"), body)
+		req.Header.Add("Content-Type", "application/json; charset=utf-8")
+		client.Do(req)
 	case packet.UpdateMapPacket:
 		// Update this character's location
 		locationID := m.sender.character.ID

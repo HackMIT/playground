@@ -12,7 +12,9 @@
       "x": 0.7089,
       "y": 0.5792,
       "width": 0.1709,
-      "path": "personal_desk.svg"
+      "path": "personal_desk.svg,personal_desk_on.svg",
+      "toggleable": true,
+      "state": 0
     },
     {
       "x": 0.3979,
