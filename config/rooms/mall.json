@@ -1,0 +1,52 @@
+{
+  "background": "mall.svg",
+  "elements": [
+    {
+      "x": 0.322,
+      "y": 0.5715,
+      "width": 0.1486,
+      "path": "mall_checkout.svg"
+    },
+    {
+      "x": 0.5647,
+      "y": 0.3467,
+      "width": 0.1,
+      "path": "mall_clothes.svg"
+    },
+    {
+      "x": 0.4291,
+      "y": 0.3309,
+      "width": 0.1,
+      "path": "mall_fittingroom_closed.svg",
+      "action": 3
+    },
+    {
+      "x": 0.3889,
+      "y": 0.6891,
+      "width": 0.1,
+      "path": "mall_plants.svg"
+    },
+    {
+      "x": 0.7007,
+      "y": 0.7364,
+      "width": 0.1,
+      "path": "mall_stand1.svg"
+    },
+    {
+      "x": 0.5488,
+      "y": 0.6857,
+      "width": 0.153,
+      "path": "mall_stand2.svg"
+    }
+  ],
+  "hallways": [
+    {
+      "x": 0.7437,
+      "y": 0.667,
+      "radius": 0.0754,
+      "to": "home",
+      "toX": 0.541,
+      "toY": 0.4499
+    }
+  ]
+}

@@ -53,6 +53,9 @@ const (
 
 	// Arena is the hacking arena, accessible from town square
 	Arena = "arena"
+
+	// Mall is the clothing store, accessible from town square
+	Mall = "mall"
 )
 
 // CreateRoom builds a room with the given ID from a template file
@@ -228,6 +231,7 @@ func reset() {
 	CreateRoom("right_field", RightField)
 	CreateRoom("plaza", Plaza)
 	CreateRoom("coffee_shop", CoffeeShop)
+	CreateRoom("mall", Mall)
 
 	createRoomWithData("arena:connectivity", Arena, map[string]interface{}{
 		"id": "connectivity",

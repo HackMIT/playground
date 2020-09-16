@@ -12,8 +12,7 @@
       "x": 0.6895,
       "y": 0.2531,
       "width": 0.3306,
-      "path": "shopping_mall.svg",
-      "action": 3
+      "path": "shopping_mall.svg"
     },
     {
       "x": 0.9035,
@@ -84,6 +83,14 @@
       "to": "arena:education",
       "toX": 0.2572,
       "toY": 0.8132
+    },
+    {
+      "x": 0.5534,
+      "y": 0.4049,
+      "radius": 0.0706,
+      "to": "mall",
+      "toX": 0.7449,
+      "toY": 0.7077
     }
   ]
 }
