@@ -1,5 +1,5 @@
 {
-  "background": "<sponsor>.svg",
+  "background": "<id>.svg",
   "sponsor": false,
   "elements": [
     {
@@ -12,13 +12,13 @@
       "x": 0.6163,
       "y": 0.5395,
       "width": 0.1922,
-      "path": "desk_<sponsor>.svg"
+      "path": "desk_<id>.svg"
     },
     {
       "x": 0.4787,
       "y": 0.3544,
       "width": 0.0992,
-      "path": "tall_shelf_<sponsor>.svg"
+      "path": "tall_shelf_<id>.svg"
     },
     {
       "x": 0.4007,
@@ -30,7 +30,7 @@
       "x": 0.5241,
       "y": 0.869,
       "width": 0.1112,
-      "path": "small_shelf_<sponsor>.svg"
+      "path": "small_shelf_<id>.svg"
     }
   ],
   "hallways": [

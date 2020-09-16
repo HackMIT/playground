@@ -1,24 +1,24 @@
 {
-  "background": "<sponsor>.svg",
+  "background": "<id>.svg",
   "sponsor": true,
   "elements": [
     {
       "x": 0.2252,
       "y": 0.7793,
       "width": 0.2029,
-      "path": "desk_<sponsor>.svg"
+      "path": "desk_<id>.svg"
     },
     {
       "x": 0.439,
       "y": 0.4095,
       "width": 0.0301,
-      "path": "plant_<sponsor>.svg"
+      "path": "plant_<id>.svg"
     },
     {
       "x": 0.3909,
       "y": 0.4593,
       "width": 0.0846,
-      "path": "shelf_<sponsor>.svg"
+      "path": "shelf_<id>.svg"
     },
     {
       "x": 0.9075,

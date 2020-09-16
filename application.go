@@ -16,7 +16,7 @@ func main() {
 	if port == "" {
 		port = "5000"
 	}
-	reset := flag.Bool("reset", false, "Resets the database")
+	reset := flag.Bool("reset", true, "Resets the database")
 
 	flag.Usage = func() {
 		fmt.Println("Usage: server -e {mode} -p {port}")

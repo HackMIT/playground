@@ -76,6 +76,14 @@
       "to": "plat_area",
       "toX": 0.5,
       "toY": 0.03
+    },
+    {
+      "x": 0.3733,
+      "y": 0.4181,
+      "radius": 0.0804,
+      "to": "arena:education",
+      "toX": 0.2572,
+      "toY": 0.8132
     }
   ]
 }

@@ -50,6 +50,9 @@ const (
 
 	// Bronze is a bronze-tier sponsor's room
 	Bronze = "bronze"
+
+	// Arena is the hacking arena, accessible from town square
+	Arena = "arena"
 )
 
 // CreateRoom builds a room with the given ID from a template file
@@ -64,8 +67,8 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 	json.Unmarshal(dat, &roomData)
 	data["background"] = roomData["background"]
 
-	if sponsorID, ok := data["sponsorId"].(string); ok {
-		data["background"] = strings.ReplaceAll(data["background"].(string), "<sponsor>", sponsorID)
+	if sponsorID, ok := data["id"].(string); ok {
+		data["background"] = strings.ReplaceAll(data["background"].(string), "<id>", sponsorID)
 	}
 
 	instance.HSet("room:"+id, data)
@@ -146,8 +149,8 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 			elementData["state"] = 0
 		}
 
-		if sponsorID, ok := data["sponsorId"].(string); ok {
-			elementData["path"] = strings.ReplaceAll(elementData["path"].(string), "<sponsor>", sponsorID)
+		if id, ok := data["id"].(string); ok {
+			elementData["path"] = strings.ReplaceAll(elementData["path"].(string), "<id>", id)
 		}
 
 		instance.HSet("element:"+elementID, elementData)
@@ -157,7 +160,7 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 	for _, val := range roomData["hallways"].([]interface{}) {
 		hallwayData := val.(map[string]interface{})
 
-		if _, ok := data["sponsorId"].(string); ok {
+		if roomType == Bronze || roomType == Silver || roomType == Gold || roomType == Plat {
 			hallwayData["toX"] = data["toX"].(float64)
 			hallwayData["toY"] = data["toY"].(float64)
 
@@ -226,105 +229,118 @@ func reset() {
 	CreateRoom("plaza", Plaza)
 	CreateRoom("coffee_shop", CoffeeShop)
 
+	createRoomWithData("arena:connectivity", Arena, map[string]interface{}{
+		"id": "connectivity",
+	})
+
+	createRoomWithData("arena:education", Arena, map[string]interface{}{
+		"id": "education",
+	})
+
+	createRoomWithData("arena:health", Arena, map[string]interface{}{
+		"id": "health",
+	})
+
+	createRoomWithData("arena:urban", Arena, map[string]interface{}{
+		"id": "urban",
+	})
+
 	createRoomWithData("sponsor:cmt", Plat, map[string]interface{}{
-		"sponsorId": "cmt",
-		"toX":       0.2685,
-		"toY":       0.5919,
+		"id":  "cmt",
+		"toX": 0.2685,
+		"toY": 0.5919,
 	})
 
 	createRoomWithData("sponsor:intersystems", Plat, map[string]interface{}{
-		"sponsorId": "intersystems",
-		"toX":       0.7402,
-		"toY":       0.5717,
+		"id":  "intersystems",
+		"toX": 0.7402,
+		"toY": 0.5717,
 	})
 
 	createRoomWithData("sponsor:drw", Gold, map[string]interface{}{
-		"sponsorId": "drw",
-		"to":        "left_field",
-		"toX":       0.8215,
-		"toY":       0.4943,
+		"id":  "drw",
+		"to":  "left_field",
+		"toX": 0.8215,
+		"toY": 0.4943,
 	})
 
 	createRoomWithData("sponsor:yext", Gold, map[string]interface{}{
-		"sponsorId": "yext",
-		"to":        "left_field",
-		"toX":       0.6128,
-		"toY":       0.702,
+		"id":  "yext",
+		"to":  "left_field",
+		"toX": 0.6128,
+		"toY": 0.702,
 	})
 
 	createRoomWithData("sponsor:facebook", Silver, map[string]interface{}{
-		"sponsorId": "facebook",
-		"to":        "left_field",
-		"toX":       0.3211,
-		"toY":       0.7636,
+		"id":  "facebook",
+		"to":  "left_field",
+		"toX": 0.3211,
+		"toY": 0.7636,
 	})
 
 	createRoomWithData("sponsor:arrowstreet", Silver, map[string]interface{}{
-		"sponsorId": "arrowstreet",
-		"to":        "left_field",
-		"toX":       0.2018,
-		"toY":       0.6347,
+		"id":  "arrowstreet",
+		"to":  "left_field",
+		"toX": 0.2018,
+		"toY": 0.6347,
 	})
 
 	createRoomWithData("sponsor:oca", Bronze, map[string]interface{}{
-		"sponsorId": "oca",
-		"to":        "left_field",
-		"toX":       0.1148,
-		"toY":       0.5487,
+		"id":  "oca",
+		"to":  "left_field",
+		"toX": 0.1148,
+		"toY": 0.5487,
 	})
 
 	createRoomWithData("sponsor:pega", Bronze, map[string]interface{}{
-		"sponsorId": "pega",
-		"to":        "left_field",
-		"toX":       0.0487,
-		"toY":       0.4728,
+		"id":  "pega",
+		"to":  "left_field",
+		"toX": 0.0487,
+		"toY": 0.4728,
 	})
 
 	createRoomWithData("sponsor:ibm", Gold, map[string]interface{}{
-		"sponsorId": "ibm",
-		"to":        "right_field",
-		"toX":       0.1792,
-		"toY":       0.5072,
+		"id":  "ibm",
+		"to":  "right_field",
+		"toX": 0.1792,
+		"toY": 0.5072,
 	})
 
 	createRoomWithData("sponsor:nasdaq", Gold, map[string]interface{}{
-		"sponsorId": "nasdaq",
-		"to":        "right_field",
-		"toX":       0.3871,
-		"toY":       0.712,
+		"id":  "nasdaq",
+		"to":  "right_field",
+		"toX": 0.3871,
+		"toY": 0.712,
 	})
 
 	createRoomWithData("sponsor:citadel", Silver, map[string]interface{}{
-		"sponsorId": "citadel",
-		"to":        "right_field",
-		"toX":       0.6788,
-		"toY":       0.755,
+		"id":  "citadel",
+		"to":  "right_field",
+		"toX": 0.6788,
+		"toY": 0.755,
 	})
 
 	createRoomWithData("sponsor:goldman", Silver, map[string]interface{}{
-		"sponsorId": "goldman",
-		"to":        "right_field",
-		"toX":       0.7916,
-		"toY":       0.6347,
+		"id":  "goldman",
+		"to":  "right_field",
+		"toX": 0.7916,
+		"toY": 0.6347,
 	})
 
 	createRoomWithData("sponsor:linode", Silver, map[string]interface{}{
-		"sponsorId": "linode",
-		"to":        "right_field",
-		"toX":       0.8867,
-		"toY":       0.543,
+		"id":  "linode",
+		"to":  "right_field",
+		"toX": 0.8867,
+		"toY": 0.543,
 	})
 
 	createRoomWithData("sponsor:quantco", Bronze, map[string]interface{}{
-		"sponsorId": "quantco",
-		"to":        "right_field",
-		"toX":       0.9593,
-		"toY":       0.4656,
+		"id":  "quantco",
+		"to":  "right_field",
+		"toX": 0.9593,
+		"toY": 0.4656,
 	})
 
 	createEvents()
 	createSponsors()
-
-	instance.SAdd("sponsor_emails", "cookj@mit.edu")
-	instance.HSet("emailToSponsor", "cookj@mit.edu", "cmt")
 }

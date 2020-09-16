@@ -1,5 +1,5 @@
 {
-  "background": "<sponsor>.svg",
+  "background": "<id>.svg",
   "sponsor": false,
   "elements": [
     {
@@ -12,13 +12,13 @@
       "x": 0.652,
       "y": 0.4814,
       "width": 0.219,
-      "path": "desk_<sponsor>.svg"
+      "path": "desk_<id>.svg"
     },
     {
       "x": 0.5654,
       "y": 0.7142,
       "width": 0.0368,
-      "path": "plant_<sponsor>.svg"
+      "path": "plant_<id>.svg"
     },
     {
       "x": 0.4164,

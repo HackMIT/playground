@@ -1,5 +1,5 @@
 {
-  "background": "<sponsor>.svg",
+  "background": "<id>.svg",
   "elements": [
     {
       "x": 0.2879,
@@ -23,13 +23,13 @@
       "x": 0.7383,
       "y": 0.716,
       "width": 0.0319,
-      "path": "plat_plant_<sponsor>.svg"
+      "path": "plat_plant_<id>.svg"
     },
     {
       "x": 0.6571,
       "y": 0.837,
       "width": 0.1576,
-      "path": "plat_coffee_table_<sponsor>.svg"
+      "path": "plat_coffee_table_<id>.svg"
     },
     {
       "x": 0.66,
@@ -71,7 +71,7 @@
       "x": 0.3211,
       "y": 0.5738,
       "width": 0.1286,
-      "path": "plat_desk_<sponsor>.svg"
+      "path": "plat_desk_<id>.svg"
     },
     {
       "x": 0.7581,

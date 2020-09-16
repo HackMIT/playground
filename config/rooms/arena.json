@@ -1,0 +1,48 @@
+{
+  "background": "arena_<id>.svg",
+  "elements": [
+    {
+      "x": 0.39,
+      "y": 0.5334,
+      "width": 0.3885,
+      "path": "long_couch.svg"
+    },
+    {
+      "x": 0.1868,
+      "y": 0.6919,
+      "width": 0.029,
+      "path": "<id>_plant.svg"
+    },
+    {
+      "x": 0.7337,
+      "y": 0.408,
+      "width": 0.1552,
+      "path": "<id>_counter.svg"
+    },
+    {
+      "x": 0.6201,
+      "y": 0.2651,
+      "width": 0.0595,
+      "path": "<id>_cooler.svg"
+    },
+    {
+      "x": 0.6105,
+      "y": 0.5335,
+      "width": 0.0475,
+      "path": "<id>_table.svg"
+    },
+    {
+      "x": 0.4805,
+      "y": 0.6565,
+      "width": 0.0475,
+      "path": "<id>_table.svg"
+    },
+    {
+      "x": 0.3498,
+      "y": 0.7978,
+      "width": 0.0475,
+      "path": "<id>_table.svg"
+    }
+  ],
+  "hallways": []
+}
