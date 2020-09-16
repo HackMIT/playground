@@ -212,8 +212,6 @@ func MonitorLeader() {
 				// Pop the next song off the queue
 				songID, _ := instance.LPop("songs").Result()
 				instance.Set("currentsong", songID, 0)
-				fmt.Println("queue song id")
-				fmt.Println(songID)
 
 				songRes, _ := instance.HGetAll("song:" + songID).Result()
 				var song models.Song
@@ -231,8 +229,6 @@ func MonitorLeader() {
 					"start": 0,
 					"end": int(song.Duration),
 				}
-				fmt.Println("in connector")
-				fmt.Println(playSongPacket)
 
 				data, _ := json.Marshal(playSongPacket)
 				pip.Publish("all", data)
