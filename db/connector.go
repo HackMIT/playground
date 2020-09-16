@@ -58,8 +58,8 @@ func Init(shouldReset bool) {
 	// Initialize jukebox
 	// TODO: Make sure this works correctly when there are multiple ingests
 	initialTime := time.Now().Unix()
-	// instance.HSet("queuestatus", utils.StructToMap(models.QueueStatus{SongEnd: initialTime}))
 	instance.Set("queuestatus", initialTime, 0)
+	instance.Set("currentsong", 0, 0)
 
 	// Update TIM the beaver
 	character := *models.NewTIMCharacter()
@@ -211,6 +211,9 @@ func MonitorLeader() {
 			if queueLength > 0 {
 				// Pop the next song off the queue
 				songID, _ := instance.LPop("songs").Result()
+				instance.Set("currentsong", songID, 0)
+				fmt.Println("queue song id")
+				fmt.Println(songID)
 
 				songRes, _ := instance.HGetAll("song:" + songID).Result()
 				var song models.Song
@@ -220,13 +223,16 @@ func MonitorLeader() {
 				endTime := (time.Now().Add(time.Second * time.Duration(song.Duration))).Unix()
 				instance.Set("queuestatus", endTime, 0)
 
+				song.ID = songID
 				// Send song packet to ingests
 				playSongPacket := map[string]interface{}{
 					"type": "playSong",
-					"song": utils.StructToMap(song),
+					"song": song,
 					"start": 0,
 					"end": int(song.Duration),
 				}
+				fmt.Println("in connector")
+				fmt.Println(playSongPacket)
 
 				data, _ := json.Marshal(playSongPacket)
 				pip.Publish("all", data)

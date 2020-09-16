@@ -703,6 +703,37 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			h.Send(p)
 		}
+	case packet.GetCurrentSongPacket:
+		res := packet.GetCurrentSongPacket{}
+		json.Unmarshal(m.msg, &res)
+
+		queueRes, _ := db.GetInstance().Get("queuestatus").Result()
+		queueStatusInt, _ := strconv.Atoi(queueRes)
+		queueStatus := int64(queueStatusInt)
+		currentSongID, _ := db.GetInstance().Get("currentsong").Result()
+		fmt.Println("Current Song ID")
+		fmt.Println(currentSongID)
+
+		songRes, _ := db.GetInstance().HGetAll("song:" + currentSongID).Result()
+		var currentSong models.Song
+		utils.Bind(songRes, &currentSong)
+
+		songEnd := time.Unix(queueStatus, 0)
+		timeDiff := songEnd.Sub(time.Now())
+		fmt.Println(currentSong)
+		var songStart int
+		if &currentSong != nil {
+			songStart = currentSong.Duration - int(timeDiff.Seconds())
+		} else {
+			songStart = 0
+		}
+		currentSong.ID = currentSongID
+		fmt.Println("in hub")
+		fmt.Println(currentSong)
+
+		resp := packet.NewPlaySongPacket(&currentSong, songStart)
+		data, _ := resp.MarshalBinary()
+		h.SendBytes("*", data)
 	case packet.GetSongsPacket:
 		res := packet.GetSongsPacket{}
 		json.Unmarshal(m.msg, &res)

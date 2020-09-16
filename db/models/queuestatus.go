@@ -5,7 +5,15 @@ import (
 )
 
 type QueueStatus struct {
+	CurrentSong *Song `json:"currentSong"`
 	SongEnd int64 `json:"songend"`
+}
+
+func NewQueueStatus(song *Song, end int64) *QueueStatus {
+	return &QueueStatus{
+		CurrentSong: song,
+		SongEnd: end,
+	}
 }
 
 func (q *QueueStatus) Init() *QueueStatus {

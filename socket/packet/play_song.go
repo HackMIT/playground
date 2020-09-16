@@ -10,9 +10,19 @@ import (
 type PlaySongPacket struct {
 	BasePacket
 	Packet
-	*models.Song
+	Song *models.Song `json:"song"`
 	Start int `json:"start"`
 	End int `json:"end"`
+}
+
+func NewPlaySongPacket(song *models.Song, start int) *PlaySongPacket {
+	return &PlaySongPacket{
+		BasePacket: BasePacket{
+			Type: "playSong",
+		},
+		Song: song,
+		Start: start,
+	}
 }
 
 func (p *PlaySongPacket) Init(song *models.Song) *PlaySongPacket {
