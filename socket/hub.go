@@ -671,6 +671,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 					sponsorID, _ := sponsorIDCmd.Result()
 					character.SponsorID = sponsorID
+
+					sponsorName, _ := db.GetInstance().HGet("sponsor:"+sponsorID, "name").Result()
+					character.Name += " (" + sponsorName + ")"
 				} else if isMentor {
 					character.Role = int(models.Mentor)
 				} else if isOrganizer {
