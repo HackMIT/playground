@@ -155,6 +155,20 @@
       "y": 0.8567,
       "width": 0.0702,
       "path": "picnic_table_flipped.svg"
+    },
+    {
+      "x": 0.5922,
+      "y": 0.1978,
+      "width": 0.036,
+      "path": "flashlight_off.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.8313,
+      "y": 0.7969,
+      "width": 0.036,
+      "path": "flashlight_off.svg",
+      "toggleable": true
     }
   ],
   "hallways": [
@@ -165,6 +179,14 @@
       "to": "home",
       "toX": 0.7167,
       "toY": 0.6815
+    },
+    {
+      "x": 0.4687,
+      "y": 0.9711,
+      "radius": 0.0662,
+      "to": "plaza",
+      "toX": 0.5711,
+      "toY": 0.0957
     }
   ]
 }

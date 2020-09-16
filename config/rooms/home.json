@@ -37,11 +37,11 @@
       "x": 0.5,
       "y": 0.5426,
       "width": 0.0906,
-      "path": "fountain.svg"
+      "fountain": true
     },
     {
-      "x": 0.5619,
-      "y": 0.6453,
+      "x": 0.5532,
+      "y": 0.6467,
       "width": 0.0436,
       "path": "bench.svg"
     },

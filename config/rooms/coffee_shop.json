@@ -2,6 +2,12 @@
   "background": "coffee_shop.svg",
   "elements": [
     {
+      "x": 0.8055,
+      "y": 0.4203,
+      "width": 0.1252,
+      "path": "coffee_bar.svg"
+    },
+    {
       "x": 0.3868,
       "y": 0.9271,
       "width": 0.0791,

@@ -121,12 +121,24 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 			elementData["changingRandomly"] = false
 		}
 
+		if _, ok := elementData["fountain"]; ok {
+			// If this is a fountain, animate it
+			delete(elementData, "fountain")
+			elementData["path"] = "fountain1.svg"
+			elementData["changingImagePath"] = true
+			elementData["changingPaths"] = "fountain1.svg,fountain2.svg,fountain3.svg"
+			elementData["changingInterval"] = 1000
+			elementData["changingRandomly"] = false
+		}
+
 		if _, ok := elementData["toggleable"]; ok {
 			switch elementData["path"] {
 			case "street_lamp.svg":
 				elementData["path"] = "street_lamp.svg,street_lamp_off.svg"
 			case "bar_closed.svg":
 				elementData["path"] = "bar_closed.svg,bar_open.svg"
+			case "flashlight_off.svg":
+				elementData["path"] = "flashlight_off.svg,flashlight_on.svg"
 			default:
 				break
 			}
