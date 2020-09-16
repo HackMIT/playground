@@ -584,6 +584,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			if err != nil {
 				// Never seen this character before, create a new one
 				character = models.NewCharacterFromQuill(quillData)
+				character.Email = quillData["email"].(string)
 				character.ID = uuid.New().String()
 				character.IsCollege = isCollege
 
@@ -650,6 +651,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			if err != nil {
 				// Never seen this character before, create a new one
 				character = models.NewCharacter("Player")
+				character.Email = p.Email
 				character.ID = uuid.New().String()
 
 				// Check this character's role
@@ -835,7 +837,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		p.Project.Challenges = strings.Join(p.Challenges, ",")
 		p.Project.Emails = strings.Join(append(p.Teammates, m.sender.character.Email), ",")
-		pip.HSet("project:"+projectID, p.Project)
+		pip.HSet("project:"+projectID, utils.StructToMap(p.Project))
 
 		for _, cmd := range characterIDCmds {
 			characterID, err := cmd.Result()

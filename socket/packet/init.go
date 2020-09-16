@@ -272,9 +272,10 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	// Get project
 	projectID, err := projectIDCmd.Result()
 
-	if err != nil && len(projectID) > 0 {
+	if err == nil && len(projectID) > 0 {
 		projectRes, _ := db.GetInstance().HGetAll("project:" + projectID).Result()
-		utils.Bind(projectRes, p.Character)
+		p.Character.Project = new(models.Project)
+		utils.Bind(projectRes, p.Character.Project)
 	}
 
 	return p
