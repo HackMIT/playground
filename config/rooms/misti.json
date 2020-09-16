@@ -1,0 +1,52 @@
+{
+  "background": "misti.svg",
+  "elements": [
+    {
+      "x": 0.3825,
+      "y": 0.4865,
+      "width": 0.1355,
+      "path": "misti_couch.svg"
+    },
+    {
+      "x": 0.4436,
+      "y": 0.8467,
+      "width": 0.1258,
+      "path": "misti_table_yellow.svg"
+    },
+    {
+      "x": 0.6387,
+      "y": 0.6533,
+      "width": 0.1258,
+      "path": "misti_table_yellow.svg"
+    },
+    {
+      "x": 0.5398,
+      "y": 0.7507,
+      "width": 0.1258,
+      "path": "misti_table_pink.svg"
+    },
+    {
+      "x": 0.2609,
+      "y": 0.5997,
+      "width": 0.1258,
+      "path": "misti_table_pink_flipped.svg"
+    },
+    {
+      "x": 0.734,
+      "y": 0.343,
+      "width": 0.1486,
+      "path": "misti_menu.svg",
+      "action": 5
+    }
+  ],
+  "hallways": [
+    {
+      "x": 0.565,
+      "y": 0.3786,
+      "radius": 0.0609,
+      "to": "plaza",
+      "toX": 0.3879,
+      "toY": 0.4226
+    }
+  ]
+}
