@@ -1035,7 +1035,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 		}
 
-		if p.To == "nightclub" && !m.sender.character.IsCollege {
+		if p.To == "nightclub" && (!m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer)) {
 			errorPacket := packet.NewErrorPacket(int(HighSchoolNightClub))
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
