@@ -6,7 +6,8 @@
       "x": 0.3624,
       "y": 0.2837,
       "width": 0.1303,
-      "path": "tent.svg"
+      "path": "tent_urban_displacement.svg",
+      "action": 4
     },
     {
       "x": 0.2111,
@@ -24,7 +25,8 @@
       "x": 0.2881,
       "y": 0.6652,
       "width": 0.1303,
-      "path": "tent.svg"
+      "path": "tent_wikimedia.svg",
+      "action": 4
     },
     {
       "x": 0.0923,
@@ -107,13 +109,15 @@
       "x": 0.6995,
       "y": 0.1315,
       "width": 0.1303,
-      "path": "tent_flipped.svg"
+      "path": "tent_medic_mobile.svg",
+      "action": 4
     },
     {
       "x": 0.7597,
       "y": 0.3242,
       "width": 0.1303,
-      "path": "tent_flipped.svg"
+      "path": "tent_kiva.svg",
+      "action": 4
     },
     {
       "x": 0.9056,
@@ -131,7 +135,8 @@
       "x": 0.6987,
       "y": 0.7204,
       "width": 0.1303,
-      "path": "tent_flipped.svg"
+      "path": "tent_humanitarian_ai.svg",
+      "action": 4
     },
     {
       "x": 0.2111,
