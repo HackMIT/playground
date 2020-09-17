@@ -899,6 +899,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		data, _ := initPacket.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.SettingsPacket:
+		pip := db.GetInstance().Pipeline()
+
 		if len(p.Settings.TwitterHandle) > 0 && p.CheckTwitter {
 			url := "https://api.twitter.com/2/tweets/search/recent?query=from:" + p.Settings.TwitterHandle + "&tweet.fields=entities"
 			method := "GET"
@@ -919,8 +921,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			usedHashtag := strings.Contains(strings.ToLower(string(body)), "#hackmit2020")
 			usedMemeHashtag := strings.Contains(strings.ToLower(string(body)), "#hackmitmemes")
 
-			pip := db.GetInstance().Pipeline()
-
 			if usedHashtag {
 				pip.HSet("character:"+m.sender.character.ID+":achievements", "socialMedia", true)
 			}
@@ -928,11 +928,19 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			if usedMemeHashtag {
 				pip.HSet("character:"+m.sender.character.ID+":achievements", "memeLord", true)
 			}
-
-			pip.Exec()
 		}
 
-		db.GetInstance().HSet("character:"+m.sender.character.ID+":settings", utils.StructToMap(p.Settings))
+		if p.Location != "" {
+			pip.HSet("character:"+m.sender.character.ID, "location", p.Location)
+		}
+
+		if p.Bio != "" {
+			pip.HSet("character:"+m.sender.character.ID, "bio", p.Bio)
+		}
+
+		pip.HSet("character:"+m.sender.character.ID+":settings", utils.StructToMap(p.Settings))
+		pip.Exec()
+
 		h.SendBytes("character:"+m.sender.character.ID, m.msg)
 	case packet.SongPacket:
 		// Make the YouTube API call
