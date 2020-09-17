@@ -49,7 +49,7 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := FriendRequestPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
-	case "get_achivements":
+	case "get_achievements":
 		p := GetAchievementsPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil

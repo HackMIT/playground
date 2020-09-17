@@ -451,7 +451,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 	case packet.GetAchievementsPacket:
 		// Send achievements back to client
-		resp := packet.NewAchievementsPacket(m.sender.character.ID)
+		resp := packet.NewAchievementsPacket(p.ID)
 		data, _ := resp.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.GetMapPacket:

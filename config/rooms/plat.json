@@ -1,5 +1,6 @@
 {
   "background": "<id>.svg",
+  "sponsor": true,
   "elements": [
     {
       "x": 0.2879,

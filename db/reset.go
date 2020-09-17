@@ -75,6 +75,10 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 
 	if sponsorID, ok := data["id"].(string); ok {
 		data["background"] = strings.ReplaceAll(data["background"].(string), "<id>", sponsorID)
+
+		if val, ok := roomData["sponsor"].(bool); ok && val {
+			data["sponsorId"] = sponsorID
+		}
 	}
 
 	instance.HSet("room:"+id, data)
@@ -351,4 +355,7 @@ func reset() {
 
 	createEvents()
 	createSponsors()
+
+	instance.SAdd("sponsor_emails", "cookj@mit.edu")
+	instance.HSet("emailToSponsor", "cookj@mit.edu", "cmt")
 }

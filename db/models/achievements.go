@@ -1,7 +1,7 @@
 package models
 
 // Character is the digital representation of a client
-type Achivements struct {
+type Achievements struct {
 	CompanyTour  bool `json:"companyTour" redis:"companyTour"`
 	PeerExpo     bool `json:"peerExpo" redis:"peerExpo"`
 	Hangouts     bool `json:"hangouts" redis:"hangouts"`
