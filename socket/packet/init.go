@@ -36,6 +36,9 @@ type InitPacket struct {
 	// All of this user's friends
 	Friends []Friend `json:"friends"`
 
+	// All of the events happening throughout the weekend
+	Events []*models.Event `json:"events"`
+
 	// Settings
 	Settings *models.Settings `json:"settings"`
 
@@ -59,6 +62,7 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	friendsCmd := pip.SMembers("character:" + characterID + ":friends")
 	requestsCmd := pip.SMembers("character:" + characterID + ":requests")
 	projectIDCmd := pip.Get("character:" + characterID + ":project")
+	eventsCmd := pip.SMembers("events")
 	pip.Exec()
 
 	room := new(models.Room).Init()
@@ -93,6 +97,13 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 
 	for i, hallwayID := range hallwayIDs {
 		hallwayCmds[i] = pip.HGetAll("hallway:" + hallwayID)
+	}
+
+	eventIDs, _ := eventsCmd.Result()
+	eventCmds := make([]*redis.StringStringMapCmd, len(eventIDs))
+
+	for i, eventID := range eventIDs {
+		eventCmds[i] = pip.HGetAll("event:" + eventID)
 	}
 
 	// Get friends
@@ -218,6 +229,13 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 		}
 
 		i++
+	}
+
+	p.Events = make([]*models.Event, len(eventIDs))
+	for i, eventCmd := range eventCmds {
+		eventRes, _ := eventCmd.Result()
+		p.Events[i] = new(models.Event)
+		utils.Bind(eventRes, p.Events[i])
 	}
 
 	if needsToken {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/techx/playground/config"
@@ -223,6 +224,14 @@ func createEvents() {
 	json.Unmarshal(dat, &eventsData)
 
 	for _, event := range eventsData {
+		startTime, err := time.Parse("2006-01-02T15:04:05-0700", event["start_time"].(string))
+
+		if err != nil {
+			panic(err)
+		}
+
+		event["startTime"] = int(startTime.Unix())
+
 		eventID := uuid.New().String()[:4]
 		instance.HSet("event:"+eventID, event)
 		instance.SAdd("events", eventID)

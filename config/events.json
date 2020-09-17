@@ -15,77 +15,77 @@
     "name": "InterSystems: Data in the Cloud with InterSystems's IRIS Platform",
     "start_time": "2020-09-18T23:00:00-0400",
     "duration": 45,
-    "url": "",
+    "url": "https://go.hackmit.org/workshop",
     "type": "workshop"
   },
   {
     "name": "Beginner Workshop (part 1)",
     "start_time": "2020-09-19T00:00:00-0400",
     "duration": 60,
-    "url": "https://youtu.be/IHWIissegC4",
+    "url": "https://go.hackmit.org/workshop",
     "type": "workshop"
   },
   {
     "name": "Mini Event: Speed Friending",
     "start_time": "2020-09-19T01:00:00-0400",
     "duration": 60,
-    "url": "https://hack.xoxo.sh",
+    "url": "https://go.hackmit.org/mini-event",
     "type": "mini_event"
   },
   {
     "name": "Beginner Workshop (part 2)",
     "start_time": "2020-09-19T10:00:00-0400",
     "duration": 60,
-    "url": "https://youtu.be/abxu1p7xo0w",
+    "url": "https://go.hackmit.org/workshop",
     "type": "workshop"
   },
   {
     "name": "Beginner Workshop (part 3)",
     "start_time": "2020-09-19T11:15:00-0400",
     "duration": 60,
-    "url": "https://youtu.be/4MYrHd6MyiM",
+    "url": "https://go.hackmit.org/workshop",
     "type": "workshop"
   },
   {
-    "name": "Detecting Vehicle Crashes with Smartphones",
+    "name": "CMT: Detecting Vehicle Crashes with Smartphones",
     "start_time": "2020-09-19T12:30:00-0400",
     "duration": 45,
-    "url": "https://youtu.be/9UEk2Gqme68",
+    "url": "https://go.hackmit.org/workshop",
     "type": "workshop"
   },
   {
     "name": "IBM: Build a COVID-19 Crisis Communication Chatbot Using IBM Cloud Technologies",
     "start_time": "2020-09-19T13:30:00-0400",
     "duration": 45,
-    "url": "https://youtu.be/vPbRbily9gg",
+    "url": "https://go.hackmit.org/workshop",
     "type": "workshop"
-  },
-  {
-    "name": "Mini Event: TikTok Dance Workshop",
-    "start_time": "2020-09-19T14:15:00-0400",
-    "duration": 30,
-    "url": "https://go.hackmit.org/mini-event",
-    "type": "mini_event"
   },
   {
     "name": "Yext: An Intro to REST APIs",
     "start_time": "2020-09-19T14:30:00-0400",
     "duration": 30,
-    "url": "https://youtu.be/6C_Jd41_7Eg",
+    "url": "https://go.hackmit.org/workshop",
     "type": "workshop"
   },
   {
     "name": "Facebook: Build Web Apps with React",
     "start_time": "2020-09-19T15:15:00-0400",
     "duration": 30,
-    "url": "https://youtu.be/4PMq8cL-wbo",
+    "url": "https://go.hackmit.org/workshop",
     "type": "workshop"
   },
   {
-    "name": "IBM: The Role of Artificial Intelligence in Responding to the Pandemic",
+    "name": "Mini Event: TikTok Dance Workshop",
     "start_time": "2020-09-19T16:00:00-0400",
     "duration": 30,
-    "url": "https://youtu.be/vPbRbily9gg",
+    "url": "https://go.hackmit.org/mini-event",
+    "type": "mini_event"
+  },
+  {
+    "name": "IBM: The Role of Artificial Intelligence in Responding to the Pandemic",
+    "start_time": "2020-09-19T16:45:00-0400",
+    "duration": 30,
+    "url": "https://go.hackmit.org/workshop",
     "type": "workshop"
   },
   {
@@ -112,28 +112,28 @@
     "name": "Fireside Chat with Aileen Lee",
     "start_time": "2020-09-19T20:00:00-0400",
     "duration": 45,
-    "url": "",
+    "url": "https://go.hackmit.org/fireside",
     "type": "workshop"
   },
   {
     "name": "Fireside Chat with Linda Avey",
     "start_time": "2020-09-19T21:00:00-0400",
     "duration": 45,
-    "url": "",
+    "url": "https://go.hackmit.org/fireside",
     "type": "workshop"
   },
   {
     "name": "Fireside Chat with Tom Preston-Werner",
     "start_time": "2020-09-19T22:00:00-0400",
     "duration": 45,
-    "url": "",
+    "url": "https://go.hackmit.org/fireside",
     "type": "workshop"
   },
   {
     "name": "HackMIT Tech Talk",
     "start_time": "2020-09-19T23:00:00-0400",
     "duration": 60,
-    "url": "",
+    "url": "https://go.hackmit.org/workshop",
     "type": "workshop"
   },
   {
@@ -160,7 +160,7 @@
     "name": "Panel Judging",
     "start_time": "2020-09-20T13:15:00-0400",
     "duration": 75,
-    "url": "https://go.hackmit.org/closing"
+    "url": "https://go.hackmit.org/panel-judging"
   },
   {
     "name": "Closing Ceremony",
