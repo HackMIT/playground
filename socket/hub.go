@@ -870,11 +870,12 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// User has never added a song to queue
 		if (jukeboxKeyExists != 1) {
 			jukeboxTimestamp = time.Now()
-			res.RequiresWarning = true
+			p.RequiresWarning = true
 		} else {
 			timestampString, _ := db.GetInstance().Get(jukeboxQuery).Result()
 			var _ error
 			jukeboxTimestamp, _ = time.Parse(time.RFC3339, timestampString)
+			p.RequiresWarning = false
 		}
 
 		// 15 minutes has not yet passed since user last submitted a song
