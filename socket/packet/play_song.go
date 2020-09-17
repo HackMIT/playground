@@ -32,7 +32,7 @@ func (p *PlaySongPacket) Init(song *models.Song) *PlaySongPacket {
 }
 
 func (p PlaySongPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }
 
 func (p PlaySongPacket) MarshalBinary() ([]byte, error) {

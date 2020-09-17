@@ -24,7 +24,7 @@ func (p *SongPacket) Init(song *models.Song) *SongPacket {
 }
 
 func (p SongPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0 && (!p.Remove || role == models.Organizer)
 }
 
 func (p SongPacket) MarshalBinary() ([]byte, error) {

@@ -11,7 +11,7 @@ type GetCurrentSongPacket struct {
 }
 
 func (p GetCurrentSongPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }
 
 func (p GetCurrentSongPacket) MarshalBinary() ([]byte, error) {

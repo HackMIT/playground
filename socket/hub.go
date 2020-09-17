@@ -786,9 +786,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			h.Send(p)
 		}
 	case packet.GetCurrentSongPacket:
-		res := packet.GetCurrentSongPacket{}
-		json.Unmarshal(m.msg, &res)
-
 		queueRes, _ := db.GetInstance().Get("queuestatus").Result()
 		queueStatusInt, _ := strconv.Atoi(queueRes)
 		queueStatus := int64(queueStatusInt)
@@ -809,12 +806,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		currentSong.ID = currentSongID
 
 		resp := packet.NewPlaySongPacket(&currentSong, songStart)
-		data, _ := resp.MarshalBinary()
-		h.SendBytes("*", data)
+		h.Send(resp)
 	case packet.GetSongsPacket:
-		res := packet.GetSongsPacket{}
-		json.Unmarshal(m.msg, &res)
-
 		songIDs, _ := db.GetInstance().LRange("songs", 0, -1).Result()
 
 		pip := db.GetInstance().Pipeline()
@@ -830,13 +823,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		for i, songCmd := range songCmds {
 			songRes, _ := songCmd.Result()
 			songs[i] = new(models.Song)
-			songs[i].ID = songIDs[i]
 			utils.Bind(songRes, songs[i])
+			songs[i].ID = songIDs[i]
 		}
 
 		resp := packet.NewSongsPacket(songs)
 		data, _ := resp.MarshalBinary()
-		h.SendBytes("*", data)
+		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.MessagePacket:
 		// TODO: Save timestamp
 		p.From = m.sender.character.ID
@@ -1013,25 +1006,24 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		h.SendBytes("character:"+m.sender.character.ID, m.msg)
 	case packet.SongPacket:
 		// Parse song packet
-		res := packet.SongPacket{}
-		json.Unmarshal(m.msg, &res)
-		if res.Remove {
+		if p.Remove {
 			pip := db.GetInstance().Pipeline()
-			pip.Del("song:"+res.ID)
-			pip.LRem("songs", 1, res.ID)
+			pip.Del("song:"p.ID)
+			pip.LRem("songs", 1, p.ID)
 			pip.Exec()
-			h.Send(res)
+			h.Send(p)
 			return
 		}
 
 		var jukeboxTimestamp time.Time
 		jukeboxQuery := "character:" + m.sender.character.ID + ":jukeboxTimestamp"
 		jukeboxKeyExists, _ := db.GetInstance().Exists(jukeboxQuery).Result()
-		// User has never added a song to queue
-		if (jukeboxKeyExists != 1) {
+		if jukeboxKeyExists != 1 {
+			// User has never added a song to queue -- remind them of COC
 			jukeboxTimestamp = time.Now()
 			p.RequiresWarning = true
 		} else {
+			// User has added a song to the queue before -- no need for a warning
 			timestampString, _ := db.GetInstance().Get(jukeboxQuery).Result()
 			var _ error
 			jukeboxTimestamp, _ = time.Parse(time.RFC3339, timestampString)
@@ -1100,7 +1092,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		songID := uuid.New().String()
-		res.ID = songID
+		p.ID = songID
 
 		jukeboxTime := time.Now().Add(time.Second * 30)
 
