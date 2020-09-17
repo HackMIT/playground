@@ -26,7 +26,7 @@ func NewAchievementsPacket(characterID string) *AchievementsPacket {
 	p.ID = characterID
 
 	res, _ := db.GetInstance().HGetAll("character:" + characterID + ":achievements").Result()
-	utils.Bind(res, p.Achievements)
+	utils.Bind(res, &p.Achievements)
 
 	return p
 }
