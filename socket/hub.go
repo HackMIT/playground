@@ -60,8 +60,8 @@ func (h *Hub) Init() *Hub {
 	return h
 }
 
-func (h *Hub) disconnectClient(client *Client) {
-	if client.character != nil {
+func (h *Hub) disconnectClient(client *Client, complete bool) {
+	if client.character != nil && complete {
 		pip := db.GetInstance().Pipeline()
 		pip.Del("character:" + client.character.ID + ":active")
 		pip.HDel("character:"+client.character.ID, "ingest")
@@ -83,16 +83,9 @@ func (h *Hub) disconnectClient(client *Client) {
 		friendIDs, _ := friendsCmd.Result()
 
 		res := packet.NewStatusPacket(client.character.ID, false)
-		data, _ := res.MarshalBinary()
-
-		// TODO: This will not work with multiple ingest servers
-		for _, id := range teammateIDs {
-			h.SendBytes("character:"+id, data)
-		}
-
-		for _, id := range friendIDs {
-			h.SendBytes("character:"+id, data)
-		}
+		res.TeammateIDs = teammateIDs
+		res.FriendIDs = friendIDs
+		h.Send(res)
 	}
 
 	delete(h.clients, client.id)
@@ -110,7 +103,7 @@ func (h *Hub) Run() {
 		case client := <-h.register:
 			h.clients[client.id] = client
 		case client := <-h.unregister:
-			h.disconnectClient(client)
+			h.disconnectClient(client, true)
 		case message := <-h.broadcast:
 			// Process incoming messages from clients
 			h.processMessage(message)
@@ -184,56 +177,82 @@ func (h *Hub) sendSponsorQueueUpdate(sponsorID string) {
 
 		// Send queue update to each hacker
 		hackerUpdatePacket := packet.NewQueueUpdateHackerPacket(sponsorID, i+1, "")
-		data, _ := hackerUpdatePacket.MarshalBinary()
-
-		// TODO: Fix with multiple ingests
-		h.SendBytes("character:"+hackerIDs[i], data)
+		hackerUpdatePacket.CharacterIDs = []string{hackerIDs[i]}
+		h.Send(hackerUpdatePacket)
 	}
 
 	sponsorUpdatePacket := packet.NewQueueUpdateSponsorPacket(subscribers)
-	data, _ := sponsorUpdatePacket.MarshalBinary()
-
-	for _, sponsorID := range sponsorIDs {
-		// TODO: Fix with multiple ingests
-		h.SendBytes("character:"+sponsorID, data)
-	}
+	sponsorUpdatePacket.CharacterIDs = sponsorIDs
+	h.Send(sponsorUpdatePacket)
 }
 
 // Processes an incoming message from Redis
 func (h *Hub) ProcessRedisMessage(msg []byte) {
+	p, err := packet.ParsePacket(msg)
+
+	if err != nil {
+		// TODO: Log to Sentry or something -- this should never happen
+		fmt.Println(err)
+		log.Println("ERROR: Received invalid packet from Redis")
+		return
+	}
+
 	var res map[string]interface{}
 	json.Unmarshal(msg, &res)
 
-	switch res["type"] {
-	case "message":
-		h.SendBytes("character:"+res["to"].(string), msg)
+	switch p := p.(type) {
+	case packet.MessagePacket:
+		h.SendBytes("character:"+p.To, msg)
 
-		if res["to"].(string) != res["from"].(string) {
-			h.SendBytes("character:"+res["from"].(string), msg)
+		if p.To != p.From {
+			h.SendBytes("character:"+p.From, msg)
 		}
-	case "chat", "dance", "move", "leave", "wardrobe_change":
+	case packet.ChatPacket, packet.DancePacket, packet.ElementAddPacket, packet.ElementDeletePacket, packet.ElementUpdatePacket, packet.HallwayAddPacket, packet.HallwayUpdatePacket, packet.HallwayDeletePacket, packet.MovePacket, packet.LeavePacket, packet.WardrobeChangePacket:
 		h.SendBytes(res["room"].(string), msg)
-	case "join":
-		characterID := res["character"].(map[string]interface{})["id"].(string)
-		clientID := res["clientId"].(string)
+	case packet.FriendUpdatePacket:
+		res["recipientId"] = ""
+		msg, _ = json.Marshal(res)
+
+		h.SendBytes("character:"+p.RecipientID, msg)
+	case packet.JoinPacket:
+		characterID := p.Character.ID
+		clientID := p.ClientID
 
 		for id, client := range h.clients {
-			if client.character.ID == characterID && id != clientID {
+			if client.character != nil && client.character.ID == characterID && id != clientID {
 				fmt.Println("disconnecting existing client for", characterID)
-				client.character = nil
-				h.disconnectClient(client)
+				h.disconnectClient(client, false)
 			}
 		}
 
-		h.SendBytes(res["character"].(map[string]interface{})["room"].(string), msg)
-	case "element_add", "element_delete", "element_update", "hallway_add", "hallway_delete", "hallway_update":
-		h.SendBytes(res["room"].(string), msg)
-	case "song":
-		h.SendBytes("*", msg)
-	case "teleport", "teleport_home":
-		var p packet.TeleportPacket
-		json.Unmarshal(msg, &p)
+		res["clientId"] = ""
+		msg, _ = json.Marshal(res)
 
+		h.SendBytes(p.Character.Room, msg)
+	case packet.QueueUpdateHackerPacket, packet.QueueUpdateSponsorPacket:
+		characterIDs := res["characterIds"].([]string)
+
+		res["characterIds"] = []string{}
+		msg, _ = json.Marshal(res)
+
+		for _, characterID := range characterIDs {
+			h.SendBytes("character:"+characterID, msg)
+		}
+	case packet.SongPacket:
+		h.SendBytes("*", msg)
+	case packet.StatusPacket:
+		res["teammateIds"] = []string{}
+		res["friendIds"] = []string{}
+		msg, _ = json.Marshal(res)
+
+		for _, id := range p.TeammateIDs {
+			h.SendBytes("character:"+id, msg)
+		}
+
+		for _, id := range p.FriendIDs {
+			h.SendBytes("character:"+id, msg)
+		}
+	case packet.TeleportPacket:
 		leavePacket, _ := packet.NewLeavePacket(p.Character, p.From).MarshalBinary()
 		h.SendBytes(p.From, leavePacket)
 
@@ -449,21 +468,16 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			pip.Exec()
 
-			// TODO: This will not work with more than one ingest server
 			firstUpdate := packet.NewFriendUpdatePacket(res.RecipientID, m.sender.character.ID)
-			data, _ := firstUpdate.MarshalBinary()
-			h.SendBytes("character:"+res.RecipientID, data)
+			h.Send(firstUpdate)
 
 			secondUpdate := packet.NewFriendUpdatePacket(m.sender.character.ID, res.RecipientID)
-			data, _ = secondUpdate.MarshalBinary()
-			h.SendBytes("character:"+m.sender.character.ID, data)
+			h.Send(secondUpdate)
 		} else {
 			db.GetInstance().SAdd("character:"+res.RecipientID+":requests", m.sender.character.ID)
 
-			// TODO: This will not work with more than one ingest server
 			friendUpdate := packet.NewFriendUpdatePacket(res.RecipientID, m.sender.character.ID)
-			data, _ := friendUpdate.MarshalBinary()
-			h.SendBytes("character:"+res.RecipientID, data)
+			h.Send(friendUpdate)
 		}
 	case packet.GetAchievementsPacket:
 		// Send achievements back to client
@@ -747,20 +761,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip.Exec()
 
 		// Tell their friends that they're online now
-		teammateIDs, _ := teammatesCmd.Result()
-		friendIDs, _ := friendsCmd.Result()
-
 		statusRes := packet.NewStatusPacket(character.ID, true)
-		statusData, _ := statusRes.MarshalBinary()
-
-		// TODO: This will not work with multiple ingest servers
-		for _, id := range teammateIDs {
-			h.SendBytes("character:"+id, statusData)
-		}
-
-		for _, id := range friendIDs {
-			h.SendBytes("character:"+id, statusData)
-		}
+		statusRes.FriendIDs, _ = friendsCmd.Result()
+		statusRes.TeammateIDs, _ = teammatesCmd.Result()
+		h.Send(statusRes)
 
 		// Authenticate the user on our end
 		m.sender.character = character
@@ -836,10 +840,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		p.ID = m.sender.character.ID
 
 		h.Send(p)
-
-		// notif := packet.NewMessageNotificationPacket("testing")
-		// data, _ := notif.MarshalBinary()
-		// h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.ProjectFormPacket:
 		projectID := uuid.New().String()
 
@@ -1029,19 +1029,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		friendsCmd := pip.SMembers("character:" + m.sender.character.ID + ":friends")
 		pip.Exec()
 
-		teammateIDs, _ := teammatesCmd.Result()
-		friendIDs, _ := friendsCmd.Result()
-
-		data, _ := p.MarshalBinary()
-
-		// TODO: This will not work with multiple ingest servers
-		for _, id := range teammateIDs {
-			h.SendBytes("character:"+id, data)
-		}
-
-		for _, id := range friendIDs {
-			h.SendBytes("character:"+id, data)
-		}
+		p.FriendIDs, _ = friendsCmd.Result()
+		p.TeammateIDs, _ = teammatesCmd.Result()
+		h.Send(p)
 	case packet.TeleportPacket:
 		p.From = m.sender.character.Room
 
@@ -1173,7 +1163,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 		}
 
-		if (!m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer)) {
+		if !m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer) {
 			errorPacket := packet.NewErrorPacket(int(HighSchoolSponsorQueue))
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
@@ -1204,8 +1194,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			// If a sponsor took a hacker off the queue, send them the sponsor's URL
 			// TODO: Replace this with the sponsor's actual URL
 			hackerUpdatePacket := packet.NewQueueUpdateHackerPacket(p.SponsorID, 0, "https://google.com")
-			data, _ := hackerUpdatePacket.MarshalBinary()
-			h.SendBytes("character:"+p.CharacterID, data)
+			hackerUpdatePacket.CharacterIDs = []string{p.CharacterID}
+			h.Send(hackerUpdatePacket)
 		}
 	case packet.QueueSubscribePacket:
 		db.GetInstance().SAdd("sponsor:"+p.SponsorID+":subscribed", m.sender.character.ID)

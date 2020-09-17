@@ -49,6 +49,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := FriendRequestPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
+	case "friend_update":
+		p := FriendUpdatePacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	case "get_achievements":
 		p := GetAchievementsPacket{}
 		json.Unmarshal(data, &p)
@@ -75,6 +79,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		return p, nil
 	case "hallway_update":
 		p := HallwayUpdatePacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
+	case "leave":
+		p := LeavePacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
 	case "message":
