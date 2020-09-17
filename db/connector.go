@@ -154,7 +154,6 @@ func MonitorLeader() {
 
 		// If we're not the leader, don't do any leader actions
 		if leaderID != ingestID {
-			fmt.Println("not leader")
 			continue
 		}
 

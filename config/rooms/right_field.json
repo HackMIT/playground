@@ -1,0 +1,278 @@
+{
+  "background": "right_field.svg",
+  "sponsor": false,
+  "elements": [
+    {
+      "x": 0.8679,
+      "y": 0.104,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.7648,
+      "y": 0.0495,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.6522,
+      "y": 0.1756,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.4992,
+      "y": 0.1412,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.0367,
+      "y": 0.0782,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.5823,
+      "y": 0.3217,
+      "width": 0.04,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.9417,
+      "y": 0.1211,
+      "width": 0.04,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.7942,
+      "y": 0.2128,
+      "width": 0.04,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.3422,
+      "y": 0.104,
+      "width": 0.04,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.1934,
+      "y": 0.2313,
+      "width": 0.2862,
+      "path": "building_ibm.svg"
+    },
+    {
+      "x": 0.3968,
+      "y": 0.4447,
+      "width": 0.2822,
+      "path": "building_nasdaq.svg"
+    },
+    {
+      "x": 0.9062,
+      "y": 0.3487,
+      "width": 0.1234,
+      "path": "building_quantco.svg"
+    },
+    {
+      "x": 0.8011,
+      "y": 0.3825,
+      "width": 0.1544,
+      "path": "building_linode.svg"
+    },
+    {
+      "x": 0.7041,
+      "y": 0.4814,
+      "width": 0.1542,
+      "path": "building_goldman.svg"
+    },
+    {
+      "x": 0.6018,
+      "y": 0.5838,
+      "width": 0.1565,
+      "path": "building_citadel.svg"
+    },
+    {
+      "x": 0.0575,
+      "y": 0.7759,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.9527,
+      "y": 0.7816,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.8108,
+      "y": 0.879,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.1202,
+      "y": 0.8645,
+      "width": 0.04,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.5077,
+      "y": 0.6381,
+      "width": 0.0287,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.5,
+      "y": 0.8232,
+      "width": 0.0906,
+      "fountain": true
+    },
+    {
+      "x": 0.4337,
+      "y": 0.9235,
+      "width": 0.0436,
+      "path": "bench_flipped.svg"
+    },
+    {
+      "x": 0.5602,
+      "y": 0.9321,
+      "width": 0.0436,
+      "path": "bench.svg"
+    },
+    {
+      "x": 0.0227,
+      "y": 0.4392,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.1169,
+      "y": 0.5324,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.0227,
+      "y": 0.4392,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.2087,
+      "y": 0.6212,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.33520000000000005,
+      "y": 0.753,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.6583,
+      "y": 0.7659,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.7549,
+      "y": 0.667,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.8685,
+      "y": 0.5481,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.5,
+      "y": 0.9488,
+      "width": 0.0189,
+      "path": "recycling_bin.svg"
+    },
+    {
+      "x": 0.237,
+      "y": 0.5375,
+      "width": 0.0213,
+      "path": "bike_rack.svg"
+    }
+  ],
+  "hallways": [
+    {
+      "x": 0.0305,
+      "y": 0.402,
+      "radius": 0.0579,
+      "to": "plat_area",
+      "toX": 0.6113,
+      "toY": 0.9628
+    },
+    {
+      "x": 0.2035,
+      "y": 0.4125,
+      "radius": 0.0676,
+      "to": "sponsor:ibm",
+      "toX": 0.4961,
+      "toY": 0.5002
+    },
+    {
+      "x": 0.4082,
+      "y": 0.6248,
+      "radius": 0.0678,
+      "to": "sponsor:nasdaq",
+      "toX": 0.4961,
+      "toY": 0.5002
+    },
+    {
+      "x": 0.6486,
+      "y": 0.6717,
+      "radius": 0.044,
+      "to": "sponsor:citadel",
+      "toX": 0.4961,
+      "toY": 0.5002
+    },
+    {
+      "x": 0.7446,
+      "y": 0.58,
+      "radius": 0.0479,
+      "to": "sponsor:goldman",
+      "toX": 0.4961,
+      "toY": 0.5002
+    },
+    {
+      "x": 0.8401,
+      "y": 0.4958,
+      "radius": 0.0402,
+      "to": "sponsor:linode",
+      "toX": 0.4961,
+      "toY": 0.5002
+    },
+    {
+      "x": 0.9189,
+      "y": 0.404,
+      "radius": 0.0263,
+      "to": "sponsor:quantco",
+      "toX": 0.3389,
+      "toY": 0.5909
+    },
+    {
+      "x": 0.9977,
+      "y": 0.3837,
+      "radius": 0.0521,
+      "to": "plaza",
+      "toX": 0.0445,
+      "toY": 0.9362
+    }
+  ]
+}

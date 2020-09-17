@@ -49,7 +49,11 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := FriendRequestPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
-	case "get_achivements":
+	case "friend_update":
+		p := FriendUpdatePacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
+	case "get_achievements":
 		p := GetAchievementsPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
@@ -69,6 +73,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := GetSongsPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
+	case "get_sponsor":
+		p := GetSponsorPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	case "hallway_add":
 		p := HallwayAddPacket{}
 		json.Unmarshal(data, &p)
@@ -81,12 +89,20 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := HallwayUpdatePacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
+	case "leave":
+		p := LeavePacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	case "message":
 		p := MessagePacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
 	case "move":
 		p := MovePacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
+	case "project_form":
+		p := ProjectFormPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
 	case "queue_join":
@@ -107,6 +123,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		return p, nil
 	case "register":
 		p := RegisterPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
+	case "report":
+		p := ReportPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
 	case "room_add":
@@ -131,6 +151,14 @@ func ParsePacket(data []byte) (Packet, error) {
 		return p, nil
 	case "update_map":
 		p := UpdateMapPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
+	case "update_sponsor":
+		p := UpdateSponsorPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
+	case "wardrobe_change":
+		p := WardrobeChangePacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
 	default:

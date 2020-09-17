@@ -1,12 +1,62 @@
 [
   {
+    "id": "arrowstreet",
+    "name": "ArrowStreet"
+  },
+  {
+    "id": "citadel",
+    "name": "Citadel"
+  },
+  {
     "id": "cmt",
-    "name": "CMT",
-    "zoom": "google.com"
+    "name": "CMT"
+  },
+  {
+    "id": "drw",
+    "name": "DRW"
+  },
+  {
+    "id": "facebook",
+    "name": "Facebook"
+  },
+  {
+    "id": "goldman",
+    "name": "Goldman Sachs"
+  },
+  {
+    "id": "ibm",
+    "name": "IBM"
   },
   {
     "id": "intersystems",
-    "name": "Intersystems",
-    "zoom": "asdf.com"
+    "name": "Intersystems"
+  },
+  {
+    "id": "misti",
+    "name": "MISTI"
+  },
+  {
+    "id": "linode",
+    "name": "Linode"
+  },
+  {
+    "id": "nasdaq",
+    "name": "Nasdaq"
+  },
+  {
+    "id": "oca",
+    "name": "OCA Ventures"
+  },
+  {
+    "id": "pega",
+    "name": "Pegasystems"
+  },
+  {
+    "id": "quantco",
+    "name": "QuantCo"
+  },
+  {
+    "id": "yext",
+    "name": "Yext"
   }
 ]

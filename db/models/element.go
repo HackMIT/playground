@@ -24,6 +24,7 @@ type Element struct {
 
 	Action int `json:"action" redis:"action"`
 
+	Hoverable  bool `json:"hoverable" redis:"hoverable"`
 	Toggleable bool `json:"toggleable" redis:"toggleable"`
 	State      int  `json:"state" redis:"state"`
 }

@@ -12,6 +12,8 @@ type RegisterPacket struct {
 	Packet
 
 	Name                string                `json:"name"`
+	Location            string                `json:"location"`
+	Bio                 string                `json:"bio"`
 	PhoneNumber         string                `json:"phoneNumber"`
 	BrowserSubscription *webpush.Subscription `json:"browserSubscription"`
 }

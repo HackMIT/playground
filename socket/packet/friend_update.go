@@ -24,6 +24,9 @@ type FriendUpdatePacket struct {
 	Packet
 
 	Friend Friend `json:"friend"`
+
+	// Server attributes
+	RecipientID string `json:"recipientId"`
 }
 
 func NewFriendUpdatePacket(characterID string, friendID string) *FriendUpdatePacket {
@@ -53,7 +56,13 @@ func NewFriendUpdatePacket(characterID string, friendID string) *FriendUpdatePac
 			Pending:  isRequest,
 			LastSeen: time.Now(),
 		},
+		RecipientID: characterID,
 	}
+}
+
+// This isn't needed -- remove later
+func (p FriendUpdatePacket) PermissionCheck(characterID string, role models.Role) bool {
+	return len(characterID) > 0
 }
 
 func (p FriendUpdatePacket) MarshalBinary() ([]byte, error) {

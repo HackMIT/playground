@@ -15,14 +15,14 @@
       "path": "shopping_mall.svg"
     },
     {
-      "x": 0.7432,
-      "y": 0.5994,
+      "x": 0.9035,
+      "y": 0.7513,
       "width": 0.0596,
       "path": "non_profit_sign.svg"
     },
     {
-      "x": 0.249,
-      "y": 0.6,
+      "x": 0.0965,
+      "y": 0.7513,
       "width": 0.0713,
       "path": "sponsor_town_sign.svg"
     },
@@ -31,6 +31,24 @@
       "y": 0.5398,
       "width": 0.0436,
       "path": "billboard.svg"
+    },
+    {
+      "x": 0.5,
+      "y": 0.5426,
+      "width": 0.0906,
+      "fountain": true
+    },
+    {
+      "x": 0.5532,
+      "y": 0.6467,
+      "width": 0.0436,
+      "path": "bench.svg"
+    },
+    {
+      "x": 0.4493,
+      "y": 0.6457,
+      "width": 0.0436,
+      "path": "bench_flipped.svg"
     }
   ],
   "hallways": [
@@ -43,20 +61,36 @@
       "toY": 0.6938
     },
     {
-      "x": 0.7268,
-      "y": 0.68,
-      "radius": 0.0717,
+      "x": 0.9318,
+      "y": 0.8677,
+      "radius": 0.089,
       "to": "nonprofits",
       "toX": 0.0194,
       "toY": 0.5099
     },
     {
-      "x": 0.2513,
-      "y": 0.6688,
-      "radius": 0.0729,
+      "x": 0.0764,
+      "y": 0.8596,
+      "radius": 0.0944,
       "to": "plat_area",
       "toX": 0.5,
       "toY": 0.03
+    },
+    {
+      "x": 0.3733,
+      "y": 0.4181,
+      "radius": 0.0804,
+      "to": "arena:education",
+      "toX": 0.2572,
+      "toY": 0.8132
+    },
+    {
+      "x": 0.5534,
+      "y": 0.4049,
+      "radius": 0.0706,
+      "to": "mall",
+      "toX": 0.7449,
+      "toY": 0.7077
     }
   ]
 }

@@ -132,13 +132,13 @@
       "x": 0.7532,
       "y": 0.3583,
       "width": 0.1406,
-      "path": "intersystems_building.svg"
+      "path": "building_intersystems.svg"
     },
     {
       "x": 0.2431,
       "y": 0.3618,
       "width": 0.1496,
-      "path": "cambridge_telecom_building.svg"
+      "path": "building_cmt.svg"
     },
     {
       "x": 0.4547,
@@ -155,8 +155,8 @@
       "toggleable": true
     },
     {
-      "x": 0.2695,
-      "y": 0.626,
+      "x": 0.3822,
+      "y": 0.7433,
       "width": 0.0223,
       "path": "street_lamp.svg",
       "toggleable": true
@@ -171,13 +171,6 @@
     {
       "x": 0.5444,
       "y": 0.668,
-      "width": 0.0223,
-      "path": "street_lamp.svg",
-      "toggleable": true
-    },
-    {
-      "x": 0.7283,
-      "y": 0.6273,
       "width": 0.0223,
       "path": "street_lamp.svg",
       "toggleable": true
@@ -216,7 +209,7 @@
       "x": 0.5,
       "y": 0.8254,
       "width": 0.0879,
-      "path": "fountain.svg"
+      "fountain": true
     }
   ],
   "hallways": [
@@ -233,16 +226,32 @@
       "y": 0.5919,
       "radius": 0.0483,
       "to": "sponsor:cmt",
-      "toX": 0.5,
-      "toY": 0.5
+      "toX": 0.7053,
+      "toY": 0.6853
     },
     {
       "x": 0.7402,
       "y": 0.5717,
       "radius": 0.056,
       "to": "sponsor:intersystems",
-      "toX": 0.5,
-      "toY": 0.5
+      "toX": 0.7053,
+      "toY": 0.6853
+    },
+    {
+      "x": 0.3624,
+      "y": 1.01,
+      "radius": 0.0739,
+      "to": "left_field",
+      "toX": 0.9695,
+      "toY": 0.402
+    },
+    {
+      "x": 0.6376,
+      "y": 1.01,
+      "radius": 0.0739,
+      "to": "right_field",
+      "toX": 0.0305,
+      "toY": 0.402
     }
   ]
 }

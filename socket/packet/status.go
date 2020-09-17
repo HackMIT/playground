@@ -19,6 +19,10 @@ type StatusPacket struct {
 
 	// The ID of the character who this is a status update for
 	ID string `json:"id"`
+
+	// Server attributes
+	FriendIDs   []string `json:"friendIds"`
+	TeammateIDs []string `json:"teammateIds"`
 }
 
 func NewStatusPacket(characterID string, online bool) *StatusPacket {

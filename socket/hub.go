@@ -28,6 +28,15 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
+type ErrorCode int
+
+const (
+	BadLogin ErrorCode = iota + 1
+	HighSchoolNightClub
+	MissingProjectForm
+	HighSchoolSponsorQueue
+)
+
 // Hub maintains the set of active clients and broadcasts messages to the clients
 type Hub struct {
 	// Registered clients
@@ -51,8 +60,8 @@ func (h *Hub) Init() *Hub {
 	return h
 }
 
-func (h *Hub) disconnectClient(client *Client) {
-	if client.character != nil {
+func (h *Hub) disconnectClient(client *Client, complete bool) {
+	if client.character != nil && complete {
 		pip := db.GetInstance().Pipeline()
 		pip.Del("character:" + client.character.ID + ":active")
 		pip.HDel("character:"+client.character.ID, "ingest")
@@ -74,20 +83,17 @@ func (h *Hub) disconnectClient(client *Client) {
 		friendIDs, _ := friendsCmd.Result()
 
 		res := packet.NewStatusPacket(client.character.ID, false)
-		data, _ := res.MarshalBinary()
-
-		// TODO: This will not work with multiple ingest servers
-		for _, id := range teammateIDs {
-			h.SendBytes("character:"+id, data)
-		}
-
-		for _, id := range friendIDs {
-			h.SendBytes("character:"+id, data)
-		}
+		res.TeammateIDs = teammateIDs
+		res.FriendIDs = friendIDs
+		h.Send(res)
 	}
 
 	delete(h.clients, client.id)
-	close(client.send)
+
+	// I'm pretty sure we want to close this but it's causing an error so I'm commenting it out for now
+	// close(client.send)
+
+	client.conn.Close()
 }
 
 // Listens for messages from websocket clients
@@ -97,7 +103,7 @@ func (h *Hub) Run() {
 		case client := <-h.register:
 			h.clients[client.id] = client
 		case client := <-h.unregister:
-			h.disconnectClient(client)
+			h.disconnectClient(client, true)
 		case message := <-h.broadcast:
 			// Process incoming messages from clients
 			h.processMessage(message)
@@ -171,45 +177,84 @@ func (h *Hub) sendSponsorQueueUpdate(sponsorID string) {
 
 		// Send queue update to each hacker
 		hackerUpdatePacket := packet.NewQueueUpdateHackerPacket(sponsorID, i+1, "")
-		data, _ := hackerUpdatePacket.MarshalBinary()
-
-		// TODO: Fix with multiple ingests
-		h.SendBytes("character:"+hackerIDs[i], data)
+		hackerUpdatePacket.CharacterIDs = []string{hackerIDs[i]}
+		h.Send(hackerUpdatePacket)
 	}
 
 	sponsorUpdatePacket := packet.NewQueueUpdateSponsorPacket(subscribers)
-	data, _ := sponsorUpdatePacket.MarshalBinary()
-
-	for _, sponsorID := range sponsorIDs {
-		// TODO: Fix with multiple ingests
-		h.SendBytes("character:"+sponsorID, data)
-	}
+	sponsorUpdatePacket.CharacterIDs = sponsorIDs
+	h.Send(sponsorUpdatePacket)
 }
 
 // Processes an incoming message from Redis
 func (h *Hub) ProcessRedisMessage(msg []byte) {
+	p, err := packet.ParsePacket(msg)
+
+	if err != nil {
+		// TODO: Log to Sentry or something -- this should never happen
+		fmt.Println(err)
+		log.Println("ERROR: Received invalid packet from Redis")
+		return
+	}
+
 	var res map[string]interface{}
 	json.Unmarshal(msg, &res)
 
-	switch res["type"] {
-	case "message":
-		h.SendBytes("character:"+res["to"].(string), msg)
+	switch p := p.(type) {
+	case packet.MessagePacket:
+		h.SendBytes("character:"+p.To, msg)
 
-		if res["to"].(string) != res["from"].(string) {
-			h.SendBytes("character:"+res["from"].(string), msg)
+		if p.To != p.From {
+			h.SendBytes("character:"+p.From, msg)
 		}
-	case "chat", "dance", "move", "leave":
+	case packet.ChatPacket, packet.DancePacket, packet.ElementAddPacket, packet.ElementDeletePacket, packet.ElementUpdatePacket, packet.HallwayAddPacket, packet.HallwayUpdatePacket, packet.HallwayDeletePacket, packet.MovePacket, packet.LeavePacket, packet.WardrobeChangePacket:
 		h.SendBytes(res["room"].(string), msg)
-	case "join":
-		h.SendBytes(res["character"].(map[string]interface{})["room"].(string), msg)
-	case "element_add", "element_delete", "element_update", "hallway_add", "hallway_delete", "hallway_update":
-		h.SendBytes(res["room"].(string), msg)
-	case "song", "playSong":
+	case packet.SongPacket, packet.PlaySongPacket:
 		h.SendBytes("*", msg)
-	case "teleport", "teleport_home":
-		var p packet.TeleportPacket
-		json.Unmarshal(msg, &p)
+	case packet.FriendUpdatePacket:
+		res["recipientId"] = ""
+		msg, _ = json.Marshal(res)
 
+		h.SendBytes("character:"+p.RecipientID, msg)
+	case packet.JoinPacket:
+		characterID := p.Character.ID
+		clientID := p.ClientID
+
+		for id, client := range h.clients {
+			if client.character != nil && client.character.ID == characterID && id != clientID {
+				fmt.Println("disconnecting existing client for", characterID)
+				h.disconnectClient(client, false)
+			}
+		}
+
+		res["clientId"] = ""
+		msg, _ = json.Marshal(res)
+
+		h.SendBytes(p.Character.Room, msg)
+	case packet.QueueUpdateHackerPacket, packet.QueueUpdateSponsorPacket:
+		characterIDs := res["characterIds"].([]string)
+
+		res["characterIds"] = []string{}
+		msg, _ = json.Marshal(res)
+
+		for _, characterID := range characterIDs {
+			h.SendBytes("character:"+characterID, msg)
+		}
+	case packet.SongPacket:
+		h.SendBytes("*", msg)
+	case packet.StatusPacket:
+		res["teammateIds"] = []string{}
+		res["friendIds"] = []string{}
+		msg, _ = json.Marshal(res)
+
+		for _, id := range p.TeammateIDs {
+			h.SendBytes("character:"+id, msg)
+		}
+
+		for _, id := range p.FriendIDs {
+			h.SendBytes("character:"+id, msg)
+		}
+	case packet.TeleportPacket:
 		leavePacket, _ := packet.NewLeavePacket(p.Character, p.From).MarshalBinary()
 		h.SendBytes(p.From, leavePacket)
 
@@ -317,11 +362,12 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		h.Send(p)
 	case packet.EmailCodePacket:
 		isValidEmail := false
-
+		name := "mentor"
 		// Make sure this email exists in our database
 		switch models.Role(p.Role) {
 		case models.SponsorRep:
 			isValidEmail, _ = db.GetInstance().SIsMember("sponsor_emails", p.Email).Result()
+			name = "sponsor"
 		case models.Mentor:
 			isValidEmail, _ = db.GetInstance().SIsMember("mentor_emails", p.Email).Result()
 		case models.Organizer:
@@ -337,33 +383,53 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		code := rand.Intn(1000000)
 		db.GetInstance().SAdd("login_requests", p.Email+","+strconv.Itoa(code))
 
-		// TODO (starter task): Send a nice email to this person with their code
-		fmt.Println(code)
+		// Send email to person trying to log in
+		utils.SendConfirmationEmail(p.Email, code, name)
 	case packet.EventPacket:
 		// Parse event packet
 		res := packet.EventPacket{}
 		json.Unmarshal(m.msg, &res)
 
-		isValidEvent, err := db.GetInstance().SIsMember("events", res.ID).Result()
+		pip := db.GetInstance().Pipeline()
+		validCmd := pip.SIsMember("events", res.ID)
+		eventCmd := pip.HGetAll("event:" + res.ID)
+		pip.Exec()
+
+		isValidEvent, err := validCmd.Result()
 
 		if !isValidEvent || err != nil {
 			return
 		}
 
-		pip := db.GetInstance().Pipeline()
+		eventRes, _ := eventCmd.Result()
+		var event models.Event
+		utils.Bind(eventRes, &event)
+
+		pip = db.GetInstance().Pipeline()
 		pip.SAdd("event:"+res.ID+":attendees", m.sender.character.ID)
 		pip.SAdd("character:"+m.sender.character.ID+":events", res.ID)
-		pip.SCard("character:" + m.sender.character.ID + ":events")
-		numEventsCmd := pip.HIncrBy("character:"+m.sender.character.ID+":achievements", "events", 1)
+
+		var countCmd *redis.IntCmd
+
+		if event.Type == "workshop" {
+			countCmd = pip.HIncrBy("character:"+m.sender.character.ID, "numWorkshops", 1)
+		} else if event.Type == "mini_event" {
+			countCmd = pip.HIncrBy("character:"+m.sender.character.ID, "numMiniEvents", 1)
+		}
+
 		pip.Exec()
 
-		// Check achievement progress and update if necessary
-		numEvents, err := numEventsCmd.Result()
+		if countCmd == nil {
+			return
+		}
 
-		if numEvents == config.GetConfig().GetInt64("achievements.num_events") && err == nil {
-			resp := packet.NewAchievementNotificationPacket("events")
-			data, _ := resp.MarshalBinary()
-			h.SendBytes("character:"+m.sender.character.ID, data)
+		// Check achievement progress and update if necessary
+		numEvents, _ := countCmd.Result()
+
+		if event.Type == "workshop" && numEvents == config.GetConfig().GetInt64("achievements.num_workshops") {
+			db.GetInstance().HSet("character:"+m.sender.character.ID+":achievements", "workshops", true)
+		} else if event.Type == "mini_event" && numEvents == config.GetConfig().GetInt64("achievements.num_mini_events") {
+			db.GetInstance().HSet("character:"+m.sender.character.ID+":achievements", "miniEvents", true)
 		}
 	case packet.FriendRequestPacket:
 		// Parse friend request packet
@@ -384,27 +450,40 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			pip.SRem("character:"+m.sender.character.ID+":requests", res.RecipientID)
 			pip.SAdd("character:"+m.sender.character.ID+":friends", res.RecipientID)
 			pip.SAdd("character:"+res.RecipientID+":friends", m.sender.character.ID)
+			firstNumFriendsCmd := pip.SCard("character:" + m.sender.character.ID + ":friends")
+			secondNumFriendsCmd := pip.SCard("character:" + res.RecipientID + ":friends")
 			pip.Exec()
 
-			// TODO: This will not work with more than one ingest server
+			// Track achievement progress
+			firstNumFriends, _ := firstNumFriendsCmd.Result()
+			secondNumFriends, _ := secondNumFriendsCmd.Result()
+
+			pip = db.GetInstance().Pipeline()
+
+			if firstNumFriends == config.GetConfig().GetInt64("achievements.num_friends") {
+				pip.HSet("character:"+m.sender.character.ID+":achievements", "hangouts", true)
+			}
+
+			if secondNumFriends == config.GetConfig().GetInt64("achievements.num_friends") {
+				pip.HSet("character:"+res.RecipientID+":achievements", "hangouts", true)
+			}
+
+			pip.Exec()
+
 			firstUpdate := packet.NewFriendUpdatePacket(res.RecipientID, m.sender.character.ID)
-			data, _ := firstUpdate.MarshalBinary()
-			h.SendBytes("character:"+res.RecipientID, data)
+			h.Send(firstUpdate)
 
 			secondUpdate := packet.NewFriendUpdatePacket(m.sender.character.ID, res.RecipientID)
-			data, _ = secondUpdate.MarshalBinary()
-			h.SendBytes("character:"+m.sender.character.ID, data)
+			h.Send(secondUpdate)
 		} else {
 			db.GetInstance().SAdd("character:"+res.RecipientID+":requests", m.sender.character.ID)
 
-			// TODO: This will not work with more than one ingest server
 			friendUpdate := packet.NewFriendUpdatePacket(res.RecipientID, m.sender.character.ID)
-			data, _ := friendUpdate.MarshalBinary()
-			h.SendBytes("character:"+res.RecipientID, data)
+			h.Send(friendUpdate)
 		}
 	case packet.GetAchievementsPacket:
 		// Send achievements back to client
-		resp := packet.NewAchievementsPacket(m.sender.character.ID)
+		resp := packet.NewAchievementsPacket(p.ID)
 		data, _ := resp.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.GetMapPacket:
@@ -449,6 +528,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		resp := packet.NewMessagesPacket(messages, p.Recipient)
 		data, _ := resp.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
+	case packet.GetSponsorPacket:
+		sponsorPacket := packet.NewSponsorPacket(p.SponsorID)
+		data, _ := sponsorPacket.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.HallwayAddPacket:
 		p.Room = m.sender.character.Room
@@ -507,7 +590,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			defer resp.Body.Close()
 			body, _ := ioutil.ReadAll(resp.Body)
 
-			var quillData map[string]interface{}
+			// var quillData map[string]interface{}
+			var quillData models.QuillResponse
 			err := json.Unmarshal(body, &quillData)
 
 			if err != nil {
@@ -516,25 +600,28 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				return
 			}
 
-			admitted := quillData["status"].(map[string]interface{})["admitted"].(bool)
-
-			if !admitted {
+			if !quillData.Status.Admitted || !quillData.Status.Confirmed {
 				// Don't allow non-admitted hackers to access Playground
 				// TODO: Send error packet
 				return
 			}
 
 			// Load this client's character
-			characterID, err := db.GetInstance().HGet("quillToCharacter", quillData["id"].(string)).Result()
+			characterID, err := db.GetInstance().HGet("quillToCharacter", quillData.ID).Result()
 
 			if err != nil {
 				// Never seen this character before, create a new one
-				character = models.NewCharacterFromQuill(quillData)
+				character = models.NewCharacterFromQuill(quillData.Profile)
+				character.Email = quillData.Email
 				character.ID = uuid.New().String()
 
 				// Add character to database
 				pip.HSet("character:"+character.ID, utils.StructToMap(character))
-				pip.HSet("quillToCharacter", quillData["id"].(string), character.ID)
+				pip.HSet("quillToCharacter", quillData.ID, character.ID)
+				pip.HSet("emailToCharacter", quillData.Email, character.ID)
+
+				// Make sure they get the account setup screen
+				firstTime = true
 			} else {
 				// This person has logged in before, fetch from Redis
 				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
@@ -553,7 +640,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			})
 
 			if err != nil {
-				errorPacket := packet.NewErrorPacket(1)
+				errorPacket := packet.NewErrorPacket(int(BadLogin))
 				data, _ := json.Marshal(errorPacket)
 				m.sender.send <- data
 				return
@@ -572,7 +659,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			characterRes, err := db.GetInstance().HGetAll("character:" + characterID).Result()
 
 			if err != nil || len(characterRes) == 0 {
-				errorPacket := packet.NewErrorPacket(1)
+				errorPacket := packet.NewErrorPacket(int(BadLogin))
 				data, _ := json.Marshal(errorPacket)
 				m.sender.send <- data
 				return
@@ -593,6 +680,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			if err != nil {
 				// Never seen this character before, create a new one
 				character = models.NewCharacter("Player")
+				character.Email = p.Email
 				character.ID = uuid.New().String()
 
 				// Check this character's role
@@ -612,6 +700,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 					sponsorID, _ := sponsorIDCmd.Result()
 					character.SponsorID = sponsorID
+
+					sponsorName, _ := db.GetInstance().HGet("sponsor:"+sponsorID, "name").Result()
+					character.Name += " (" + sponsorName + ")"
 				} else if isMentor {
 					character.Role = int(models.Mentor)
 				} else if isOrganizer {
@@ -639,6 +730,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		if p.Type == "join" {
+			pip.Exec()
+
 			// Generate init packet before new character is added to room
 			initPacket = packet.NewInitPacket(character.ID, character.Room, true)
 			initPacket.FirstTime = firstTime
@@ -670,20 +763,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip.Exec()
 
 		// Tell their friends that they're online now
-		teammateIDs, _ := teammatesCmd.Result()
-		friendIDs, _ := friendsCmd.Result()
-
 		statusRes := packet.NewStatusPacket(character.ID, true)
-		statusData, _ := statusRes.MarshalBinary()
-
-		// TODO: This will not work with multiple ingest servers
-		for _, id := range teammateIDs {
-			h.SendBytes("character:"+id, statusData)
-		}
-
-		for _, id := range friendIDs {
-			h.SendBytes("character:"+id, statusData)
-		}
+		statusRes.FriendIDs, _ = friendsCmd.Result()
+		statusRes.TeammateIDs, _ = teammatesCmd.Result()
+		h.Send(statusRes)
 
 		// Authenticate the user on our end
 		m.sender.character = character
@@ -700,6 +783,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			// Send the join packet to clients and Redis
 			p.Character = character
+			p.ClientID = m.sender.id
 
 			h.Send(p)
 		}
@@ -810,15 +894,52 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		p.ID = m.sender.character.ID
 
 		h.Send(p)
+	case packet.ProjectFormPacket:
+		projectID := uuid.New().String()
 
-		// notif := packet.NewMessageNotificationPacket("testing")
-		// data, _ := notif.MarshalBinary()
-		// h.SendBytes("character:"+m.sender.character.ID, data)
+		pip := db.GetInstance().Pipeline()
+
+		characterIDCmds := make([]*redis.StringCmd, len(p.Teammates))
+
+		for i, email := range p.Teammates {
+			characterIDCmds[i] = pip.HGet("emailToCharacter", email)
+		}
+
+		pip.Exec()
+		pip = db.GetInstance().Pipeline()
+
+		p.Project.Challenges = strings.Join(p.Challenges, ",")
+		p.Project.Emails = strings.Join(append(p.Teammates, m.sender.character.Email), ",")
+		p.Project.SubmittedAt = int(time.Now().Unix())
+		pip.HSet("project:"+projectID, utils.StructToMap(p.Project))
+
+		for _, cmd := range characterIDCmds {
+			characterID, err := cmd.Result()
+
+			if err != nil || len(characterID) == 0 {
+				continue
+			}
+
+			pip.Set("character:"+characterID+":project", projectID, 0)
+			pip.HSet("character:"+characterID+":achievements", "trackCounter", true)
+		}
+
+		pip.Set("character:"+m.sender.character.ID+":project", projectID, 0)
+		pip.HSet("character:"+m.sender.character.ID+":achievements", "trackCounter", true)
+		pip.Exec()
 	case packet.RegisterPacket:
 		pip := db.GetInstance().Pipeline()
 
 		if p.Name != "" {
 			pip.HSet("character:"+m.sender.character.ID, "name", p.Name)
+		}
+
+		if p.Location != "" {
+			pip.HSet("character:"+m.sender.character.ID, "location", p.Location)
+		}
+
+		if p.Bio != "" {
+			pip.HSet("character:"+m.sender.character.ID, "bio", p.Bio)
 		}
 
 		if p.PhoneNumber != "" {
@@ -849,7 +970,48 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		data, _ := initPacket.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.SettingsPacket:
-		db.GetInstance().HSet("character:"+m.sender.character.ID+":settings", utils.StructToMap(p.Settings))
+		pip := db.GetInstance().Pipeline()
+
+		if len(p.Settings.TwitterHandle) > 0 && p.CheckTwitter {
+			url := "https://api.twitter.com/2/tweets/search/recent?query=from:" + p.Settings.TwitterHandle + "&tweet.fields=entities"
+			method := "GET"
+
+			bearer := "Bearer " + config.GetSecret("TWITTER_API_KEY")
+			client := &http.Client{}
+			req, err := http.NewRequest(method, url, nil)
+
+			req.Header.Add("Authorization", bearer)
+			if err != nil {
+				fmt.Println("errror", err)
+			}
+			res, err := client.Do(req)
+			defer res.Body.Close()
+			body, err := ioutil.ReadAll(res.Body)
+
+			// Track achievements
+			usedHashtag := strings.Contains(strings.ToLower(string(body)), "#hackmit2020")
+			usedMemeHashtag := strings.Contains(strings.ToLower(string(body)), "#hackmitmemes")
+
+			if usedHashtag {
+				pip.HSet("character:"+m.sender.character.ID+":achievements", "socialMedia", true)
+			}
+
+			if usedMemeHashtag {
+				pip.HSet("character:"+m.sender.character.ID+":achievements", "memeLord", true)
+			}
+		}
+
+		if p.Location != "" {
+			pip.HSet("character:"+m.sender.character.ID, "location", p.Location)
+		}
+
+		if p.Bio != "" {
+			pip.HSet("character:"+m.sender.character.ID, "bio", p.Bio)
+		}
+
+		pip.HSet("character:"+m.sender.character.ID+":settings", utils.StructToMap(p.Settings))
+		pip.Exec()
+
 		h.SendBytes("character:"+m.sender.character.ID, m.msg)
 	case packet.SongPacket:
 		// Parse song packet
@@ -976,19 +1138,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		friendsCmd := pip.SMembers("character:" + m.sender.character.ID + ":friends")
 		pip.Exec()
 
-		teammateIDs, _ := teammatesCmd.Result()
-		friendIDs, _ := friendsCmd.Result()
-
-		data, _ := p.MarshalBinary()
-
-		// TODO: This will not work with multiple ingest servers
-		for _, id := range teammateIDs {
-			h.SendBytes("character:"+id, data)
-		}
-
-		for _, id := range friendIDs {
-			h.SendBytes("character:"+id, data)
-		}
+		p.FriendIDs, _ = friendsCmd.Result()
+		p.TeammateIDs, _ = teammatesCmd.Result()
+		h.Send(p)
 	case packet.TeleportPacket:
 		p.From = m.sender.character.Room
 
@@ -1020,6 +1172,31 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 		}
 
+		if strings.HasPrefix(p.To, "character:") {
+			characterID := strings.Split(p.To, ":")[1]
+
+			pip := db.GetInstance().Pipeline()
+			isFriendCmd := pip.SIsMember("character:"+m.sender.character.ID+":friends", characterID)
+			roomCmd := pip.HGet("character:"+characterID, "room")
+			pip.Exec()
+
+			isFriend, _ := isFriendCmd.Result()
+
+			if !isFriend {
+				// Don't let people teleport to random other people
+				return
+			}
+
+			p.To, _ = roomCmd.Result()
+		}
+
+		if p.To == "nightclub" && (!m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer)) {
+			errorPacket := packet.NewErrorPacket(int(HighSchoolNightClub))
+			data, _ := json.Marshal(errorPacket)
+			m.sender.send <- data
+			return
+		}
+
 		// Update this character's room
 		pip.HSet("character:"+m.sender.character.ID, map[string]interface{}{
 			"room": p.To,
@@ -1041,6 +1218,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip = db.GetInstance().Pipeline()
 		characterCmd := pip.HGetAll("character:" + m.sender.character.ID)
 		pip.SAdd("room:"+p.To+":characters", m.sender.character.ID)
+		projectIDCmd := pip.Get("character:" + m.sender.character.ID + ":project")
 		pip.Exec()
 
 		characterRes, _ := characterCmd.Result()
@@ -1050,6 +1228,39 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Publish event to other ingest servers
 		p.Character = &character
+
+		// If we're going to the hacker arena after 5pm, add the character's project
+		if strings.HasPrefix(p.To, "arena:") && time.Now().Unix() >= 1600549200 {
+			projectID, err := projectIDCmd.Result()
+
+			if err != nil || len(projectID) == 0 {
+				errorPacket := packet.NewErrorPacket(int(MissingProjectForm))
+				data, _ := json.Marshal(errorPacket)
+				m.sender.send <- data
+				return
+			}
+
+			pip := db.GetInstance().Pipeline()
+
+			// Make sure they earn the peer expo achievement
+			pip.HSet("character:"+m.sender.character.ID+":achivements", "peerExpo", true)
+
+			projectCmd := db.GetInstance().HGetAll("project:" + projectID)
+			pip.Exec()
+
+			projectRes, _ := projectCmd.Result()
+			utils.Bind(projectRes, p.Character.Project)
+		}
+
+		// If we're entering a sponsor room, track achievement progress
+		if strings.HasPrefix(p.To, "sponsor:") {
+			numSponsors, _ := db.GetInstance().HIncrBy("character:"+m.sender.character.ID, "numSponsorsVisited", 1).Result()
+
+			if numSponsors == config.GetConfig().GetInt64("achievements.num_sponsors") {
+				pip.HSet("character:"+m.sender.character.ID+":achivements", "companyTour", true)
+			}
+		}
+
 		h.Send(p)
 	case packet.QueueJoinPacket:
 		hackerIDs, _ := db.GetInstance().LRange("sponsor:"+p.SponsorID+":hackerqueue", 0, -1).Result()
@@ -1061,12 +1272,22 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 		}
 
+		if !m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer) {
+			errorPacket := packet.NewErrorPacket(int(HighSchoolSponsorQueue))
+			data, _ := json.Marshal(errorPacket)
+			m.sender.send <- data
+			return
+		}
+
 		pip := db.GetInstance().Pipeline()
 		pip.RPush("sponsor:"+p.SponsorID+":hackerqueue", m.sender.character.ID)
 		pip.HSet("character:"+m.sender.character.ID, "queueId", p.SponsorID)
 
-		subscriber := models.NewQueueSubscriber(m.sender.character)
+		subscriber := models.NewQueueSubscriber(m.sender.character, p.Interests)
 		pip.HSet("subscriber:"+m.sender.character.ID, utils.StructToMap(subscriber))
+
+		// Track achievements
+		pip.HSet("character:"+m.sender.character.ID+":achievements", "sponsorQueue", true)
 		pip.Exec()
 
 		h.sendSponsorQueueUpdate(p.SponsorID)
@@ -1081,9 +1302,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		if m.sender.character.Role == int(models.SponsorRep) {
 			// If a sponsor took a hacker off the queue, send them the sponsor's URL
 			// TODO: Replace this with the sponsor's actual URL
-			hackerUpdatePacket := packet.NewQueueUpdateHackerPacket(p.SponsorID, 0, "https://google.com")
-			data, _ := hackerUpdatePacket.MarshalBinary()
-			h.SendBytes("character:"+p.CharacterID, data)
+			hackerUpdatePacket := packet.NewQueueUpdateHackerPacket(p.SponsorID, 0, p.Zoom)
+			hackerUpdatePacket.CharacterIDs = []string{p.CharacterID}
+			h.Send(hackerUpdatePacket)
 		}
 	case packet.QueueSubscribePacket:
 		db.GetInstance().SAdd("sponsor:"+p.SponsorID+":subscribed", m.sender.character.ID)
@@ -1092,6 +1313,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		h.sendSponsorQueueUpdate(p.SponsorID)
 	case packet.QueueUnsubscribePacket:
 		db.GetInstance().SRem("sponsor:"+p.SponsorID+":subscribed", m.sender.character.ID)
+	case packet.ReportPacket:
+		json := []byte(`{"text": "` + m.sender.character.Name + `: ` + `(` + p.CharacterID + `): ` + p.Text + `"}`)
+		body := bytes.NewBuffer(json)
+
+		client := &http.Client{}
+		req, _ := http.NewRequest("POST", config.GetSecret("SLACK_WEBHOOK"), body)
+		req.Header.Add("Content-Type", "application/json; charset=utf-8")
+		client.Do(req)
 	case packet.UpdateMapPacket:
 		// Update this character's location
 		locationID := m.sender.character.ID
@@ -1099,11 +1328,42 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip := db.GetInstance().Pipeline()
 		pip.HSet("location:"+locationID, utils.StructToMap(p.Location))
 		pip.SAdd("locations", locationID)
+
+		// Track achievements
+		pip.HSet("character:"+m.sender.character.ID+":achievements", "sendLocation", true)
 		pip.Exec()
 
 		// Send locations back to client
 		resp := packet.NewMapPacket()
 		data, _ := resp.MarshalBinary()
 		h.SendBytes("character:"+m.sender.character.ID, data)
+	case packet.UpdateSponsorPacket:
+		pip := db.GetInstance().Pipeline()
+
+		if len(p.Sponsor.Challenges) > 0 {
+			pip.HSet("sponsor:"+m.sender.character.SponsorID, "challenges", p.Sponsor.Challenges)
+		}
+
+		if len(p.Sponsor.Description) > 0 {
+			pip.HSet("sponsor:"+m.sender.character.SponsorID, "description", p.Sponsor.Description)
+		}
+
+		if len(p.Sponsor.URL) > 0 {
+			pip.HSet("sponsor:"+m.sender.character.SponsorID, "url", p.Sponsor.URL)
+		}
+
+		pip.Exec()
+	case packet.WardrobeChangePacket:
+		p.CharacterID = m.sender.character.ID
+		p.Room = m.sender.character.Room
+
+		db.GetInstance().HSet("character:"+m.sender.character.ID, map[string]interface{}{
+			"eyeColor":   p.EyeColor,
+			"skinColor":  p.SkinColor,
+			"shirtColor": p.ShirtColor,
+			"pantsColor": p.PantsColor,
+		})
+
+		h.Send(p)
 	}
 }

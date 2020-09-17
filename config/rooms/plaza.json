@@ -2,6 +2,55 @@
   "background": "plaza.svg",
   "elements": [
     {
+      "x": 0.0339,
+      "y": 0.4501,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.1737,
+      "y": 0.4672,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.0911,
+      "y": 0.3212,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.1564,
+      "y": 0.208,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.2427,
+      "y": 0.1335,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.3266,
+      "y": 0.0733,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.404,
+      "y": -0.0112,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
       "x": 0.1737,
       "y": 0.4672,
       "width": 0.2015,
@@ -17,7 +66,11 @@
       "x": 0.887,
       "y": 0.1314,
       "width": 0.3928,
-      "path": "stadium.svg"
+      "path": "stadium.svg",
+      "changingImagePath": true,
+      "changingPaths": "stadium.svg,stadium2.svg",
+      "changingInterval": 1000,
+      "changingRandomly": false
     },
     {
       "x": 0.0561,
@@ -185,7 +238,7 @@
       "x": 0.4264,
       "y": 0.6472,
       "width": 0.0906,
-      "path": "fountain.svg"
+      "fountain": true
     },
     {
       "x": 0.4885,
@@ -243,9 +296,25 @@
       "x": 0.0544,
       "y": 0.9247,
       "radius": 0.0885,
-      "to": "plat_area",
-      "toX": 0.5,
-      "toY": 0.5
+      "to": "right_field",
+      "toX": 0.9772,
+      "toY": 0.41
+    },
+    {
+      "x": 0.6241,
+      "y": 0.0286,
+      "radius": 0.0654,
+      "to": "nonprofits",
+      "toX": 0.4705,
+      "toY": 0.9522
+    },
+    {
+      "x": 0.3755,
+      "y": 0.3674,
+      "radius": 0.0577,
+      "to": "misti",
+      "toX": 0.5523,
+      "toY": 0.4284
     }
   ]
 }

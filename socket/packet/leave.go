@@ -26,6 +26,10 @@ func NewLeavePacket(character *models.Character, room string) *LeavePacket {
 	return p
 }
 
+func (p LeavePacket) PermissionCheck(characterID string, role models.Role) bool {
+	return len(characterID) > 0
+}
+
 func (p LeavePacket) MarshalBinary() ([]byte, error) {
 	return json.Marshal(p)
 }

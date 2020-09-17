@@ -1,0 +1,270 @@
+{
+  "background": "left_field.svg",
+  "sponsor": false,
+  "elements": [
+    {
+      "x": 0.1321,
+      "y": 0.104,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.2352,
+      "y": 0.0495,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.3478,
+      "y": 0.1756,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.5008,
+      "y": 0.1412,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.9633,
+      "y": 0.0782,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.4177,
+      "y": 0.3217,
+      "width": 0.04,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.0583,
+      "y": 0.1211,
+      "width": 0.04,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.2058,
+      "y": 0.2128,
+      "width": 0.04,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.6578,
+      "y": 0.104,
+      "width": 0.04,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.8066,
+      "y": 0.2313,
+      "width": 0.2862,
+      "path": "building_drw.svg"
+    },
+    {
+      "x": 0.6032,
+      "y": 0.4447,
+      "width": 0.2822,
+      "path": "building_yext.svg"
+    },
+    {
+      "x": 0.1108,
+      "y": 0.3659,
+      "width": 0.1234,
+      "path": "building_pega.svg"
+    },
+    {
+      "x": 0.1958,
+      "y": 0.4355,
+      "width": 0.1286,
+      "path": "building_oca.svg"
+    },
+    {
+      "x": 0.2959,
+      "y": 0.4814,
+      "width": 0.1542,
+      "path": "building_arrowstreet.svg"
+    },
+    {
+      "x": 0.3982,
+      "y": 0.5838,
+      "width": 0.1565,
+      "path": "building_facebook.svg"
+    },
+    {
+      "x": 0.9425,
+      "y": 0.7759,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.0473,
+      "y": 0.7816,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.1892,
+      "y": 0.879,
+      "width": 0.0558,
+      "path": "tree.svg"
+    },
+    {
+      "x": 0.8798,
+      "y": 0.8645,
+      "width": 0.04,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.4923,
+      "y": 0.6381,
+      "width": 0.0287,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.5,
+      "y": 0.8232,
+      "width": 0.0906,
+      "fountain": true
+    },
+    {
+      "x": 0.5663,
+      "y": 0.9235,
+      "width": 0.0436,
+      "path": "bench.svg"
+    },
+    {
+      "x": 0.4398,
+      "y": 0.9321,
+      "width": 0.0436,
+      "path": "bench_flipped.svg"
+    },
+    {
+      "x": 0.9773,
+      "y": 0.4392,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.8831,
+      "y": 0.5324,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.9773,
+      "y": 0.4392,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.7913,
+      "y": 0.6212,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.6648,
+      "y": 0.753,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.3417,
+      "y": 0.7659,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.2451,
+      "y": 0.667,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.1315,
+      "y": 0.5481,
+      "width": 0.0223,
+      "path": "street_lamp.svg",
+      "toggleable": true
+    },
+    {
+      "x": 0.5,
+      "y": 0.9488,
+      "width": 0.0189,
+      "path": "recycling_bin.svg"
+    },
+    {
+      "x": 0.763,
+      "y": 0.5375,
+      "width": 0.0213,
+      "path": "bike_rack_flipped.svg"
+    }
+  ],
+  "hallways": [
+    {
+      "x": 0.9695,
+      "y": 0.402,
+      "radius": 0.0579,
+      "to": "plat_area",
+      "toX": 0.3887,
+      "toY": 0.9628
+    },
+    {
+      "x": 0.7965,
+      "y": 0.4125,
+      "radius": 0.0676,
+      "to": "sponsor:drw",
+      "toX": 0.4961,
+      "toY": 0.5002
+    },
+    {
+      "x": 0.5918,
+      "y": 0.6248,
+      "radius": 0.0678,
+      "to": "sponsor:yext",
+      "toX": 0.4961,
+      "toY": 0.5002
+    },
+    {
+      "x": 0.3514,
+      "y": 0.6717,
+      "radius": 0.044,
+      "to": "sponsor:facebook",
+      "toX": 0.4961,
+      "toY": 0.5002
+    },
+    {
+      "x": 0.2554,
+      "y": 0.58,
+      "radius": 0.0479,
+      "to": "sponsor:arrowstreet",
+      "toX": 0.4961,
+      "toY": 0.5002
+    },
+    {
+      "x": 0.1599,
+      "y": 0.4958,
+      "radius": 0.0402,
+      "to": "sponsor:oca",
+      "toX": 0.3389,
+      "toY": 0.5909
+    },
+    {
+      "x": 0.0892,
+      "y": 0.4138,
+      "radius": 0.0368,
+      "to": "sponsor:pega",
+      "toX": 0.3389,
+      "toY": 0.5909
+    }
+  ]
+}

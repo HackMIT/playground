@@ -3,8 +3,11 @@ package db
 import (
 	"encoding/json"
 	"io/ioutil"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/techx/playground/config"
 )
 
 // RoomType is an enum representing all possible room templates
@@ -32,6 +35,15 @@ const (
 	// PlatArea is the area accessible from town square with the two plat sponsor buildings
 	PlatArea = "plat_area"
 
+	// LeftField is the left sponsor area
+	LeftField = "left_field"
+
+	// RightField is the right sponsor area
+	RightField = "right_field"
+
+	// Plat is a plat-tier sponsor's room
+	Plat = "plat"
+
 	// Gold is a gold-tier sponsor's room
 	Gold = "gold"
 
@@ -40,6 +52,15 @@ const (
 
 	// Bronze is a bronze-tier sponsor's room
 	Bronze = "bronze"
+
+	// Arena is the hacking arena, accessible from town square
+	Arena = "arena"
+
+	// Mall is the clothing store, accessible from town square
+	Mall = "mall"
+
+	// MISTI is the room for MISTI, accessible from the plaza
+	MISTI = "misti"
 )
 
 // CreateRoom builds a room with the given ID from a template file
@@ -53,6 +74,14 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 	var roomData map[string]interface{}
 	json.Unmarshal(dat, &roomData)
 	data["background"] = roomData["background"]
+
+	if sponsorID, ok := data["id"].(string); ok {
+		data["background"] = strings.ReplaceAll(data["background"].(string), "<id>", sponsorID)
+
+		if val, ok := roomData["sponsor"].(bool); ok && val {
+			data["sponsorId"] = sponsorID
+		}
+	}
 
 	instance.HSet("room:"+id, data)
 
@@ -103,7 +132,17 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 			elementData["path"] = "campfire/campfire1.svg"
 			elementData["changingImagePath"] = true
 			elementData["changingPaths"] = "campfire/campfire1.svg,campfire/campfire2.svg,campfire/campfire3.svg,campfire/campfire4.svg,campfire/campfire5.svg"
-			elementData["changingInterval"] = 350
+			elementData["changingInterval"] = 250
+			elementData["changingRandomly"] = false
+		}
+
+		if _, ok := elementData["fountain"]; ok {
+			// If this is a fountain, animate it
+			delete(elementData, "fountain")
+			elementData["path"] = "fountain1.svg"
+			elementData["changingImagePath"] = true
+			elementData["changingPaths"] = "fountain1.svg,fountain2.svg,fountain3.svg"
+			elementData["changingInterval"] = 1000
 			elementData["changingRandomly"] = false
 		}
 
@@ -113,6 +152,8 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 				elementData["path"] = "street_lamp.svg,street_lamp_off.svg"
 			case "bar_closed.svg":
 				elementData["path"] = "bar_closed.svg,bar_open.svg"
+			case "flashlight_off.svg":
+				elementData["path"] = "flashlight_off.svg,flashlight_on.svg"
 			default:
 				break
 			}
@@ -120,11 +161,26 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 			elementData["state"] = 0
 		}
 
+		if id, ok := data["id"].(string); ok {
+			elementData["path"] = strings.ReplaceAll(elementData["path"].(string), "<id>", id)
+		}
+
 		instance.HSet("element:"+elementID, elementData)
 		instance.RPush("room:"+id+":elements", elementID)
 	}
 
 	for _, val := range roomData["hallways"].([]interface{}) {
+		hallwayData := val.(map[string]interface{})
+
+		if roomType == Bronze || roomType == Silver || roomType == Gold || roomType == Plat {
+			hallwayData["toX"] = data["toX"].(float64)
+			hallwayData["toY"] = data["toY"].(float64)
+
+			if val, ok := data["to"].(string); ok {
+				hallwayData["to"] = val
+			}
+		}
+
 		hallwayID := uuid.New().String()
 		instance.HSet("hallway:"+hallwayID, val)
 		instance.SAdd("room:"+id+":hallways", hallwayID)
@@ -146,7 +202,6 @@ func createSponsors() {
 	for _, sponsor := range sponsorsData {
 		instance.HSet("sponsor:"+sponsor["id"], map[string]interface{}{
 			"name": sponsor["name"],
-			"zoom": sponsor["zoom"],
 		})
 
 		instance.SAdd("sponsors", sponsor["id"])
@@ -157,25 +212,159 @@ func CreateRoom(id string, roomType RoomType) {
 	createRoomWithData(id, roomType, map[string]interface{}{})
 }
 
+func createEvents() {
+	dat, err := ioutil.ReadFile("config/events.json")
+
+	if err != nil {
+		return
+	}
+
+	var eventsData []map[string]interface{}
+	json.Unmarshal(dat, &eventsData)
+
+	for _, event := range eventsData {
+		startTime, err := time.Parse("2006-01-02T15:04:05-0700", event["start_time"].(string))
+
+		if err != nil {
+			panic(err)
+		}
+
+		event["startTime"] = int(startTime.Unix())
+
+		eventID := uuid.New().String()[:4]
+		instance.HSet("event:"+eventID, event)
+		instance.SAdd("events", eventID)
+	}
+}
+
 func reset() {
 	instance.FlushDB()
 	CreateRoom("home", Home)
 	CreateRoom("nightclub", Nightclub)
 	CreateRoom("nonprofits", Nonprofits)
 	CreateRoom("plat_area", PlatArea)
+	CreateRoom("left_field", LeftField)
+	CreateRoom("right_field", RightField)
 	CreateRoom("plaza", Plaza)
 	CreateRoom("coffee_shop", CoffeeShop)
+	CreateRoom("mall", Mall)
+	CreateRoom("misti", MISTI)
 
-	createRoomWithData("sponsor:cmt", Gold, map[string]interface{}{
-		"sponsorId": "cmt",
+	createRoomWithData("arena:connectivity", Arena, map[string]interface{}{
+		"id": "connectivity",
 	})
 
-	createRoomWithData("sponsor:intersystems", Gold, map[string]interface{}{
-		"sponsorId": "intersystems",
+	createRoomWithData("arena:education", Arena, map[string]interface{}{
+		"id": "education",
 	})
 
+	createRoomWithData("arena:health", Arena, map[string]interface{}{
+		"id": "health",
+	})
+
+	createRoomWithData("arena:urban", Arena, map[string]interface{}{
+		"id": "urban",
+	})
+
+	createRoomWithData("sponsor:cmt", Plat, map[string]interface{}{
+		"id":  "cmt",
+		"toX": 0.2685,
+		"toY": 0.5919,
+	})
+
+	createRoomWithData("sponsor:intersystems", Plat, map[string]interface{}{
+		"id":  "intersystems",
+		"toX": 0.7402,
+		"toY": 0.5717,
+	})
+
+	createRoomWithData("sponsor:drw", Gold, map[string]interface{}{
+		"id":  "drw",
+		"to":  "left_field",
+		"toX": 0.8215,
+		"toY": 0.4943,
+	})
+
+	createRoomWithData("sponsor:yext", Gold, map[string]interface{}{
+		"id":  "yext",
+		"to":  "left_field",
+		"toX": 0.6128,
+		"toY": 0.702,
+	})
+
+	createRoomWithData("sponsor:facebook", Silver, map[string]interface{}{
+		"id":  "facebook",
+		"to":  "left_field",
+		"toX": 0.3211,
+		"toY": 0.7636,
+	})
+
+	createRoomWithData("sponsor:arrowstreet", Silver, map[string]interface{}{
+		"id":  "arrowstreet",
+		"to":  "left_field",
+		"toX": 0.2018,
+		"toY": 0.6347,
+	})
+
+	createRoomWithData("sponsor:oca", Bronze, map[string]interface{}{
+		"id":  "oca",
+		"to":  "left_field",
+		"toX": 0.1148,
+		"toY": 0.5487,
+	})
+
+	createRoomWithData("sponsor:pega", Bronze, map[string]interface{}{
+		"id":  "pega",
+		"to":  "left_field",
+		"toX": 0.0487,
+		"toY": 0.4728,
+	})
+
+	createRoomWithData("sponsor:ibm", Gold, map[string]interface{}{
+		"id":  "ibm",
+		"to":  "right_field",
+		"toX": 0.1792,
+		"toY": 0.5072,
+	})
+
+	createRoomWithData("sponsor:nasdaq", Gold, map[string]interface{}{
+		"id":  "nasdaq",
+		"to":  "right_field",
+		"toX": 0.3871,
+		"toY": 0.712,
+	})
+
+	createRoomWithData("sponsor:citadel", Silver, map[string]interface{}{
+		"id":  "citadel",
+		"to":  "right_field",
+		"toX": 0.6788,
+		"toY": 0.755,
+	})
+
+	createRoomWithData("sponsor:goldman", Silver, map[string]interface{}{
+		"id":  "goldman",
+		"to":  "right_field",
+		"toX": 0.7916,
+		"toY": 0.6347,
+	})
+
+	createRoomWithData("sponsor:linode", Silver, map[string]interface{}{
+		"id":  "linode",
+		"to":  "right_field",
+		"toX": 0.8867,
+		"toY": 0.543,
+	})
+
+	createRoomWithData("sponsor:quantco", Bronze, map[string]interface{}{
+		"id":  "quantco",
+		"to":  "right_field",
+		"toX": 0.9593,
+		"toY": 0.4656,
+	})
+
+	createEvents()
 	createSponsors()
 
-	instance.SAdd("sponsor_emails", "cookj@mit.edu")
-	instance.HSet("emailToSponsor", "cookj@mit.edu", "cmt")
+	instance.SAdd("sponsor_emails", config.GetSecret("EMAIL"))
+	instance.HSet("emailToSponsor", config.GetSecret("EMAIL"), "cmt")
 }

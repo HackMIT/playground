@@ -1,0 +1,118 @@
+{
+  "background": "<id>.svg",
+  "sponsor": true,
+  "elements": [
+    {
+      "x": 0.2879,
+      "y": 0.5083,
+      "width": 0.0594,
+      "path": "plat_chair.svg"
+    },
+    {
+      "x": 0.3788,
+      "y": 0.6774,
+      "width": 0.0551,
+      "path": "plat_chair_back.svg"
+    },
+    {
+      "x": 0.44,
+      "y": 0.6215,
+      "width": 0.0551,
+      "path": "plat_chair_back.svg"
+    },
+    {
+      "x": 0.7383,
+      "y": 0.716,
+      "width": 0.0319,
+      "path": "plat_plant_<id>.svg"
+    },
+    {
+      "x": 0.6571,
+      "y": 0.837,
+      "width": 0.1576,
+      "path": "plat_coffee_table_<id>.svg"
+    },
+    {
+      "x": 0.66,
+      "y": 0.7721,
+      "width": 0.0396,
+      "path": "plat_coffee_machine.svg"
+    },
+    {
+      "x": 0.456,
+      "y": 0.4374,
+      "width": 0.0898,
+      "path": "plat_couch.svg"
+    },
+    {
+      "x": 0.56,
+      "y": 0.5656,
+      "width": 0.0941,
+      "path": "plat_couch_back.svg"
+    },
+    {
+      "x": 0.504,
+      "y": 0.5133,
+      "width": 0.1288,
+      "path": "plat_rug.svg"
+    },
+    {
+      "x": 0.5059,
+      "y": 0.5054,
+      "width": 0.0599,
+      "path": "plat_couch_table.svg"
+    },
+    {
+      "x": 0.565,
+      "y": 0.4097,
+      "width": 0.093,
+      "path": "plat_tv.svg"
+    },
+    {
+      "x": 0.3211,
+      "y": 0.5738,
+      "width": 0.1286,
+      "path": "plat_desk_<id>.svg"
+    },
+    {
+      "x": 0.7581,
+      "y": 0.5396,
+      "width": 0.0555,
+      "path": "door.svg"
+    },
+    {
+      "x": 0.3926,
+      "y": 0.3393,
+      "width": 0.0827,
+      "path": "plat_window.svg"
+    },
+    {
+      "x": 0.4728,
+      "y": 0.4217,
+      "width": 0.0827,
+      "path": "plat_window.svg"
+    },
+    {
+      "x": 0.5528,
+      "y": 0.5034,
+      "width": 0.0827,
+      "path": "plat_window.svg"
+    },
+    {
+      "x": 0.51,
+      "y": 0.6267,
+      "width": 0.1655,
+      "path": "plat_glass_door.svg"
+    }
+  ],
+  "hallways": [
+    {
+      "x": 0.7485,
+      "y": 0.6185,
+      "radius": 0.0539,
+      "to": "plat_area",
+      "toX": 0.5,
+      "toY": 0.5
+    }
+  ]
+}

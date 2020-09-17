@@ -13,6 +13,11 @@ type SettingsPacket struct {
 
 	// The client's new settings
 	Settings *models.Settings `json:"settings"`
+
+	CheckTwitter bool `json:"checkTwitter"`
+
+	Location string `json:"location"`
+	Bio      string `json:"bio"`
 }
 
 func (p SettingsPacket) PermissionCheck(characterID string, role models.Role) bool {

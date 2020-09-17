@@ -1,22 +1,12 @@
 package models
 
-import "time"
-
-type EventType int
-
-const (
-	MiniEvent EventType = iota
-	Workshop
-	Talk
-)
-
 type Event struct {
-	Name      string     `json:"name" redis:"name"`
-	StartTime *time.Time `json:"startTime" redis:"startTime"`
+	Name string `json:"name" redis:"name"`
+
+	// Start time of the event, as a Unix timestamp
+	StartTime int `json:"startTime" redis:"startTime"`
 
 	// Duration of the event, in minutes
-	Duration int `json:"duration" redis:"duration"`
-
-	// TODO: How can we detect EventType in bind.go?
-	Type EventType `json:"type" redis:"type"`
+	Duration int    `json:"duration" redis:"duration"`
+	Type     string `json:"type" redis:"type"`
 }

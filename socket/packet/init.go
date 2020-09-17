@@ -9,9 +9,6 @@ import (
 	"github.com/techx/playground/db/models"
 	"github.com/techx/playground/utils"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-redis/redis/v7"
 )
@@ -39,6 +36,9 @@ type InitPacket struct {
 	// All of this user's friends
 	Friends []Friend `json:"friends"`
 
+	// All of the events happening throughout the weekend
+	Events []*models.Event `json:"events"`
+
 	// Settings
 	Settings *models.Settings `json:"settings"`
 
@@ -61,6 +61,8 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	teammatesCmd := pip.SMembers("character:" + characterID + ":teammates")
 	friendsCmd := pip.SMembers("character:" + characterID + ":friends")
 	requestsCmd := pip.SMembers("character:" + characterID + ":requests")
+	projectIDCmd := pip.Get("character:" + characterID + ":project")
+	eventsCmd := pip.SMembers("events")
 	pip.Exec()
 
 	room := new(models.Room).Init()
@@ -95,6 +97,13 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 
 	for i, hallwayID := range hallwayIDs {
 		hallwayCmds[i] = pip.HGetAll("hallway:" + hallwayID)
+	}
+
+	eventIDs, _ := eventsCmd.Result()
+	eventCmds := make([]*redis.StringStringMapCmd, len(eventIDs))
+
+	for i, eventID := range eventIDs {
+		eventCmds[i] = pip.HGetAll("event:" + eventID)
 	}
 
 	// Get friends
@@ -222,6 +231,13 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 		i++
 	}
 
+	p.Events = make([]*models.Event, len(eventIDs))
+	for i, eventCmd := range eventCmds {
+		eventRes, _ := eventCmd.Result()
+		p.Events[i] = new(models.Event)
+		utils.Bind(eventRes, p.Events[i])
+	}
+
 	if needsToken {
 		// Generate a JWT
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -235,32 +251,33 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 
 	// Find all of the possible paths
 	// TODO: Cache these
-	sess := session.Must(session.NewSession())
-	svc := s3.New(sess)
+	p.ElementNames = []string{}
+	// sess := session.Must(session.NewSession())
+	// svc := s3.New(sess)
 
-	input := &s3.ListObjectsV2Input{
-		Bucket: aws.String("hackmit-playground-2020"),
-		Prefix: aws.String("elements/"),
-	}
+	// input := &s3.ListObjectsV2Input{
+	// 	Bucket: aws.String("hackmit-playground-2020"),
+	// 	Prefix: aws.String("elements/"),
+	// }
 
-	result, err := svc.ListObjectsV2(input)
+	// result, err := svc.ListObjectsV2(input)
 
-	if err != nil {
-		p.ElementNames = []string{}
-	} else {
-		elementNames := make([]string, len(result.Contents)-1)
+	// if err != nil {
+	// 	p.ElementNames = []string{}
+	// } else {
+	// 	elementNames := make([]string, len(result.Contents)-1)
 
-		for i, item := range result.Contents {
-			if i == 0 {
-				// First key is the elements directory
-				continue
-			}
+	// 	for i, item := range result.Contents {
+	// 		if i == 0 {
+	// 			// First key is the elements directory
+	// 			continue
+	// 		}
 
-			elementNames[i-1] = (*item.Key)[9:]
-		}
+	// 		elementNames[i-1] = (*item.Key)[9:]
+	// 	}
 
-		p.ElementNames = elementNames
-	}
+	// 	p.ElementNames = elementNames
+	// }
 
 	// Get all room names
 	p.RoomNames, _ = db.GetInstance().SMembers("rooms").Result()
@@ -269,6 +286,15 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	p.Settings = new(models.Settings)
 	settingsRes, _ := settingsCmd.Result()
 	utils.Bind(settingsRes, p.Settings)
+
+	// Get project
+	projectID, err := projectIDCmd.Result()
+
+	if err == nil && len(projectID) > 0 {
+		projectRes, _ := db.GetInstance().HGetAll("project:" + projectID).Result()
+		p.Character.Project = new(models.Project)
+		utils.Bind(projectRes, p.Character.Project)
+	}
 
 	return p
 }

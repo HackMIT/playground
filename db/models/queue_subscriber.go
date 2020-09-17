@@ -1,22 +1,25 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 type QueueSubscriber struct {
-	ID       string `json:"id"`
-	Name     string `json:"name" redis:"name"`
-	School   string `json:"school" redis:"school"`
-	GradYear int    `json:"gradYear" redis:"gradYear"`
-	Reason   int    `json:"reason" redis:"reason"`
+	ID        string `json:"id"`
+	Name      string `json:"name" redis:"name"`
+	School    string `json:"school" redis:"school"`
+	GradYear  int    `json:"gradYear" redis:"gradYear"`
+	Interests string `json:"interests" redis:"interests"`
 }
 
-func NewQueueSubscriber(c *Character) *QueueSubscriber {
+func NewQueueSubscriber(c *Character, interests []string) *QueueSubscriber {
 	return &QueueSubscriber{
-		ID:       c.ID,
-		Name:     c.Name,
-		School:   c.School,
-		GradYear: c.GradYear,
-		Reason:   0,
+		ID:        c.ID,
+		Name:      c.Name,
+		School:    c.School,
+		GradYear:  c.GradYear,
+		Interests: strings.Join(interests, ","),
 	}
 }
 

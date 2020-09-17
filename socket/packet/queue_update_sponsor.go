@@ -11,6 +11,9 @@ type QueueUpdateSponsorPacket struct {
 	BasePacket
 
 	Subscribers []*models.QueueSubscriber `json:"subscribers"`
+
+	// Server attributes
+	CharacterIDs []string `json:"characterIds"`
 }
 
 func NewQueueUpdateSponsorPacket(subscribers []*models.QueueSubscriber) *QueueUpdateSponsorPacket {
@@ -20,6 +23,11 @@ func NewQueueUpdateSponsorPacket(subscribers []*models.QueueSubscriber) *QueueUp
 		},
 		Subscribers: subscribers,
 	}
+}
+
+// This isn't needed -- remove later
+func (p QueueUpdateSponsorPacket) PermissionCheck(characterID string, role models.Role) bool {
+	return len(characterID) > 0
 }
 
 func (p QueueUpdateSponsorPacket) MarshalBinary() ([]byte, error) {

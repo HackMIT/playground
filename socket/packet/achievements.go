@@ -11,7 +11,7 @@ import (
 type AchievementsPacket struct {
 	BasePacket
 	Packet
-	*models.Achivements `json:"achievements"`
+	models.Achievements `json:"achievements"`
 
 	// The id of the client who we're getting achievements for
 	ID string `json:"id"`
@@ -26,7 +26,7 @@ func NewAchievementsPacket(characterID string) *AchievementsPacket {
 	p.ID = characterID
 
 	res, _ := db.GetInstance().HGetAll("character:" + characterID + ":achievements").Result()
-	utils.Bind(res, p.Achivements)
+	utils.Bind(res, p.Achievements)
 
 	return p
 }
