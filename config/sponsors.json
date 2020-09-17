@@ -32,6 +32,10 @@
     "name": "Intersystems"
   },
   {
+    "id": "misti",
+    "name": "MISTI"
+  },
+  {
     "id": "linode",
     "name": "Linode"
   },

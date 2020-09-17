@@ -10,9 +10,9 @@ import (
 type QueueRemovePacket struct {
 	BasePacket
 
-	SponsorID string `json:"sponsorId"`
-
+	SponsorID   string `json:"sponsorId"`
 	CharacterID string `json:"characterId"`
+	Zoom        string `json:"zoom"`
 }
 
 func (p QueueRemovePacket) PermissionCheck(characterID string, role models.Role) bool {

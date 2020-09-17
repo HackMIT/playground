@@ -1193,7 +1193,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		if m.sender.character.Role == int(models.SponsorRep) {
 			// If a sponsor took a hacker off the queue, send them the sponsor's URL
 			// TODO: Replace this with the sponsor's actual URL
-			hackerUpdatePacket := packet.NewQueueUpdateHackerPacket(p.SponsorID, 0, "https://google.com")
+			hackerUpdatePacket := packet.NewQueueUpdateHackerPacket(p.SponsorID, 0, p.Zoom)
 			hackerUpdatePacket.CharacterIDs = []string{p.CharacterID}
 			h.Send(hackerUpdatePacket)
 		}

@@ -202,7 +202,6 @@ func createSponsors() {
 	for _, sponsor := range sponsorsData {
 		instance.HSet("sponsor:"+sponsor["id"], map[string]interface{}{
 			"name": sponsor["name"],
-			"zoom": sponsor["zoom"],
 		})
 
 		instance.SAdd("sponsors", sponsor["id"])

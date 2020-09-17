@@ -9,7 +9,6 @@ type Sponsor struct {
 	Description string `json:"description" redis:"description"`
 	URL         string `json:"url" redis:"url"`
 	Name        string `json:"name" redis:"name"`
-	Zoom        string `json:"zoom" redis:"zoom"`
 	ID          string `json:"id" redis:"-"`
 }
 
