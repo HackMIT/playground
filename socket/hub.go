@@ -1056,6 +1056,24 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 		}
 
+		if strings.HasPrefix(p.To, "character:") {
+			characterID := strings.Split(p.To, ":")[1]
+
+			pip := db.GetInstance().Pipeline()
+			isFriendCmd := pip.SIsMember("character:"+m.sender.character.ID+":friends", characterID)
+			roomCmd := pip.HGet("character:"+characterID, "room")
+			pip.Exec()
+
+			isFriend, _ := isFriendCmd.Result()
+
+			if !isFriend {
+				// Don't let people teleport to random other people
+				return
+			}
+
+			p.To, _ = roomCmd.Result()
+		}
+
 		if p.To == "nightclub" && (!m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer)) {
 			errorPacket := packet.NewErrorPacket(int(HighSchoolNightClub))
 			data, _ := json.Marshal(errorPacket)
