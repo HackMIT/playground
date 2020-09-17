@@ -35,6 +35,7 @@ const (
 	HighSchoolNightClub
 	MissingProjectForm
 	HighSchoolSponsorQueue
+	MissingSurveyResponse
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the clients
@@ -1190,6 +1191,19 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		if p.To == "nightclub" && (!m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer)) {
 			errorPacket := packet.NewErrorPacket(int(HighSchoolNightClub))
+			data, _ := json.Marshal(errorPacket)
+			m.sender.send <- data
+			return
+		}
+
+		projectID, _ := db.GetInstance().Get("character" + m.sender.character.ID + ":project").Result()
+		projectTimeString, _ := db.GetInstance().HGet("project:" + projectID, "submittedAt").Result()
+		projectTimeInt, _ := strconv.ParseInt(projectTimeString, 10, 64)
+		projectTime := time.Unix(projectTimeInt, 0)
+		timeZone, _ := time.LoadLocation("America/New_York")
+		deadline := time.Date(2020, 9, 19, 4, 0, 0, 0, timeZone)
+		if strings.HasPrefix(p.To, "arena:") && m.sender.character.Role != int(models.Organizer) && projectTime.Before(deadline) {
+			errorPacket := packet.NewErrorPacket(int(MissingSurveyResponse))
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
 			return
