@@ -1008,7 +1008,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Parse song packet
 		if p.Remove {
 			pip := db.GetInstance().Pipeline()
-			pip.Del("song:"p.ID)
+			pip.Del("song:"+p.ID)
 			pip.LRem("songs", 1, p.ID)
 			pip.Exec()
 			h.Send(p)
