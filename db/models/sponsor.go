@@ -10,6 +10,7 @@ type Sponsor struct {
 	URL         string `json:"url" redis:"url"`
 	Name        string `json:"name" redis:"name"`
 	ID          string `json:"id" redis:"-"`
+	QueueOpen   bool   `json:"queueOpen" redis:"queueOpen"`
 }
 
 func (s Sponsor) MarshalBinary() ([]byte, error) {

@@ -42,8 +42,9 @@ type Character struct {
 	// If this character is in a queue, this is the sponsor ID of the queue they're in
 	QueueID string `json:"queueId" redis:"queueId"`
 
-	// If this character is a sponsor rep, this is their company's ID
+	// If this character is a sponsor rep, this is their company's ID and personal zoom link
 	SponsorID string `json:"sponsorId,omitempty" redis:"sponsorId"`
+	Zoom      string `json:"zoom,omitempty" redis:"zoom"`
 
 	// This character's project, if they have one
 	Project *Project `json:"project" redis:"-"`

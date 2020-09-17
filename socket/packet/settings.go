@@ -18,10 +18,11 @@ type SettingsPacket struct {
 
 	Location string `json:"location"`
 	Bio      string `json:"bio"`
+	Zoom     string `json:"zoom"`
 }
 
 func (p SettingsPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }
 
 func (p SettingsPacket) MarshalBinary() ([]byte, error) {

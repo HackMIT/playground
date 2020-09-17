@@ -99,34 +99,33 @@
     "name": "Peer Expo",
     "start_time": "2020-09-19T18:00:00-0400",
     "duration": 60,
-    "url": "room:home"
+    "url": "room:arena:education"
   },
   {
-    "name": "Mini Event: Hackathon Organizer Meetup",
+    "name": "Hackathon Organizer Meetup",
     "start_time": "2020-09-19T19:00:00-0400",
     "duration": 60,
-    "url": "https://go.hackmit.org/mini-event",
-    "type": "mini_event"
+    "url": "https://go.hackmit.org/hackathon-organizer"
   },
   {
     "name": "Fireside Chat with Aileen Lee",
     "start_time": "2020-09-19T20:00:00-0400",
     "duration": 45,
-    "url": "https://go.hackmit.org/fireside",
+    "url": "https://go.hackmit.org/fireside1",
     "type": "workshop"
   },
   {
     "name": "Fireside Chat with Linda Avey",
     "start_time": "2020-09-19T21:00:00-0400",
     "duration": 45,
-    "url": "https://go.hackmit.org/fireside",
+    "url": "https://go.hackmit.org/fireside2",
     "type": "workshop"
   },
   {
     "name": "Fireside Chat with Tom Preston-Werner",
     "start_time": "2020-09-19T22:00:00-0400",
     "duration": 45,
-    "url": "https://go.hackmit.org/fireside",
+    "url": "https://go.hackmit.org/fireside3",
     "type": "workshop"
   },
   {
@@ -160,7 +159,7 @@
     "name": "Panel Judging",
     "start_time": "2020-09-20T13:15:00-0400",
     "duration": 75,
-    "url": "https://go.hackmit.org/panel-judging"
+    "url": "https://go.hackmit.org/closing"
   },
   {
     "name": "Closing Ceremony",
