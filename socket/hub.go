@@ -1126,7 +1126,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip.RPush("sponsor:"+p.SponsorID+":hackerqueue", m.sender.character.ID)
 		pip.HSet("character:"+m.sender.character.ID, "queueId", p.SponsorID)
 
-		subscriber := models.NewQueueSubscriber(m.sender.character)
+		subscriber := models.NewQueueSubscriber(m.sender.character, p.Interests)
 		pip.HSet("subscriber:"+m.sender.character.ID, utils.StructToMap(subscriber))
 
 		// Track achievements

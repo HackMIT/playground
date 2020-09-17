@@ -10,7 +10,8 @@ import (
 type QueueJoinPacket struct {
 	BasePacket
 
-	SponsorID string `json:"sponsorId"`
+	SponsorID string   `json:"sponsorId"`
+	Interests []string `json:"interests"`
 }
 
 func (p QueueJoinPacket) PermissionCheck(characterID string, role models.Role) bool {

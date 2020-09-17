@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/techx/playground/config"
 )
 
 // RoomType is an enum representing all possible room templates
@@ -356,6 +357,6 @@ func reset() {
 	createEvents()
 	createSponsors()
 
-	instance.SAdd("sponsor_emails", "cookj@mit.edu")
-	instance.HSet("emailToSponsor", "cookj@mit.edu", "cmt")
+	instance.SAdd("sponsor_emails", config.GetSecret("EMAIL"))
+	instance.HSet("emailToSponsor", config.GetSecret("EMAIL"), "cmt")
 }
