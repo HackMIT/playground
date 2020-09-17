@@ -623,7 +623,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			} else {
 				// This person has logged in before, fetch from Redis
 				characterRes, _ := db.GetInstance().HGetAll("character:" + characterID).Result()
-				utils.Bind(characterRes, &character)
+				utils.Bind(characterRes, character)
 				character.ID = characterID
 			}
 		} else if p.Token != "" {
