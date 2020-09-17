@@ -34,6 +34,7 @@ const (
 	BadLogin ErrorCode = iota + 1
 	HighSchoolNightClub
 	MissingProjectForm
+	HighSchoolSponsorQueue
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the clients
@@ -1170,6 +1171,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				// This hacker is already in the queue
 				return
 			}
+		}
+
+		if (!m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer)) {
+			errorPacket := packet.NewErrorPacket(int(HighSchoolSponsorQueue))
+			data, _ := json.Marshal(errorPacket)
+			m.sender.send <- data
+			return
 		}
 
 		pip := db.GetInstance().Pipeline()
