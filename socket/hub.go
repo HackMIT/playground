@@ -798,7 +798,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		songEnd := time.Unix(queueStatus, 0)
 		timeDiff := songEnd.Sub(time.Now())
 		var songStart int
-		if &currentSong != nil {
+		if currentSong.Duration != 0 {
 			songStart = currentSong.Duration - int(timeDiff.Seconds())
 		} else {
 			songStart = 0
@@ -1025,7 +1025,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		} else {
 			// User has added a song to the queue before -- no need for a warning
 			timestampString, _ := db.GetInstance().Get(jukeboxQuery).Result()
-			var _ error
 			jukeboxTimestamp, _ = time.Parse(time.RFC3339, timestampString)
 			p.RequiresWarning = false
 		}
