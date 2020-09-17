@@ -887,7 +887,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		// Make the YouTube API call
-		fmt.Println(config.GetSecret(config.YouTubeKey))
 		youtubeClient, _ := youtube.New(&http.Client{
 			Transport: &transport.APIKey{Key: config.GetSecret(config.YouTubeKey)},
 		})
