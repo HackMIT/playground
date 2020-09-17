@@ -209,6 +209,8 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 		}
 	case packet.ChatPacket, packet.DancePacket, packet.ElementAddPacket, packet.ElementDeletePacket, packet.ElementUpdatePacket, packet.HallwayAddPacket, packet.HallwayUpdatePacket, packet.HallwayDeletePacket, packet.MovePacket, packet.LeavePacket, packet.WardrobeChangePacket:
 		h.SendBytes(res["room"].(string), msg)
+	case packet.SongPacket, packet.PlaySongPacket:
+		h.SendBytes("*", msg)
 	case packet.FriendUpdatePacket:
 		res["recipientId"] = ""
 		msg, _ = json.Marshal(res)
@@ -238,8 +240,6 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 		for _, characterID := range characterIDs {
 			h.SendBytes("character:"+characterID, msg)
 		}
-	case packet.SongPacket:
-		h.SendBytes("*", msg)
 	case packet.StatusPacket:
 		res["teammateIds"] = []string{}
 		res["friendIds"] = []string{}
@@ -785,6 +785,51 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			h.Send(p)
 		}
+	case packet.GetCurrentSongPacket:
+		queueRes, _ := db.GetInstance().Get("queuestatus").Result()
+		queueStatusInt, _ := strconv.Atoi(queueRes)
+		queueStatus := int64(queueStatusInt)
+		currentSongID, _ := db.GetInstance().Get("currentsong").Result()
+
+		songRes, _ := db.GetInstance().HGetAll("song:" + currentSongID).Result()
+		var currentSong models.Song
+		utils.Bind(songRes, &currentSong)
+
+		songEnd := time.Unix(queueStatus, 0)
+		timeDiff := songEnd.Sub(time.Now())
+		var songStart int
+		if currentSong.Duration != 0 {
+			songStart = currentSong.Duration - int(timeDiff.Seconds())
+		} else {
+			songStart = 0
+		}
+		currentSong.ID = currentSongID
+
+		resp := packet.NewPlaySongPacket(&currentSong, songStart)
+		h.Send(resp)
+	case packet.GetSongsPacket:
+		songIDs, _ := db.GetInstance().LRange("songs", 0, -1).Result()
+
+		pip := db.GetInstance().Pipeline()
+		songCmds := make([]*redis.StringStringMapCmd, len(songIDs))
+
+		for i, songID := range songIDs {
+			songCmds[i] = pip.HGetAll("song:" + songID)
+		}
+
+		pip.Exec()
+		songs := make([]*models.Song, len(songIDs))
+
+		for i, songCmd := range songCmds {
+			songRes, _ := songCmd.Result()
+			songs[i] = new(models.Song)
+			utils.Bind(songRes, songs[i])
+			songs[i].ID = songIDs[i]
+		}
+
+		resp := packet.NewSongsPacket(songs)
+		data, _ := resp.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.MessagePacket:
 		// TODO: Save timestamp
 		p.From = m.sender.character.ID
@@ -964,6 +1009,38 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		h.SendBytes("character:"+m.sender.character.ID, m.msg)
 	case packet.SongPacket:
+		// Parse song packet
+		if p.Remove {
+			pip := db.GetInstance().Pipeline()
+			pip.Del("song:"+p.ID)
+			pip.LRem("songs", 1, p.ID)
+			pip.Exec()
+			h.Send(p)
+			return
+		}
+
+		var jukeboxTimestamp time.Time
+		jukeboxQuery := "character:" + m.sender.character.ID + ":jukeboxTimestamp"
+		jukeboxKeyExists, _ := db.GetInstance().Exists(jukeboxQuery).Result()
+		if jukeboxKeyExists != 1 {
+			// User has never added a song to queue -- remind them of COC
+			jukeboxTimestamp = time.Now()
+			p.RequiresWarning = true
+		} else {
+			// User has added a song to the queue before -- no need for a warning
+			timestampString, _ := db.GetInstance().Get(jukeboxQuery).Result()
+			jukeboxTimestamp, _ = time.Parse(time.RFC3339, timestampString)
+			p.RequiresWarning = false
+		}
+
+		// 15 minutes has not yet passed since user last submitted a song
+		if jukeboxTimestamp.After(time.Now()) {
+			errorPacket := packet.NewErrorPacket(401)
+			data, _ := json.Marshal(errorPacket)
+			m.sender.send <- data
+			return
+		}
+
 		// Make the YouTube API call
 		youtubeClient, _ := youtube.New(&http.Client{
 			Transport: &transport.APIKey{Key: config.GetSecret(config.YouTubeKey)},
@@ -986,8 +1063,25 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			secIndex := strings.Index(duration, "S")
 
 			// Convert duration to seconds
-			minutes, err := strconv.Atoi(duration[2:minIndex])
-			seconds, err := strconv.Atoi(duration[minIndex+1 : secIndex])
+			var minutes int
+			var seconds int
+			var _ error
+			if minIndex != -1 {
+				minutes, _ = strconv.Atoi(duration[2:minIndex])
+				seconds, _ = strconv.Atoi(duration[minIndex+1:secIndex])
+			} else {
+				minutes = 0
+				timeIndex := strings.Index(duration, "T")
+				seconds, _ = strconv.Atoi(duration[timeIndex+1:secIndex])
+			}
+
+			// Song is too long
+			if minutes >= 6 {
+				errorPacket := packet.NewErrorPacket(400)
+				data, _ := json.Marshal(errorPacket)
+				m.sender.send <- data
+				return
+			}
 
 			// Error parsing duration string
 			if err != nil {
@@ -1001,10 +1095,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		songID := uuid.New().String()
+		p.ID = songID
+
+		jukeboxTime := time.Now().Add(time.Second * 30)
 
 		pip := db.GetInstance().Pipeline()
 		pip.HSet("song:"+songID, utils.StructToMap(p.Song))
 		pip.RPush("songs", songID)
+		pip.Set(jukeboxQuery, jukeboxTime.Format(time.RFC3339), 0)
 		pip.Exec()
 
 		if err != nil {

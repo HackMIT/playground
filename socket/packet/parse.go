@@ -65,6 +65,14 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := GetMessagesPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
+	case "get_current_song":
+		p := GetCurrentSongPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
+	case "get_songs":
+		p := GetSongsPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	case "get_sponsor":
 		p := GetSponsorPacket{}
 		json.Unmarshal(data, &p)
@@ -91,6 +99,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		return p, nil
 	case "move":
 		p := MovePacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
+	case "play_song":
+		p := PlaySongPacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
 	case "project_form":
