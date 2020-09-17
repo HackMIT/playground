@@ -18,7 +18,7 @@ type PlaySongPacket struct {
 func NewPlaySongPacket(song *models.Song, start int) *PlaySongPacket {
 	return &PlaySongPacket{
 		BasePacket: BasePacket{
-			Type: "playSong",
+			Type: "play_song",
 		},
 		Song: song,
 		Start: start,
@@ -26,7 +26,7 @@ func NewPlaySongPacket(song *models.Song, start int) *PlaySongPacket {
 }
 
 func (p *PlaySongPacket) Init(song *models.Song) *PlaySongPacket {
-	p.BasePacket = BasePacket{Type: "playSong"}
+	p.BasePacket = BasePacket{Type: "play_song"}
 	p.Song = song
 	return p
 }

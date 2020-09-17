@@ -240,8 +240,6 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 		for _, characterID := range characterIDs {
 			h.SendBytes("character:"+characterID, msg)
 		}
-	case packet.SongPacket:
-		h.SendBytes("*", msg)
 	case packet.StatusPacket:
 		res["teammateIds"] = []string{}
 		res["friendIds"] = []string{}

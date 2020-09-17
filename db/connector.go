@@ -223,7 +223,7 @@ func MonitorLeader() {
 				song.ID = songID
 				// Send song packet to ingests
 				playSongPacket := map[string]interface{}{
-					"type": "playSong",
+					"type": "play_song",
 					"song": song,
 					"start": 0,
 					"end": int(song.Duration),
