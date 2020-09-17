@@ -26,6 +26,8 @@ const (
 type Character struct {
 	ID             string  `json:"id" redis:"-"`
 	Name           string  `json:"name" redis:"name"`
+	Location       string  `json:"location" redis:"location"`
+	Bio            string  `json:"bio" redis:"bio"`
 	School         string  `json:"school" redis:"school"`
 	GradYear       int     `json:"gradYear" redis:"gradYear"`
 	X              float64 `json:"x" redis:"x"`

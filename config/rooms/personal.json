@@ -33,6 +33,14 @@
       "y": 0.9012,
       "width": 0.0907,
       "path": "shelf.svg"
+    },
+    {
+      "x": 0.4674,
+      "y": 0.3327,
+      "width": 0.1071,
+      "path": "closet_closed.svg,closet_open.svg",
+      "toggleable": true,
+      "state": 0
     }
   ],
   "hallways": []

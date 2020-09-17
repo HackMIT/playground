@@ -863,6 +863,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			pip.HSet("character:"+m.sender.character.ID, "name", p.Name)
 		}
 
+		if p.Location != "" {
+			pip.HSet("character:"+m.sender.character.ID, "location", p.Location)
+		}
+
+		if p.Bio != "" {
+			pip.HSet("character:"+m.sender.character.ID, "bio", p.Bio)
+		}
+
 		if p.PhoneNumber != "" {
 			pip.HSet("character:"+m.sender.character.ID+":settings", "phoneNumber", p.PhoneNumber)
 		}
