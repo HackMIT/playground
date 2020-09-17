@@ -839,6 +839,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		p.Project.Challenges = strings.Join(p.Challenges, ",")
 		p.Project.Emails = strings.Join(append(p.Teammates, m.sender.character.Email), ",")
+		p.Project.SubmittedAt = int(time.Now().Unix())
 		pip.HSet("project:"+projectID, utils.StructToMap(p.Project))
 
 		for _, cmd := range characterIDCmds {
