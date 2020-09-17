@@ -22,6 +22,7 @@ type JoinPacket struct {
 
 	// Server attributes
 	Character *models.Character `json:"character"`
+	ClientID  string            `json:"clientId,omitempty"`
 }
 
 func NewJoinPacket(character *models.Character) *JoinPacket {

@@ -95,7 +95,11 @@ func (h *Hub) disconnectClient(client *Client) {
 	}
 
 	delete(h.clients, client.id)
-	close(client.send)
+
+	// I'm pretty sure we want to close this but it's causing an error so I'm commenting it out for now
+	// close(client.send)
+
+	client.conn.Close()
 }
 
 // Listens for messages from websocket clients
@@ -209,6 +213,17 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 	case "chat", "dance", "move", "leave", "wardrobe_change":
 		h.SendBytes(res["room"].(string), msg)
 	case "join":
+		characterID := res["character"].(map[string]interface{})["id"].(string)
+		clientID := res["clientId"].(string)
+
+		for id, client := range h.clients {
+			if client.character.ID == characterID && id != clientID {
+				fmt.Println("disconnecting existing client for", characterID)
+				client.character = nil
+				h.disconnectClient(client)
+			}
+		}
+
 		h.SendBytes(res["character"].(map[string]interface{})["room"].(string), msg)
 	case "element_add", "element_delete", "element_update", "hallway_add", "hallway_delete", "hallway_update":
 		h.SendBytes(res["room"].(string), msg)
@@ -761,6 +776,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 			// Send the join packet to clients and Redis
 			p.Character = character
+			p.ClientID = m.sender.id
 
 			h.Send(p)
 		}
