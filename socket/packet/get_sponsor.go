@@ -14,7 +14,7 @@ type GetSponsorPacket struct {
 }
 
 func (p GetSponsorPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }
 
 func (p GetSponsorPacket) MarshalBinary() ([]byte, error) {

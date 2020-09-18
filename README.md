@@ -103,5 +103,6 @@ This project wouldn't have been possible without our supportive and energetic te
 
 - [“Done For You” sound effect](https://notificationsounds.com/notification-sounds/done-for-you-612), Notification Sounds
 - [“Beaver” 3D asset](https://poly.google.com/view/fwtA7VLrXPr), Poly by Google
+- [Original character model](http://quaternius.com), Quaternius
 - [Several icons](http://iconmonstr.com), iconmonstr
 - [Many open source frameworks](https://github.com/hackmit/playground/blob/master/go.mod)

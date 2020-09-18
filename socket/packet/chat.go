@@ -21,7 +21,7 @@ type ChatPacket struct {
 }
 
 func (p ChatPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }
 
 func (p ChatPacket) MarshalBinary() ([]byte, error) {

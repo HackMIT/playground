@@ -33,7 +33,7 @@ func NewElementUpdatePacket(room, id string, element models.Element) *ElementUpd
 }
 
 func (p ElementUpdatePacket) PermissionCheck(characterID string, role models.Role) bool {
-	return role == models.Organizer
+	return len(characterID) > 0 && role == models.Organizer
 }
 
 func (p ElementUpdatePacket) MarshalBinary() ([]byte, error) {

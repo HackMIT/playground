@@ -39,7 +39,7 @@ func NewTeleportPacket(character *models.Character, from, to string) *TeleportPa
 }
 
 func (p TeleportPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }
 
 func (p TeleportPacket) MarshalBinary() ([]byte, error) {

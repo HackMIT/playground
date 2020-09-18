@@ -7,5 +7,5 @@ type GetMapPacket struct {
 }
 
 func (p GetMapPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }

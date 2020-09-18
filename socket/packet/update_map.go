@@ -13,7 +13,7 @@ type UpdateMapPacket struct {
 }
 
 func (p UpdateMapPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }
 
 func (p UpdateMapPacket) MarshalBinary() ([]byte, error) {

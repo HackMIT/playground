@@ -22,7 +22,7 @@ func (p *EventPacket) Init(id string) *EventPacket {
 }
 
 func (p EventPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }
 
 func (p EventPacket) MarshalBinary() ([]byte, error) {

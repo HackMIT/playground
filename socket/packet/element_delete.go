@@ -19,7 +19,7 @@ type ElementDeletePacket struct {
 }
 
 func (p ElementDeletePacket) PermissionCheck(characterID string, role models.Role) bool {
-	return role == models.Organizer
+	return len(characterID) > 0 && role == models.Organizer
 }
 
 func (p ElementDeletePacket) MarshalBinary() ([]byte, error) {

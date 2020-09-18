@@ -22,7 +22,7 @@ type AddEmailPacket struct {
 }
 
 func (p AddEmailPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return role == models.Organizer
+	return len(characterID) > 0 && role == models.Organizer
 }
 
 func (p AddEmailPacket) MarshalBinary() ([]byte, error) {

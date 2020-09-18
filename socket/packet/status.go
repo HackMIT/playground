@@ -37,7 +37,7 @@ func NewStatusPacket(characterID string, online bool) *StatusPacket {
 }
 
 func (p StatusPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return true
+	return len(characterID) > 0
 }
 
 func (p StatusPacket) MarshalBinary() ([]byte, error) {
