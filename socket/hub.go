@@ -36,6 +36,7 @@ const (
 	MissingProjectForm
 	HighSchoolSponsorQueue
 	MissingSurveyResponse
+	NonMitMisti
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the clients
@@ -1027,12 +1028,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		if jukeboxKeyExists != 1 {
 			// User has never added a song to queue -- remind them of COC
 			jukeboxTimestamp = time.Now()
-			p.RequiresWarning = true
+			warningPacket := packet.NewJukeboxWarningPacket()
+			data, _ := json.Marshal(warningPacket)
+			m.sender.send <- data
 		} else {
 			// User has added a song to the queue before -- no need for a warning
 			timestampString, _ := db.GetInstance().Get(jukeboxQuery).Result()
 			jukeboxTimestamp, _ = time.Parse(time.RFC3339, timestampString)
-			p.RequiresWarning = false
 		}
 
 		// 15 minutes has not yet passed since user last submitted a song
@@ -1187,6 +1189,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		if p.To == "nightclub" && (!m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer)) {
 			errorPacket := packet.NewErrorPacket(int(HighSchoolNightClub))
+			data, _ := json.Marshal(errorPacket)
+			m.sender.send <- data
+			return
+		}
+
+		if p.To == "misti" && m.sender.character.School != "Massachusetts Institute of Technology" && m.sender.character.Role != int(models.Organizer) {
+			errorPacket := packet.NewErrorPacket(int(NonMitMisti))
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
 			return
