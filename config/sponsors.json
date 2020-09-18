@@ -2,40 +2,41 @@
   {
     "id": "arrowstreet",
     "name": "ArrowStreet",
-    "challenges": "..."
+    "challenges": "Best Panel Data Visualization"
   },
   {
     "id": "citadel",
-    "name": "Citadel",
-    "challenges": "..."
+    "name": "Citadel"
   },
   {
     "id": "cmt",
     "name": "CMT",
-    "challenges": "..."
+    "challenges": "Detecting Crashes with Smartphone Data"
   },
   {
     "id": "drw",
     "name": "DRW",
-    "challenges": "..."
+    "challenges": "Best Data Visualization Hack "
   },
   {
     "id": "facebook",
-    "name": "Facebook"
+    "name": "Facebook",
+    "challenges": "Best Hack for Building Community"
   },
   {
     "id": "goldman",
-    "name": "Goldman Sachs"
+    "name": "Goldman Sachs",
+    "challenges": "Best Use of Marquee API by Goldman Sachs"
   },
   {
     "id": "ibm",
     "name": "IBM",
-    "challenges": "..."
+    "challenges": "Best solution addressing the community response to COVID-19 (must use at least 1 IBM Service or API)<br>Green Compute Challenge"
   },
   {
     "id": "intersystems",
     "name": "Intersystems",
-    "challenges": "..."
+    "challenges": "InterSystems Technology Challenge"
   },
   {
     "id": "misti",
@@ -43,28 +44,24 @@
   },
   {
     "id": "linode",
-    "name": "Linode",
-    "challenges": "..."
+    "name": "Linode"
   },
   {
     "id": "nasdaq",
     "name": "Nasdaq",
-    "challenges": "..."
+    "challenges": "Most Creative Use of Nasdaq Quandl Datasets<br>Most creative solution (software and/or hardware) that enables two or more musicians in separate locations to virtually record a song together in one take, and have the resulting video recording have virtually no audio or video delay/lag."
   },
   {
     "id": "oca",
-    "name": "OCA Ventures",
-    "challenges": "..."
+    "name": "OCA Ventures"
   },
   {
     "id": "pega",
-    "name": "Pegasystems",
-    "challenges": "..."
+    "name": "Pegasystems"
   },
   {
     "id": "quantco",
-    "name": "QuantCo",
-    "challenges": "..."
+    "name": "QuantCo"
   },
   {
     "id": "yext",
