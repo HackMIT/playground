@@ -1110,7 +1110,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		songID := uuid.New().String()
 		p.ID = songID
 
-		jukeboxTime := time.Now().Add(time.Second * 30)
+		jukeboxTime := time.Now().Add(time.Minute * 15)
 
 		pip := db.GetInstance().Pipeline()
 		pip.HSet("song:"+songID, utils.StructToMap(p.Song))
