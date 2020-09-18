@@ -85,9 +85,10 @@ func NewTIMCharacter() *Character {
 	c.Name = "TIM the Beaver"
 	c.Bio = config.GetConfig().GetString("tim.bio")
 	c.School = "MIT"
+	c.Location = "Cambridge, MA"
 	c.GradYear = 9999
 	c.X = 0.5
-	c.Y = 0.5
+	c.Y = 0.75
 	c.Room = "home"
 	c.Role = int(Organizer)
 	return c
