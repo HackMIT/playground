@@ -1028,12 +1028,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		if jukeboxKeyExists != 1 {
 			// User has never added a song to queue -- remind them of COC
 			jukeboxTimestamp = time.Now()
-			p.RequiresWarning = true
+			warningPacket := packet.NewJukeboxWarningPacket()
+			data, _ := json.Marshal(warningPacket)
+			m.sender.send <- data
 		} else {
 			// User has added a song to the queue before -- no need for a warning
 			timestampString, _ := db.GetInstance().Get(jukeboxQuery).Result()
 			jukeboxTimestamp, _ = time.Parse(time.RFC3339, timestampString)
-			p.RequiresWarning = false
 		}
 
 		// 15 minutes has not yet passed since user last submitted a song
