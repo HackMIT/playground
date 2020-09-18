@@ -1362,7 +1362,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		if p.SetQueueOpen {
-			pip.HSet("sponsor:"+m.sender.character.SponsorID, "queueClosed", p.QueueOpen)
+			pip.HSet("sponsor:"+m.sender.character.SponsorID, "queueOpen", p.QueueOpen)
 		}
 
 		pip.Exec()
