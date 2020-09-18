@@ -1,6 +1,7 @@
 {
   "background": "personal_room.svg",
   "sponsor": false,
+  "corners": "0.8032,0.6844;0.4991,0.9980;0.1939,0.6864;0.4991,0.3748",
   "elements": [
     {
       "x": 0.341,
