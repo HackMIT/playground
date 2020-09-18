@@ -6,8 +6,7 @@
   },
   {
     "id": "citadel",
-    "name": "Citadel",
-    "challenges": "..."
+    "name": "Citadel"
   },
   {
     "id": "cmt",
@@ -45,8 +44,7 @@
   },
   {
     "id": "linode",
-    "name": "Linode",
-    "challenges": "..."
+    "name": "Linode"
   },
   {
     "id": "nasdaq",
@@ -55,18 +53,15 @@
   },
   {
     "id": "oca",
-    "name": "OCA Ventures",
-    "challenges": "..."
+    "name": "OCA Ventures"
   },
   {
     "id": "pega",
-    "name": "Pegasystems",
-    "challenges": "..."
+    "name": "Pegasystems"
   },
   {
     "id": "quantco",
-    "name": "QuantCo",
-    "challenges": "..."
+    "name": "QuantCo"
   },
   {
     "id": "yext",
