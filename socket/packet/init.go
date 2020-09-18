@@ -244,8 +244,7 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 			"id": characterID,
 		})
 
-		config := config.GetConfig()
-		tokenString, _ := token.SignedString([]byte(config.GetString("jwt.secret")))
+		tokenString, _ := token.SignedString([]byte(config.GetSecret("JWT_SECRET")))
 		p.Token = tokenString
 	}
 
