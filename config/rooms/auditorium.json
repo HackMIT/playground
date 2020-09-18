@@ -2,17 +2,33 @@
   "background": "auditorium.svg",
   "elements": [
     {
-      "x": 0.5,
-      "y": 0.6,
-      "width": 0.6,
+      "x": 0.4909,
+      "y": 0.5996,
+      "width": 0.5769,
       "path": "auditorium_chairs.svg"
     },
     {
-      "x": 0.1868,
-      "y": 0.6919,
-      "width": 0.029,
+      "x": 0.5246,
+      "y": 0.2113,
+      "width": 0.0324,
       "path": "trash_recycling_flipped.svg"
+    },
+    {
+      "x": 0.608,
+      "y": 0.2101,
+      "width": 0.0976,
+      "path": "auditorium_whiteboard.svg",
+      "action": 6
     }
   ],
-  "hallways": []
+  "hallways": [
+    {
+      "x": 0.8214,
+      "y": 0.5172,
+      "radius": 0.0826,
+      "to": "plaza",
+      "toX": 0.8869,
+      "toY": 0.4579
+    }
+  ]
 }

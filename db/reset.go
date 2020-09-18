@@ -246,7 +246,7 @@ func createEvents() {
 
 func reset() {
 	instance.FlushDB()
-	CreateRoom("home", Auditorium)
+	CreateRoom("home", Home)
 	CreateRoom("nightclub", Nightclub)
 	CreateRoom("nonprofits", Nonprofits)
 	CreateRoom("plat_area", PlatArea)
@@ -376,6 +376,8 @@ func reset() {
 	createEvents()
 	createSponsors()
 
-	instance.SAdd("sponsor_emails", config.GetSecret("EMAIL"))
-	instance.HSet("emailToSponsor", config.GetSecret("EMAIL"), "cmt")
+	if len(config.GetSecret("EMAIL")) > 0 {
+		instance.SAdd("sponsor_emails", config.GetSecret("EMAIL"))
+		instance.HSet("emailToSponsor", config.GetSecret("EMAIL"), "cmt")
+	}
 }
