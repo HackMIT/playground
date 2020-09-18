@@ -89,6 +89,10 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := HallwayUpdatePacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
+	case "jukebox_warning":
+		p := JukeboxWarningPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	case "leave":
 		p := LeavePacket{}
 		json.Unmarshal(data, &p)
