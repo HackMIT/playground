@@ -76,7 +76,7 @@ This project wouldn't have been possible without our supportive and energetic te
 
 - [Jack Cook](https://jackcook.com) (_HackMIT co-director, project lead_)
 - [Julia Gonik](https://linkedin.com/in/julia-gonik-44813917a) (_Jukebox, workshop attendance_)
-- [Natalie Huang](https://linkedin.com/in/natalie-huang-09bba6178) (_A billion tiny last-minute fixes and improvements_)
+- [Natalie Huang](https://linkedin.com/in/natalie-huang-09bba6178) (_A billion last-minute fixes and improvements_)
 - [Jianna Liu](https://linkedin.com/in/jianna-liu-90747413b) (_Character profiles_)
 - [Kat Liu](https://linkedin.com/in/kaxili) (_Settings, Twitter integration_)
 - [Mindy Long](https://mlong93.github.io) (_Chat, account creation, world map_)

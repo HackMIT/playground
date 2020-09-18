@@ -1349,6 +1349,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		pip.Exec()
+
+		// Send new sponsor packet
+		sponsorPacket := packet.NewSponsorPacket(m.sender.character.SponsorID)
+		data, _ := sponsorPacket.MarshalBinary()
+		h.SendBytes("character:"+m.sender.character.ID, data)
 	case packet.WardrobeChangePacket:
 		p.CharacterID = m.sender.character.ID
 		p.Room = m.sender.character.Room
