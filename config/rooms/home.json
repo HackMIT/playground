@@ -3,15 +3,81 @@
   "sponsor": false,
   "elements": [
     {
-      "x": 0.3076,
-      "y": 0.2648,
-      "width": 0.3222,
+      "x": 0.5032,
+      "y": 0.2671,
+      "width": 0.0297,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.4444,
+      "y": 0.2136,
+      "width": 0.0297,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.5528,
+      "y": 0.217,
+      "width": 0.0297,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.6093,
+      "y": 0.16,
+      "width": 0.0297,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.6639,
+      "y": 0.0974,
+      "width": 0.0297,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.3898,
+      "y": 0.1475,
+      "width": 0.0297,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.3265,
+      "y": 0.0917,
+      "width": 0.0297,
+      "path": "tree2.svg"
+    },
+    {
+      "x": 0.236,
+      "y": 0.3089,
+      "width": 0.3664,
       "path": "hacker_arena.svg"
     },
     {
-      "x": 0.6895,
-      "y": 0.2531,
-      "width": 0.3306,
+      "x": 0.05,
+      "y": 0.455,
+      "width": 0.0302,
+      "path": "tree_smol.svg"
+    },
+    {
+      "x": 0.0704,
+      "y": 0.4744,
+      "width": 0.0302,
+      "path": "tree_smol.svg"
+    },
+    {
+      "x": 0.0909,
+      "y": 0.496,
+      "width": 0.0302,
+      "path": "tree_smol.svg"
+    },
+    {
+      "x": 0.11,
+      "y": 0.5177,
+      "width": 0.0302,
+      "path": "tree_smol.svg"
+    },
+    {
+      "x": 0.7776,
+      "y": 0.302,
+      "width": 0.3735,
       "path": "shopping_mall.svg"
     },
     {
@@ -27,8 +93,8 @@
       "path": "sponsor_town_sign.svg"
     },
     {
-      "x": 0.3186,
-      "y": 0.5398,
+      "x": 0.1738,
+      "y": 0.6947,
       "width": 0.0436,
       "path": "billboard.svg"
     },
@@ -39,54 +105,66 @@
       "fountain": true
     },
     {
-      "x": 0.5532,
-      "y": 0.6467,
+      "x": 0.5366,
+      "y": 0.6171,
       "width": 0.0436,
       "path": "bench.svg"
     },
     {
-      "x": 0.4493,
-      "y": 0.6457,
+      "x": 0.4666,
+      "y": 0.6252,
       "width": 0.0436,
       "path": "bench_flipped.svg"
+    },
+    {
+      "x": 0.8621,
+      "y": 0.5622,
+      "width": 0.0433,
+      "path": "bike_rack_flipped.svg"
+    },
+    {
+      "x": 0.8386,
+      "y": 0.7102,
+      "width": 0.0302,
+      "path": "recycling_bin.svg"
     }
   ],
   "hallways": [
     {
-      "x": 0.8272,
-      "y": 0.4319,
-      "radius": 0.0341,
+      "x": 0.9282,
+      "y": 0.4919,
+      "radius": 0.0482,
       "to": "nightclub",
       "toX": 0.75,
       "toY": 0.6938
     },
     {
-      "x": 0.9318,
-      "y": 0.8677,
-      "radius": 0.089,
+      "x": 0.9214,
+      "y": 0.9018,
+      "radius": 0.1294,
       "to": "nonprofits",
       "toX": 0.0194,
       "toY": 0.5099
     },
     {
-      "x": 0.0764,
-      "y": 0.8596,
-      "radius": 0.0944,
+      "x": 0.051,
+      "y": 0.9313,
+      "radius": 0.15,
       "to": "plat_area",
       "toX": 0.5,
       "toY": 0.03
     },
     {
-      "x": 0.3733,
-      "y": 0.4181,
+      "x": 0.3111,
+      "y": 0.4728,
       "radius": 0.0804,
       "to": "arena:education",
       "toX": 0.2572,
       "toY": 0.8132
     },
     {
-      "x": 0.5534,
-      "y": 0.4049,
+      "x": 0.619,
+      "y": 0.4755,
       "radius": 0.0706,
       "to": "mall",
       "toX": 0.7449,

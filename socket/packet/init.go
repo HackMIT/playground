@@ -146,6 +146,7 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 		room.Characters[characterIDs[i]] = new(models.Character)
 		utils.Bind(characterRes, room.Characters[characterIDs[i]])
 		room.Characters[characterIDs[i]].ID = characterIDs[i]
+		room.Characters[characterIDs[i]].Email = ""
 	}
 
 	for i, elementCmd := range elementCmds {
