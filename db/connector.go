@@ -267,12 +267,12 @@ func MonitorLeader() {
 
 				hallwayOptions := make([]string, 0)
 
-				for _, cmd := range hallwayCmds {
+				for j, cmd := range hallwayCmds {
 					roomID, _ := cmd.Result()
 
 					for _, allowedRoomID := range config.GetConfig().GetStringSlice("tim.allowed_rooms") {
 						if roomID == allowedRoomID {
-							hallwayOptions = append(hallwayOptions, roomID)
+							hallwayOptions = append(hallwayOptions, hallwaysRes[j])
 							break
 						}
 					}

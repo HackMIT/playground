@@ -289,6 +289,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		return
 	}
 
+	logID := uuid.New().String()
+	logRecord := models.NewLog(characterID, string(m.msg))
+	pip := db.GetInstance().Pipeline()
+	pip.HSet("log:"+logID, utils.StructToMap(logRecord))
+	pip.RPush("logs", logID)
+	pip.Exec()
+
 	switch p := p.(type) {
 	case packet.AddEmailPacket:
 		var emailsKey string
@@ -1341,6 +1348,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			// Send the hacker a text message letting them know it's their turn
 			phoneNumber, _ := phoneCmd.Result()
 			sponsorName, _ := sponsorNameCmd.Result()
+
+			if len(phoneNumber) == 0 || len(sponsorName) == 0 {
+				return
+			}
 
 			reg, _ := regexp.Compile("[^0-9]+")
 			phoneNumber = "+1" + reg.ReplaceAllString(phoneNumber, "")
