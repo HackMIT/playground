@@ -582,13 +582,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		pip := db.GetInstance().Pipeline()
 
-		if p.Name != "" {
-			character = models.NewCharacter(p.Name)
-
-			// Add character to database
-			character.Ingest = db.GetIngestID()
-			db.GetInstance().HSet("character:"+character.ID, utils.StructToMap(character))
-		} else if p.QuillToken != "" {
+		if p.QuillToken != "" {
 			// Fetch data from Quill
 			quillValues := map[string]string{
 				"token": p.QuillToken,

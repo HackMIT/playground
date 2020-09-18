@@ -203,15 +203,15 @@ func createSponsors() {
 		return
 	}
 
-	var sponsorsData []map[string]string
+	var sponsorsData []map[string]interface{}
 	json.Unmarshal(dat, &sponsorsData)
 
 	for _, sponsor := range sponsorsData {
-		instance.HSet("sponsor:"+sponsor["id"], map[string]interface{}{
-			"name": sponsor["name"],
-		})
+		sponsorID := sponsor["id"].(string)
+		delete(sponsor, "id")
 
-		instance.SAdd("sponsors", sponsor["id"])
+		instance.HSet("sponsor:"+sponsorID, sponsor)
+		instance.SAdd("sponsors", sponsorID)
 	}
 }
 
