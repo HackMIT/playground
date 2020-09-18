@@ -377,7 +377,6 @@ func reset() {
 	createSponsors()
 
 	if len(config.GetSecret("EMAIL")) > 0 {
-		instance.SAdd("sponsor_emails", config.GetSecret("EMAIL"))
-		instance.HSet("emailToSponsor", config.GetSecret("EMAIL"), "cmt")
+		instance.SAdd("organizer_emails", config.GetSecret("EMAIL"))
 	}
 }

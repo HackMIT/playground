@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SherClockHolmes/webpush-go"
 	"github.com/techx/playground/config"
 	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
@@ -704,9 +703,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 					sponsorID, _ := sponsorIDCmd.Result()
 					character.SponsorID = sponsorID
-
-					sponsorName, _ := db.GetInstance().HGet("sponsor:"+sponsorID, "name").Result()
-					character.Name += " (" + sponsorName + ")"
 				} else if isMentor {
 					character.Role = int(models.Mentor)
 				} else if isOrganizer {
@@ -928,6 +924,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip := db.GetInstance().Pipeline()
 
 		if p.Name != "" {
+			if m.sender.character.Role == int(models.Organizer) {
+				p.Name += " (HackMIT)"
+			} else if m.sender.character.Role == int(models.SponsorRep) {
+				sponsorName, _ := db.GetInstance().HGet("sponsor:"+m.sender.character.SponsorID, "name").Result()
+				p.Name += " (" + sponsorName + ")"
+			}
+
 			pip.HSet("character:"+m.sender.character.ID, "name", p.Name)
 		}
 
@@ -941,22 +944,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		if p.PhoneNumber != "" {
 			pip.HSet("character:"+m.sender.character.ID+":settings", "phoneNumber", p.PhoneNumber)
-		}
-
-		if p.BrowserSubscription != nil {
-			resp, err := webpush.SendNotification([]byte("Test"), p.BrowserSubscription, &webpush.Options{
-				Subscriber:      "jbcook418@gmail.com",
-				VAPIDPublicKey:  config.GetConfig().GetString("webpush.public_key"),
-				VAPIDPrivateKey: config.GetConfig().GetString("webpush.private_key"),
-				TTL:             30,
-			})
-
-			if err != nil {
-				fmt.Println("Error sending browser notification:")
-				fmt.Println(err)
-			}
-
-			defer resp.Body.Close()
 		}
 
 		roomCmd := pip.HGet("character:"+m.sender.character.ID, "room")
