@@ -232,13 +232,13 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 
 		h.SendBytes(p.Character.Room, msg)
 	case packet.QueueUpdateHackerPacket, packet.QueueUpdateSponsorPacket:
-		characterIDs := res["characterIds"].([]string)
+		characterIDs := res["characterIds"].([]interface{})
 
-		res["characterIds"] = []string{}
+		res["characterIds"] = []interface{}{}
 		msg, _ = json.Marshal(res)
 
 		for _, characterID := range characterIDs {
-			h.SendBytes("character:"+characterID, msg)
+			h.SendBytes("character:"+characterID.(string), msg)
 		}
 	case packet.StatusPacket:
 		res["teammateIds"] = []string{}
