@@ -1,19 +1,23 @@
 [
   {
     "id": "arrowstreet",
-    "name": "ArrowStreet"
+    "name": "ArrowStreet",
+    "challenges": "..."
   },
   {
     "id": "citadel",
-    "name": "Citadel"
+    "name": "Citadel",
+    "challenges": "..."
   },
   {
     "id": "cmt",
-    "name": "CMT"
+    "name": "CMT",
+    "challenges": "..."
   },
   {
     "id": "drw",
-    "name": "DRW"
+    "name": "DRW",
+    "challenges": "..."
   },
   {
     "id": "facebook",
@@ -25,11 +29,13 @@
   },
   {
     "id": "ibm",
-    "name": "IBM"
+    "name": "IBM",
+    "challenges": "..."
   },
   {
     "id": "intersystems",
-    "name": "Intersystems"
+    "name": "Intersystems",
+    "challenges": "..."
   },
   {
     "id": "misti",
@@ -37,23 +43,28 @@
   },
   {
     "id": "linode",
-    "name": "Linode"
+    "name": "Linode",
+    "challenges": "..."
   },
   {
     "id": "nasdaq",
-    "name": "Nasdaq"
+    "name": "Nasdaq",
+    "challenges": "..."
   },
   {
     "id": "oca",
-    "name": "OCA Ventures"
+    "name": "OCA Ventures",
+    "challenges": "..."
   },
   {
     "id": "pega",
-    "name": "Pegasystems"
+    "name": "Pegasystems",
+    "challenges": "..."
   },
   {
     "id": "quantco",
-    "name": "QuantCo"
+    "name": "QuantCo",
+    "challenges": "..."
   },
   {
     "id": "yext",
