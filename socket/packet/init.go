@@ -112,15 +112,21 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 	requestIDs, _ := requestsCmd.Result()
 
 	teammateCmds := make([]*redis.StringStringMapCmd, len(teammateIDs))
+	teammateStatusCmds := make([]*redis.StringCmd, len(teammateIDs))
+
 	friendCmds := make([]*redis.StringStringMapCmd, len(friendIDs))
+	friendStatusCmds := make([]*redis.StringCmd, len(friendIDs))
+
 	requestCmds := make([]*redis.StringStringMapCmd, len(requestIDs))
 
 	for i, id := range teammateIDs {
 		teammateCmds[i] = pip.HGetAll("character:" + id)
+		teammateStatusCmds[i] = pip.Get("character:" + id + ":active")
 	}
 
 	for i, id := range friendIDs {
 		friendCmds[i] = pip.HGetAll("character:" + id)
+		friendStatusCmds[i] = pip.Get("character:" + id + ":active")
 	}
 
 	for i, id := range requestIDs {
@@ -186,11 +192,18 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 		res := new(models.Character)
 		utils.Bind(data, res)
 
+		active, _ := teammateStatusCmds[j].Result()
+		status := 2
+
+		if active == "true" {
+			status = 0
+		}
+
 		p.Friends[i] = Friend{
 			ID:       teammateIDs[j],
 			Name:     res.Name,
 			School:   res.School,
-			Status:   0,
+			Status:   status,
 			Teammate: true,
 			LastSeen: time.Now(),
 		}
@@ -203,11 +216,18 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 		res := new(models.Character)
 		utils.Bind(data, res)
 
+		active, _ := friendStatusCmds[j].Result()
+		status := 2
+
+		if active == "true" {
+			status = 0
+		}
+
 		p.Friends[i] = Friend{
 			ID:       friendIDs[j],
 			Name:     res.Name,
 			School:   res.School,
-			Status:   0,
+			Status:   status,
 			LastSeen: time.Now(),
 		}
 
@@ -223,7 +243,7 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 			ID:       requestIDs[j],
 			Name:     res.Name,
 			School:   res.School,
-			Status:   0,
+			Status:   2,
 			Pending:  true,
 			LastSeen: time.Now(),
 		}
