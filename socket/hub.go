@@ -1344,6 +1344,10 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			pip.HSet("sponsor:"+m.sender.character.SponsorID, "url", p.Sponsor.URL)
 		}
 
+		if p.SetQueueOpen {
+			pip.HSet("sponsor:"+m.sender.character.SponsorID, "queueClosed", p.QueueOpen)
+		}
+
 		pip.Exec()
 	case packet.WardrobeChangePacket:
 		p.CharacterID = m.sender.character.ID

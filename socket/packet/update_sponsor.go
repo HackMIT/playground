@@ -10,6 +10,8 @@ type UpdateSponsorPacket struct {
 	BasePacket
 	Packet
 	*models.Sponsor
+
+	SetQueueOpen bool `json:"setQueueOpen"`
 }
 
 func (p UpdateSponsorPacket) PermissionCheck(characterID string, role models.Role) bool {
