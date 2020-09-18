@@ -75,6 +75,10 @@ func createRoomWithData(id string, roomType RoomType, data map[string]interface{
 	json.Unmarshal(dat, &roomData)
 	data["background"] = roomData["background"]
 
+	if val, ok := roomData["corners"]; ok {
+		data["corners"] = val
+	}
+
 	if sponsorID, ok := data["id"].(string); ok {
 		data["background"] = strings.ReplaceAll(data["background"].(string), "<id>", sponsorID)
 

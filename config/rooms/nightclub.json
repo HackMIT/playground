@@ -1,6 +1,7 @@
 {
   "background": "nightclub.svg",
   "sponsor": false,
+  "corners": "0.8152,0.7418;0.5701,0.9961;0.1839,0.6036;0.4325,0.3531",
   "elements": [
     {
       "x": 0.5121,

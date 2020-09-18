@@ -10,6 +10,7 @@ type Room struct {
 	Hallways   map[string]*Hallway   `json:"hallways" redis:"-"`
 
 	Background string `json:"background" redis:"background"`
+	Corners    string `json:"corners" redis:"corners"`
 	ID         string `json:"id" redis:"id"`
 	SponsorID  string `json:"sponsorId" redis:"sponsorId"`
 
