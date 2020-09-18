@@ -9,7 +9,7 @@ import (
 // Sent by clients when they move around
 type MovePacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The id of the client who is moving
 	ID string `json:"id"`

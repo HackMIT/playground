@@ -8,7 +8,7 @@ import (
 
 type ChatPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The message being sent
 	Message string `json:"mssg"`

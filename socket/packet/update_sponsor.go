@@ -8,7 +8,7 @@ import (
 
 type UpdateSponsorPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 	*models.Sponsor
 
 	SetQueueOpen bool `json:"setQueueOpen"`

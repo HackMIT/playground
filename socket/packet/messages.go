@@ -8,7 +8,7 @@ import (
 
 type MessagesPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	Messages  []*models.Message `json:"messages"`
 	Recipient string            `json:"recipient"`

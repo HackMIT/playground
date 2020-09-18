@@ -9,7 +9,7 @@ import (
 // Sent by ingests when a client disconnects
 type LeavePacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The character who is leaving
 	Character *models.Character `json:"character"`

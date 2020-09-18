@@ -8,7 +8,7 @@ import (
 
 type WardrobeChangePacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	CharacterID string `json:"characterId"`
 	Room        string `json:"room"`

@@ -9,7 +9,7 @@ import (
 // Sent by clients when they're deleting a hallway
 type HallwayDeletePacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The room being updated
 	Room string `json:"room"`

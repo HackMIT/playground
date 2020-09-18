@@ -17,7 +17,7 @@ import (
 // world that they load into
 type InitPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	Character *models.Character `json:"character"`
 

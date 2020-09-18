@@ -8,7 +8,7 @@ import (
 
 type GetSponsorPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	SponsorID string `json:"id"`
 }

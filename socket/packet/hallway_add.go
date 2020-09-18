@@ -9,7 +9,7 @@ import (
 // Sent by clients when adding a hallway
 type HallwayAddPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The room being updated
 	Room string `json:"room"`

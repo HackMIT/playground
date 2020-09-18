@@ -9,7 +9,7 @@ import (
 // Sent when a user confirms attendance for an event
 type EventPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// ID of this event
 	ID string `json:"id"`

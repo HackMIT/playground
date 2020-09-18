@@ -9,7 +9,7 @@ import (
 // Sent by clients when they're adding an element
 type RoomAddPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The name of the new room
 	ID string `json:"id"`

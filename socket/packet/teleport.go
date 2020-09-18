@@ -9,7 +9,7 @@ import (
 // Sent by ingests when a client changes rooms
 type TeleportPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The charcater who is teleporting
 	Character *models.Character `json:"character"`

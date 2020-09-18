@@ -8,7 +8,7 @@ import (
 
 type UpdateMapPacket struct {
 	BasePacket
-	Packet
+	Packet           `json:",omitempty"`
 	*models.Location `json:"location"`
 }
 

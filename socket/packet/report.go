@@ -8,7 +8,7 @@ import (
 
 type ReportPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	CharacterID string `json:"characterId"`
 	Text        string `json:"text"`

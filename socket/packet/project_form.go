@@ -8,7 +8,7 @@ import (
 
 type ProjectFormPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	Challenges []string `json:"challenges"`
 	Teammates  []string `json:"teammates"`

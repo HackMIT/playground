@@ -9,7 +9,7 @@ import (
 // Sent by clients when they're updating the room
 type ElementUpdatePacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The room being updated
 	Room string `json:"room"`

@@ -9,7 +9,7 @@ import (
 // Sent by clients when they need to add a valid email to our system
 type AddEmailPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The email address to check and send the code to
 	Email string `json:"email"`

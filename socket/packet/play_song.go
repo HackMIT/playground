@@ -9,10 +9,10 @@ import (
 // Sent by ingests when a song is added to queue
 type PlaySongPacket struct {
 	BasePacket
-	Packet
-	Song *models.Song `json:"song"`
-	Start int `json:"start"`
-	End int `json:"end"`
+	Packet `json:",omitempty"`
+	Song   *models.Song `json:"song"`
+	Start  int          `json:"start"`
+	End    int          `json:"end"`
 }
 
 func NewPlaySongPacket(song *models.Song, start int) *PlaySongPacket {
@@ -20,7 +20,7 @@ func NewPlaySongPacket(song *models.Song, start int) *PlaySongPacket {
 		BasePacket: BasePacket{
 			Type: "play_song",
 		},
-		Song: song,
+		Song:  song,
 		Start: start,
 	}
 }

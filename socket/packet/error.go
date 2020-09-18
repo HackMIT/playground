@@ -6,7 +6,7 @@ import (
 
 type ErrorPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	Code int `json:"code"`
 }

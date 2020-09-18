@@ -9,7 +9,7 @@ import (
 // Sent by clients when they're deleting an element
 type ElementDeletePacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The room being updated
 	Room string `json:"room"`

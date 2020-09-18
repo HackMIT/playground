@@ -9,7 +9,7 @@ import (
 // Sent by clients when settings are changed
 type SettingsPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The client's new settings
 	Settings *models.Settings `json:"settings"`

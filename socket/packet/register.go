@@ -9,7 +9,7 @@ import (
 
 type RegisterPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	Name                string                `json:"name"`
 	Location            string                `json:"location"`

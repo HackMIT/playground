@@ -9,7 +9,7 @@ import (
 // Sent by clients when the window gains or loses focus
 type StatusPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// True if the user is online and has the tab open -- false if the window doesn't have focus
 	Active bool `json:"active"`

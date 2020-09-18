@@ -10,7 +10,7 @@ import (
 
 type SponsorPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	Sponsor *models.Sponsor `json:"sponsor"`
 }

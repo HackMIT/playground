@@ -9,7 +9,7 @@ import (
 // Sent by clients when they're deleting an element
 type ElementTogglePacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The ID of the element being toggled
 	ID string `json:"id"`

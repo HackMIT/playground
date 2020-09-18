@@ -8,7 +8,7 @@ import (
 
 type GetAchievementsPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	ID string `json:"id"`
 }

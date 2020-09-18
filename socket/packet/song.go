@@ -9,10 +9,10 @@ import (
 // Sent by ingests when a song is added to queue
 type SongPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 	*models.Song
 	RequiresWarning bool `json:"requiresWarning"`
-	Remove bool `json:"remove"`
+	Remove          bool `json:"remove"`
 }
 
 func (p *SongPacket) Init(song *models.Song) *SongPacket {

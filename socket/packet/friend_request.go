@@ -8,7 +8,7 @@ import (
 
 type FriendRequestPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	SenderID    string `json:"senderId"`
 	RecipientID string `json:"recipientId"`

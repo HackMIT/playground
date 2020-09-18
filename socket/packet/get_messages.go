@@ -8,7 +8,7 @@ import (
 
 type GetMessagesPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	Recipient string `json:"recipient"`
 }

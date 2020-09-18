@@ -10,7 +10,7 @@ import (
 
 type AchievementsPacket struct {
 	BasePacket
-	Packet
+	Packet              `json:",omitempty"`
 	models.Achievements `json:"achievements"`
 
 	// The id of the client who we're getting achievements for

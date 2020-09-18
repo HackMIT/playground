@@ -10,7 +10,7 @@ import (
 // server, and in turn other clients
 type JoinPacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// Client attributes
 	Name       string `json:"name,omitempty"`

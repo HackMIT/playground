@@ -9,7 +9,7 @@ import (
 // Sent by clients when they dance
 type DancePacket struct {
 	BasePacket
-	Packet
+	Packet `json:",omitempty"`
 
 	// The id of the client who is dancing
 	ID string `json:"id"`
