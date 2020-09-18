@@ -58,6 +58,12 @@
       "y": 0.7136,
       "width": 0.059,
       "path": "table.svg"
+    },
+    {
+      "x": 0.4661,
+      "y": 0.3031,
+      "width": 0.0136,
+      "path": "stripper_pole.svg"
     }
   ],
   "hallways": [
