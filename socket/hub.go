@@ -36,6 +36,7 @@ const (
 	MissingProjectForm
 	HighSchoolSponsorQueue
 	MissingSurveyResponse
+	NonMitMisti
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the clients
@@ -1187,6 +1188,13 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		if p.To == "nightclub" && (!m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer)) {
 			errorPacket := packet.NewErrorPacket(int(HighSchoolNightClub))
+			data, _ := json.Marshal(errorPacket)
+			m.sender.send <- data
+			return
+		}
+
+		if p.To == "misti" && m.sender.character.School != "Massachusetts Institute of Technology" && m.sender.character.Role != int(models.Organizer) {
+			errorPacket := packet.NewErrorPacket(int(NonMitMisti))
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
 			return
