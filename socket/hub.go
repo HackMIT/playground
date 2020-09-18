@@ -633,8 +633,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 				}
 
-				config := config.GetConfig()
-				return []byte(config.GetString("jwt.secret")), nil
+				return []byte(config.GetSecret("JWT_SECRET")), nil
 			})
 
 			if err != nil {
@@ -1012,7 +1011,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Parse song packet
 		if p.Remove {
 			pip := db.GetInstance().Pipeline()
-			pip.Del("song:"+p.ID)
+			pip.Del("song:" + p.ID)
 			pip.LRem("songs", 1, p.ID)
 			pip.Exec()
 			h.Send(p)
@@ -1068,11 +1067,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			var _ error
 			if minIndex != -1 {
 				minutes, _ = strconv.Atoi(duration[2:minIndex])
-				seconds, _ = strconv.Atoi(duration[minIndex+1:secIndex])
+				seconds, _ = strconv.Atoi(duration[minIndex+1 : secIndex])
 			} else {
 				minutes = 0
 				timeIndex := strings.Index(duration, "T")
-				seconds, _ = strconv.Atoi(duration[timeIndex+1:secIndex])
+				seconds, _ = strconv.Atoi(duration[timeIndex+1 : secIndex])
 			}
 
 			// Song is too long

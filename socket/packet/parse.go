@@ -125,6 +125,14 @@ func ParsePacket(data []byte) (Packet, error) {
 		p := QueueUnsubscribePacket{}
 		json.Unmarshal(data, &p)
 		return p, nil
+	case "queue_update_hacker":
+		p := QueueUpdateHackerPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
+	case "queue_update_sponsor":
+		p := QueueUpdateSponsorPacket{}
+		json.Unmarshal(data, &p)
+		return p, nil
 	case "register":
 		p := RegisterPacket{}
 		json.Unmarshal(data, &p)
