@@ -61,6 +61,9 @@ const (
 
 	// MISTI is the room for MISTI, accessible from the plaza
 	MISTI = "misti"
+
+	// Auditorium is the room for the stadium, accessible from the plaza
+	Auditorium = "auditorium"
 )
 
 // CreateRoom builds a room with the given ID from a template file
@@ -243,7 +246,7 @@ func createEvents() {
 
 func reset() {
 	instance.FlushDB()
-	CreateRoom("home", Home)
+	CreateRoom("home", Auditorium)
 	CreateRoom("nightclub", Nightclub)
 	CreateRoom("nonprofits", Nonprofits)
 	CreateRoom("plat_area", PlatArea)
@@ -252,7 +255,7 @@ func reset() {
 	CreateRoom("plaza", Plaza)
 	CreateRoom("coffee_shop", CoffeeShop)
 	CreateRoom("mall", Mall)
-	CreateRoom("misti", MISTI)
+	CreateRoom("auditorium", Auditorium)
 
 	createRoomWithData("arena:connectivity", Arena, map[string]interface{}{
 		"id": "connectivity",
@@ -364,6 +367,10 @@ func reset() {
 		"to":  "right_field",
 		"toX": 0.9593,
 		"toY": 0.4656,
+	})
+
+	createRoomWithData("sponsor:misti", MISTI, map[string]interface{}{
+		"id": "misti",
 	})
 
 	createEvents()

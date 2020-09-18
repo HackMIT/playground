@@ -293,7 +293,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		switch models.Role(p.Role) {
 		case models.SponsorRep:
 			emailsKey = "sponsor_emails"
-			db.GetInstance().HSet("emailToSponsor", p.Email, p.SponsorID)
+			db.GetInstance().HSet("emailToSponsor", strings.ToLower(p.Email), p.SponsorID)
 		case models.Mentor:
 			emailsKey = "mentor_emails"
 		case models.Organizer:
@@ -360,6 +360,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		// Publish event to other ingest servers
 		h.Send(p)
 	case packet.EmailCodePacket:
+		p.Email = strings.ToLower(p.Email)
+
 		isValidEmail := false
 		name := "mentor"
 		// Make sure this email exists in our database

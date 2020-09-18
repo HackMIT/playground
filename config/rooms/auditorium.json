@@ -1,0 +1,18 @@
+{
+  "background": "auditorium.svg",
+  "elements": [
+    {
+      "x": 0.5,
+      "y": 0.6,
+      "width": 0.6,
+      "path": "auditorium_chairs.svg"
+    },
+    {
+      "x": 0.1868,
+      "y": 0.6919,
+      "width": 0.029,
+      "path": "trash_recycling_flipped.svg"
+    }
+  ],
+  "hallways": []
+}
