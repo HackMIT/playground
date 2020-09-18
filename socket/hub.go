@@ -1191,12 +1191,15 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		projectID, _ := db.GetInstance().Get("character" + m.sender.character.ID + ":project").Result()
-		projectTimeString, _ := db.GetInstance().HGet("project:" + projectID, "submittedAt").Result()
+		projectTimeString, _ := db.GetInstance().HGet("project:"+projectID, "submittedAt").Result()
 		projectTimeInt, _ := strconv.ParseInt(projectTimeString, 10, 64)
 		projectTime := time.Unix(projectTimeInt, 0)
 		timeZone, _ := time.LoadLocation("America/New_York")
+
 		deadline := time.Date(2020, 9, 19, 4, 0, 0, 0, timeZone)
-		if strings.HasPrefix(p.To, "arena:") && m.sender.character.Role != int(models.Organizer) && projectTime.Before(deadline) {
+		oneHourBeforePeerExpo := time.Date(2020, 9, 19, 17, 0, 0, 0, timeZone)
+
+		if strings.HasPrefix(p.To, "arena:") && m.sender.character.Role == int(models.Hacker) && oneHourBeforePeerExpo.Before(time.Now()) && projectTime.Before(deadline) {
 			errorPacket := packet.NewErrorPacket(int(MissingSurveyResponse))
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
