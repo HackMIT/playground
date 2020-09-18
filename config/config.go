@@ -11,8 +11,9 @@ import (
 type Secret string
 
 const (
-	TwilioKey  Secret = "TWILIO_API_KEY"
-	YouTubeKey        = "YOUTUBE_API_KEY"
+	TwilioAccountSID Secret = "TWILIO_ACCOUNT_SID"
+	TwilioAuthToken         = "TWILIO_AUTH_TOKEN"
+	YouTubeKey              = "YOUTUBE_API_KEY"
 )
 
 var config *viper.Viper

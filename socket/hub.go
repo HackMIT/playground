@@ -10,6 +10,8 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -1323,6 +1325,8 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip := db.GetInstance().Pipeline()
 		pip.LRem("sponsor:"+p.SponsorID+":hackerqueue", 0, p.CharacterID)
 		pip.HSet("character:"+p.CharacterID, "queueId", "")
+		phoneCmd := pip.HGet("character:"+p.CharacterID+":settings", "phoneNumber")
+		sponsorNameCmd := pip.HGet("sponsor:"+p.SponsorID, "name")
 		pip.Exec()
 
 		h.sendSponsorQueueUpdate(p.SponsorID)
@@ -1333,6 +1337,27 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			hackerUpdatePacket := packet.NewQueueUpdateHackerPacket(p.SponsorID, 0, p.Zoom)
 			hackerUpdatePacket.CharacterIDs = []string{p.CharacterID}
 			h.Send(hackerUpdatePacket)
+
+			// Send the hacker a text message letting them know it's their turn
+			phoneNumber, _ := phoneCmd.Result()
+			sponsorName, _ := sponsorNameCmd.Result()
+
+			reg, _ := regexp.Compile("[^0-9]+")
+			phoneNumber = "+1" + reg.ReplaceAllString(phoneNumber, "")
+
+			msgData := url.Values{}
+			msgData.Set("To", phoneNumber)
+			msgData.Set("From", config.GetConfig().GetString("twilio.from_phone_number"))
+			msgData.Set("Body", "It's your turn to talk to "+sponsorName+"! Meet with them at "+p.Zoom)
+			msgDataReader := *strings.NewReader(msgData.Encode())
+
+			client := &http.Client{}
+			urlStr := "https://api.twilio.com/2010-04-01/Accounts/" + config.GetSecret(config.TwilioAccountSID) + "/Messages.json"
+			req, _ := http.NewRequest("POST", urlStr, &msgDataReader)
+			req.SetBasicAuth(config.GetSecret(config.TwilioAccountSID), config.GetSecret(config.TwilioAuthToken))
+			req.Header.Add("Accept", "application/json")
+			req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+			client.Do(req)
 		}
 	case packet.QueueSubscribePacket:
 		db.GetInstance().SAdd("sponsor:"+p.SponsorID+":subscribed", m.sender.character.ID)
