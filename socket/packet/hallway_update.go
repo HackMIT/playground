@@ -22,7 +22,7 @@ type HallwayUpdatePacket struct {
 }
 
 func (p HallwayUpdatePacket) PermissionCheck(characterID string, role models.Role) bool {
-	return role == models.Organizer
+	return len(characterID) > 0 && role == models.Organizer
 }
 
 func (p HallwayUpdatePacket) MarshalBinary() ([]byte, error) {

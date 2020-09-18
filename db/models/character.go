@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
+	"github.com/techx/playground/config"
 )
 
 type Role int
@@ -82,6 +83,7 @@ func NewTIMCharacter() *Character {
 	c := new(Character)
 	c.ID = "tim"
 	c.Name = "TIM the Beaver"
+	c.Bio = config.GetConfig().GetString("tim.bio")
 	c.School = "MIT"
 	c.GradYear = 9999
 	c.X = 0.5

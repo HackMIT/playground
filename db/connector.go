@@ -223,10 +223,10 @@ func MonitorLeader() {
 				song.ID = songID
 				// Send song packet to ingests
 				playSongPacket := map[string]interface{}{
-					"type": "play_song",
-					"song": song,
+					"type":  "play_song",
+					"song":  song,
 					"start": 0,
-					"end": int(song.Duration),
+					"end":   int(song.Duration),
 				}
 
 				data, _ := json.Marshal(playSongPacket)
@@ -243,14 +243,43 @@ func MonitorLeader() {
 
 			whatToDo := rand.Float64()
 
-			if whatToDo < 0.33 {
+			walkProb := config.GetConfig().GetFloat64("tim.action_probs.walk")
+			talkProb := config.GetConfig().GetFloat64("tim.action_probs.talk")
+			teleportProb := config.GetConfig().GetFloat64("tim.action_probs.teleport")
+
+			if whatToDo < teleportProb {
 				hallwaysRes, _ := instance.SMembers("room:" + tim.Room + ":hallways").Result()
 
 				if len(hallwaysRes) == 0 {
 					continue
 				}
 
-				hallwayID := hallwaysRes[rand.Intn(len(hallwaysRes))]
+				// Make sure tim can only walk into rooms without walls
+				hallwayCmds := make([]*redis.StringCmd, len(hallwaysRes))
+
+				pip := instance.Pipeline()
+
+				for j, hallwayID := range hallwaysRes {
+					hallwayCmds[j] = pip.HGet("hallway:"+hallwayID, "to")
+				}
+
+				pip.Exec()
+
+				hallwayOptions := make([]string, 0)
+
+				for _, cmd := range hallwayCmds {
+					roomID, _ := cmd.Result()
+
+					for _, allowedRoomID := range config.GetConfig().GetStringSlice("tim.allowed_rooms") {
+						if roomID == allowedRoomID {
+							hallwayOptions = append(hallwayOptions, roomID)
+							break
+						}
+					}
+				}
+
+				// Teleport into the allowed room
+				hallwayID := hallwayOptions[rand.Intn(len(hallwayOptions))]
 
 				hallwayRes, _ := instance.HGetAll("hallway:" + hallwayID).Result()
 				var hallway models.Hallway
@@ -265,7 +294,7 @@ func MonitorLeader() {
 				}
 				data, _ := json.Marshal(movePacket)
 
-				pip := instance.Pipeline()
+				pip = instance.Pipeline()
 				pip.HSet("character:tim", "x", hallway.X)
 				pip.HSet("character:tim", "y", hallway.Y)
 				pip.Publish("all", data)
@@ -296,7 +325,7 @@ func MonitorLeader() {
 					pip.Publish("all", data)
 					pip.Exec()
 				})
-			} else {
+			} else if whatToDo < teleportProb+walkProb {
 				x := rand.Float64()
 				y := rand.Float64()
 
@@ -314,6 +343,19 @@ func MonitorLeader() {
 				pip.HSet("character:tim", "y", y)
 				pip.Publish("all", data)
 				pip.Exec()
+			} else if whatToDo < teleportProb+walkProb+talkProb {
+				timLines := config.GetConfig().GetStringSlice("tim.chat_lines")
+				randomLine := timLines[rand.Intn(len(timLines))]
+
+				chatPacket := map[string]interface{}{
+					"type": "chat",
+					"id":   "tim",
+					"mssg": randomLine,
+					"room": tim.Room,
+				}
+
+				data, _ := json.Marshal(chatPacket)
+				instance.Publish("all", data)
 			}
 		}
 

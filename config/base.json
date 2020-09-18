@@ -11,6 +11,31 @@
     "db": 0
   },
   "feedback_open": 1600621200,
+  "tim": {
+    "allowed_rooms": [
+      "home",
+      "plaza",
+      "plat_area",
+      "left_field",
+      "right_field",
+      "nonprofits"
+    ],
+    "action_probs": {
+      "walk": 0.01,
+      "talk": 0.99,
+      "teleport": 0.01
+    },
+    "bio": "hi! i’m tim the beaver. super excited to be at hackmit again this year! had to fight some kangaroos and elephants to grab my position as mit’s mascot, but getting to attend hackmit makes it all worth it :))",
+    "chat_lines": [
+      "call me speedy boi tim! *zoom*",
+      "pls come to my 107th birthday next year!",
+      "lmk if you see my cousins Flat Tim and Sloanie Tim!",
+      "mens et paw",
+      "like hackers, beavers are very much nocturnal!",
+      "call me nature’s engineer ;)",
+      "did u know i used to be called Bucky, Chipper, and Eager"
+    ]
+  },
   "webpush": {
     "public_key": "BB584OYloNsGGb3p4lIv4hb0J4ZPgd3WlqhEVA_e9DuZsJ2XMaBOplUlnPIAXSna8gDchIHtF9_MNzMfd9jTEtQ",
     "private_key": "UHZ4QPdkoq6o3pCvbIRNh4NWBJ_lYAFXBIAF78ETLH0"
