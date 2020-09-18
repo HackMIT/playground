@@ -1283,6 +1283,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		h.Send(p)
 	case packet.QueueJoinPacket:
+		sponsorRes, _ := db.GetInstance().HGetAll("sponsor:" + p.SponsorID).Result()
+		var sponsor models.Sponsor
+		utils.Bind(sponsorRes, &sponsor)
+
+		if !sponsor.QueueOpen {
+			return
+		}
+
 		hackerIDs, _ := db.GetInstance().LRange("sponsor:"+p.SponsorID+":hackerqueue", 0, -1).Result()
 
 		for _, hackerID := range hackerIDs {

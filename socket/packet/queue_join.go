@@ -15,7 +15,7 @@ type QueueJoinPacket struct {
 }
 
 func (p QueueJoinPacket) PermissionCheck(characterID string, role models.Role) bool {
-	return len(characterID) > 0 // && role == models.Hacker
+	return len(characterID) > 0 && (role == models.Hacker || role == models.Organizer)
 }
 
 func (p QueueJoinPacket) MarshalBinary() ([]byte, error) {
