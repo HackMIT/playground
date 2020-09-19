@@ -1196,20 +1196,30 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			return
 		}
 
-		projectID, _ := db.GetInstance().Get("character" + m.sender.character.ID + ":project").Result()
-		projectTimeString, _ := db.GetInstance().HGet("project:"+projectID, "submittedAt").Result()
-		projectTimeInt, _ := strconv.ParseInt(projectTimeString, 10, 64)
-		projectTime := time.Unix(projectTimeInt, 0)
-		timeZone, _ := time.LoadLocation("America/New_York")
+		var project *models.Project
 
-		deadline := time.Date(2020, 9, 19, 4, 0, 0, 0, timeZone)
-		oneHourBeforePeerExpo := time.Date(2020, 9, 19, 17, 0, 0, 0, timeZone)
+		// If we're going to the hacker arena after 5pm, add the character's project
+		if strings.HasPrefix(p.To, "arena:") && time.Now().Unix() >= 1600549200 {
+			projectID, _ := db.GetInstance().Get("character:" + m.sender.character.ID + ":project").Result()
 
-		if strings.HasPrefix(p.To, "arena:") && m.sender.character.Role == int(models.Hacker) && oneHourBeforePeerExpo.Before(time.Now()) && projectTime.Before(deadline) {
-			errorPacket := packet.NewErrorPacket(int(MissingSurveyResponse))
-			data, _ := json.Marshal(errorPacket)
-			m.sender.send <- data
-			return
+			if m.sender.character.Role == int(models.Hacker) && len(projectID) == 0 {
+				errorPacket := packet.NewErrorPacket(int(MissingSurveyResponse))
+				data, _ := json.Marshal(errorPacket)
+				m.sender.send <- data
+				return
+			}
+
+			pip := db.GetInstance().Pipeline()
+
+			// Make sure they earn the peer expo achievement
+			pip.HSet("character:"+m.sender.character.ID+":achivements", "peerExpo", true)
+
+			projectCmd := db.GetInstance().HGetAll("project:" + projectID)
+			pip.Exec()
+
+			projectRes, _ := projectCmd.Result()
+			project = new(models.Project)
+			utils.Bind(projectRes, project)
 		}
 
 		// Update this character's room
@@ -1233,7 +1243,6 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip = db.GetInstance().Pipeline()
 		characterCmd := pip.HGetAll("character:" + m.sender.character.ID)
 		pip.SAdd("room:"+p.To+":characters", m.sender.character.ID)
-		projectIDCmd := pip.Get("character:" + m.sender.character.ID + ":project")
 		pip.Exec()
 
 		characterRes, _ := characterCmd.Result()
@@ -1243,29 +1252,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		// Publish event to other ingest servers
 		p.Character = &character
-
-		// If we're going to the hacker arena after 5pm, add the character's project
-		if strings.HasPrefix(p.To, "arena:") && time.Now().Unix() >= 1600549200 {
-			projectID, err := projectIDCmd.Result()
-
-			if err != nil || len(projectID) == 0 {
-				errorPacket := packet.NewErrorPacket(int(MissingProjectForm))
-				data, _ := json.Marshal(errorPacket)
-				m.sender.send <- data
-				return
-			}
-
-			pip := db.GetInstance().Pipeline()
-
-			// Make sure they earn the peer expo achievement
-			pip.HSet("character:"+m.sender.character.ID+":achivements", "peerExpo", true)
-
-			projectCmd := db.GetInstance().HGetAll("project:" + projectID)
-			pip.Exec()
-
-			projectRes, _ := projectCmd.Result()
-			utils.Bind(projectRes, p.Character.Project)
-		}
+		p.Character.Project = project
 
 		// If we're entering a sponsor room, track achievement progress
 		if strings.HasPrefix(p.To, "sponsor:") {
