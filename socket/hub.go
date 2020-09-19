@@ -784,6 +784,11 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			// Send the join packet to clients and Redis
 			p.Character = character
 			p.ClientID = m.sender.id
+			p.Room = character.Room
+
+			if strings.HasPrefix(p.Room, "arena:") {
+				p.SetProject()
+			}
 
 			h.Send(p)
 		}

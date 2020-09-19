@@ -36,19 +36,23 @@ func NewJoinPacket(character *models.Character, room string) *JoinPacket {
 	p.Character = character
 	p.Character.Email = ""
 
-	if strings.HasPrefix(room, "arena:") {
-		projectID, err := db.GetInstance().Get("character:" + character.ID + ":project").Result()
-
-		if err != nil || len(projectID) == 0 {
-			return p
-		}
-
-		p.Project = new(models.Project)
-		projectRes, _ := db.GetInstance().HGetAll("project:" + projectID).Result()
-		utils.Bind(projectRes, p.Project)
+	if strings.HasPrefix(p.Room, "arena:") {
+		p.SetProject()
 	}
 
 	return p
+}
+
+func (p *JoinPacket) SetProject() {
+	projectID, err := db.GetInstance().Get("character:" + p.Character.ID + ":project").Result()
+
+	if err != nil || len(projectID) == 0 {
+		return
+	}
+
+	p.Project = new(models.Project)
+	projectRes, _ := db.GetInstance().HGetAll("project:" + projectID).Result()
+	utils.Bind(projectRes, p.Project)
 }
 
 func (p JoinPacket) PermissionCheck(characterID string, role models.Role) bool {
