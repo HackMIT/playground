@@ -259,7 +259,7 @@ func (h *Hub) ProcessRedisMessage(msg []byte) {
 		leavePacket, _ := packet.NewLeavePacket(p.Character, p.From).MarshalBinary()
 		h.SendBytes(p.From, leavePacket)
 
-		joinPacket, _ := packet.NewJoinPacket(p.Character).MarshalBinary()
+		joinPacket, _ := packet.NewJoinPacket(p.Character, p.To).MarshalBinary()
 		h.SendBytes(p.To, joinPacket)
 	}
 }

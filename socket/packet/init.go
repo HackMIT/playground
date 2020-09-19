@@ -2,6 +2,7 @@ package packet
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/techx/playground/config"
@@ -38,6 +39,9 @@ type InitPacket struct {
 
 	// All of the events happening throughout the weekend
 	Events []*models.Event `json:"events"`
+
+	// Projects of the users in this room, if we're in the hacking arena
+	Projects []*models.Project `json:"projects"`
 
 	// Settings
 	Settings *models.Settings `json:"settings"`
@@ -104,6 +108,14 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 
 	for i, eventID := range eventIDs {
 		eventCmds[i] = pip.HGetAll("event:" + eventID)
+	}
+
+	projectIDCmds := make([]*redis.StringCmd, len(characterIDs))
+
+	if strings.HasPrefix(roomID, "arena:") {
+		for i, characterID := range characterIDs {
+			projectIDCmds[i] = pip.Get("character:" + characterID + ":project")
+		}
 	}
 
 	// Get friends
@@ -257,6 +269,37 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 		eventRes, _ := eventCmd.Result()
 		p.Events[i] = new(models.Event)
 		utils.Bind(eventRes, p.Events[i])
+	}
+
+	if strings.HasPrefix(roomID, "arena:") {
+		// Load projects
+		pip = db.GetInstance().Pipeline()
+		projectCmds := make(map[string]*redis.StringStringMapCmd)
+
+		for _, cmd := range projectIDCmds {
+			projectID, err := cmd.Result()
+
+			if err != nil || len(projectID) == 0 {
+				continue
+			}
+
+			if _, ok := projectCmds[projectID]; ok {
+				continue
+			}
+
+			projectCmds[projectID] = pip.HGetAll("project:" + projectID)
+		}
+
+		pip.Exec()
+
+		p.Projects = make([]*models.Project, len(projectCmds))
+		i := 0
+
+		for _, cmd := range projectCmds {
+			projectRes, _ := cmd.Result()
+			utils.Bind(projectRes, p.Projects[i])
+			i++
+		}
 	}
 
 	if needsToken {

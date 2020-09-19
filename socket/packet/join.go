@@ -2,8 +2,11 @@ package packet
 
 import (
 	"encoding/json"
+	"strings"
 
+	"github.com/techx/playground/db"
 	"github.com/techx/playground/db/models"
+	"github.com/techx/playground/utils"
 )
 
 // Sent by clients after receiving the init packet. Identifies them to the
@@ -23,13 +26,28 @@ type JoinPacket struct {
 	// Server attributes
 	Character *models.Character `json:"character"`
 	ClientID  string            `json:"clientId,omitempty"`
+	Project   *models.Project   `json:"project"`
+	Room      string            `json:"room"`
 }
 
-func NewJoinPacket(character *models.Character) *JoinPacket {
+func NewJoinPacket(character *models.Character, room string) *JoinPacket {
 	p := new(JoinPacket)
 	p.BasePacket = BasePacket{Type: "join"}
 	p.Character = character
 	p.Character.Email = ""
+
+	if strings.HasPrefix(room, "arena:") {
+		projectID, err := db.GetInstance().Get("character:" + character.ID + ":project").Result()
+
+		if err != nil || len(projectID) == 0 {
+			return p
+		}
+
+		p.Project = new(models.Project)
+		projectRes, _ := db.GetInstance().HGetAll("project:" + projectID).Result()
+		utils.Bind(projectRes, p.Project)
+	}
+
 	return p
 }
 
