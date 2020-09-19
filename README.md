@@ -4,6 +4,8 @@ _Making the HackMIT Club Penguin 🐧 dream come true._
 
 [![Gitter](https://badges.gitter.im/HackMIT/playground.svg)](https://gitter.im/HackMIT/playground?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
+![Dabbing in Playground](img/banner.png)
+
 ## Setup
 
 Make sure you have Go installed. If you don't have Go installed, [click here](https://golang.org/doc/install). (If you're on macOS, I recommend using [Homebrew](https://brew.sh))
