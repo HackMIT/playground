@@ -1212,9 +1212,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			pip := db.GetInstance().Pipeline()
 
 			// Make sure they earn the peer expo achievement
-			pip.HSet("character:"+m.sender.character.ID+":achivements", "peerExpo", true)
+			pip.HSet("character:"+m.sender.character.ID+":achievements", "peerExpo", true)
 
-			projectCmd := db.GetInstance().HGetAll("project:" + projectID)
+			projectCmd := pip.HGetAll("project:" + projectID)
 			pip.Exec()
 
 			projectRes, _ := projectCmd.Result()
