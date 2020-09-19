@@ -1028,7 +1028,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		// 15 minutes has not yet passed since user last submitted a song
-		if jukeboxTimestamp.After(time.Now()) {
+		if m.sender.character.Role != int(models.Organizer) && jukeboxTimestamp.After(time.Now()) {
 			errorPacket := packet.NewErrorPacket(401)
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
