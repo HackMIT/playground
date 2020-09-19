@@ -226,7 +226,8 @@
       "x": 0.6234,
       "y": 0.4228,
       "width": 0.3401,
-      "path": "arcade.svg"
+      "path": "arcade.svg",
+      "action": 7
     },
     {
       "x": 0.3615,

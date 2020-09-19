@@ -297,6 +297,7 @@ func NewInitPacket(characterID, roomID string, needsToken bool) *InitPacket {
 
 		for _, cmd := range projectCmds {
 			projectRes, _ := cmd.Result()
+			p.Projects[i] = new(models.Project)
 			utils.Bind(projectRes, p.Projects[i])
 			i++
 		}
