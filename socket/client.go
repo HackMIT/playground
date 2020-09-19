@@ -28,7 +28,7 @@ func NewClient(hub *Hub, conn *websocket.Conn) *Client {
 	c := new(Client)
 	c.hub = hub
 	c.conn = conn
-	c.send = make(chan []byte, 1024)
+	c.send = make(chan []byte, 4096)
 	c.id = uuid.New().String()
 	return c
 }
