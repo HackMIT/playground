@@ -1259,7 +1259,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			numSponsors, _ := db.GetInstance().HIncrBy("character:"+m.sender.character.ID, "numSponsorsVisited", 1).Result()
 
 			if numSponsors == config.GetConfig().GetInt64("achievements.num_sponsors") {
-				pip.HSet("character:"+m.sender.character.ID+":achivements", "companyTour", true)
+				db.GetInstance().HSet("character:"+m.sender.character.ID+":achievements", "companyTour", true)
 			}
 		}
 
