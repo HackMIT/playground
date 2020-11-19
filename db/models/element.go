@@ -22,7 +22,7 @@ type Element struct {
 
 	ChangingRandomly bool `json:"changingRandomly" redis:"changingRandomly"`
 
-	Action int `json:"action" redis:"action"`
+	Action ElementAction `json:"action" redis:"action"`
 
 	Hoverable  bool `json:"hoverable" redis:"hoverable"`
 	Toggleable bool `json:"toggleable" redis:"toggleable"`

@@ -361,7 +361,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		if p.Element.Path == "djbooth.svg" {
-			p.Element.Action = int(models.OpenJukebox)
+			p.Element.Action = models.OpenJukebox
 		}
 
 		db.GetInstance().HSet("element:"+p.ID, utils.StructToMap(p.Element))
@@ -699,14 +699,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 				isOrganizer, _ := organizerCmd.Result()
 
 				if isSponsor {
-					character.Role = int(models.SponsorRep)
+					character.Role = models.SponsorRep
 
 					sponsorID, _ := sponsorIDCmd.Result()
 					character.SponsorID = sponsorID
 				} else if isMentor {
-					character.Role = int(models.Mentor)
+					character.Role = models.Mentor
 				} else if isOrganizer {
-					character.Role = int(models.Organizer)
+					character.Role = models.Organizer
 				}
 
 				// Add character to database
@@ -929,9 +929,9 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		pip := db.GetInstance().Pipeline()
 
 		if p.Name != "" {
-			if m.sender.character.Role == int(models.Organizer) {
+			if m.sender.character.Role == models.Organizer {
 				p.Name += " (HackMIT)"
-			} else if m.sender.character.Role == int(models.SponsorRep) {
+			} else if m.sender.character.Role == models.SponsorRep {
 				sponsorName, _ := db.GetInstance().HGet("sponsor:"+m.sender.character.SponsorID, "name").Result()
 				p.Name += " (" + sponsorName + ")"
 			}
@@ -1033,7 +1033,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		}
 
 		// 15 minutes has not yet passed since user last submitted a song
-		if m.sender.character.Role != int(models.Organizer) && jukeboxTimestamp.After(time.Now()) {
+		if m.sender.character.Role != models.Organizer && jukeboxTimestamp.After(time.Now()) {
 			errorPacket := packet.NewErrorPacket(401)
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
@@ -1182,14 +1182,14 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			p.To, _ = roomCmd.Result()
 		}
 
-		if p.To == "nightclub" && (!m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer)) {
+		if p.To == "nightclub" && (!m.sender.character.IsCollege && m.sender.character.Role != models.Organizer) {
 			errorPacket := packet.NewErrorPacket(int(HighSchoolNightClub))
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
 			return
 		}
 
-		if p.To == "misti" && m.sender.character.School != "Massachusetts Institute of Technology" && m.sender.character.Role != int(models.Organizer) {
+		if p.To == "misti" && m.sender.character.School != "Massachusetts Institute of Technology" && m.sender.character.Role != models.Organizer {
 			errorPacket := packet.NewErrorPacket(int(NonMitMisti))
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
@@ -1202,7 +1202,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 		if strings.HasPrefix(p.To, "arena:") && time.Now().Unix() >= 1600549200 {
 			projectID, _ := db.GetInstance().Get("character:" + m.sender.character.ID + ":project").Result()
 
-			if m.sender.character.Role == int(models.Hacker) && len(projectID) == 0 {
+			if m.sender.character.Role == models.Hacker && len(projectID) == 0 {
 				errorPacket := packet.NewErrorPacket(int(MissingSurveyResponse))
 				data, _ := json.Marshal(errorPacket)
 				m.sender.send <- data
@@ -1282,7 +1282,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 			}
 		}
 
-		if !m.sender.character.IsCollege && m.sender.character.Role != int(models.Organizer) {
+		if !m.sender.character.IsCollege && m.sender.character.Role != models.Organizer {
 			errorPacket := packet.NewErrorPacket(int(HighSchoolSponsorQueue))
 			data, _ := json.Marshal(errorPacket)
 			m.sender.send <- data
@@ -1311,7 +1311,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		h.sendSponsorQueueUpdate(p.SponsorID)
 
-		if m.sender.character.Role == int(models.SponsorRep) {
+		if m.sender.character.Role == models.SponsorRep {
 			// If a sponsor took a hacker off the queue, send them the sponsor's URL
 			// TODO: Replace this with the sponsor's actual URL
 			hackerUpdatePacket := packet.NewQueueUpdateHackerPacket(p.SponsorID, 0, p.Zoom)

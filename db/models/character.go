@@ -37,7 +37,7 @@ type Character struct {
 	Ingest         string  `json:"ingest" redis:"ingest"`
 	FeedbackOpened bool    `json:"feedbackOpened" redis:"feedbackOpened"`
 	Email          string  `json:"email" redis:"email"`
-	Role           int     `json:"role" redis:"role"`
+	Role           Role     `json:"role" redis:"role"`
 	IsCollege      bool    `json:"isCollege" redis:"isCollege"`
 
 	// If this character is in a queue, this is the sponsor ID of the queue they're in
@@ -71,7 +71,7 @@ func NewCharacter(name string) *Character {
 	c.X = 0.5
 	c.Y = 0.5
 	c.Room = "home"
-	c.Role = int(Organizer)
+	c.Role = Organizer
 	c.EyeColor = defaultEyeColor
 	c.SkinColor = defaultSkinColor
 	c.ShirtColor = defaultShirtColor
@@ -90,7 +90,7 @@ func NewTIMCharacter() *Character {
 	c.X = 0.5
 	c.Y = 0.75
 	c.Room = "home"
-	c.Role = int(Organizer)
+	c.Role = Organizer
 	return c
 }
 
@@ -123,7 +123,7 @@ func NewCharacterFromQuill(profile QuillProfile) *Character {
 	c.X = 0.5
 	c.Y = 0.5
 	c.Room = "home"
-	c.Role = int(Hacker)
+	c.Role = Hacker
 	c.EyeColor = defaultEyeColor
 	c.SkinColor = defaultSkinColor
 	c.ShirtColor = defaultShirtColor

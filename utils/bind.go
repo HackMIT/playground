@@ -9,6 +9,22 @@ import (
 	"time"
 )
 
+func getInterfaceValue(field reflect.StructField, value reflect.Value) (rtnVal interface{}) {
+	defer func() {
+		if r := recover(); r != nil {
+			// If value.Int() panics, it's because value wasn't an int -- assume value is an interface
+			rtnVal = value.Interface()
+
+			if field.Type == reflect.TypeOf(time.Now()) {
+				rtnVal = rtnVal.(time.Time).Unix()
+			}
+		}
+	}()
+
+	// Assume all types are ints so that enums work
+	return value.Int()
+}
+
 func StructToMap(item interface{}) map[string]interface{} {
 	out := make(map[string]interface{})
 
@@ -33,12 +49,7 @@ func StructToMap(item interface{}) map[string]interface{} {
 			continue
 		}
 
-		val := v.Field(i).Interface()
-
-		if fi.Type == reflect.TypeOf(time.Now()) {
-			val = val.(time.Time).Unix()
-		}
-
+		val := getInterfaceValue(fi, v.Field(i))
 		out[tagv] = val
 	}
 
