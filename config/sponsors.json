@@ -1,70 +1,34 @@
 [
   {
-    "id": "arrowstreet",
-    "name": "ArrowStreet",
-    "challenges": "<h2>Best Panel Data Visualization: </h2>We are looking for the best data visualization hack using panel data. At Arrowstreet, we work with hundreds of financial datasets to generate thousands of statistics every day. These panel data sets (<a href='http://bit.ly/3hkb7QS'>http://bit.ly/3hkb7QS</a>) contain data for a variety of cross sections (assets, companies, countries, etc.) and time frequencies (intraday, daily, weekly, monthly, quarterly, etc.). <br/><br/>The winning data visualization will help users to understand and explore panel data by presenting multiple dimensions, highlighting conclusions, and handling real world data challenges like missing or invalid values. The visualization can use any publicly available data set and does not need to use financial data.<br/><br/>Submissions will be evaluated across 4 dimensions:<br/>1.\tDoes the project effectively communicate findings about the data set, while encouraging users to ask questions and explore other ideas?<br/>2.\tDoes the project include innovations in technical design, data / statistical analysis or user experience?<br/>3.\tDoes the visualization creatively address the complexities of working with real-world panel datasets, in terms of missing data, variety in cross sectional units, and variety in time horizons?<br/>4.\tDoes the project demonstrate a high level of professionalism in terms of performance, user interface, and visuals?<br/>"
+    "id": "beaverworks",
+    "name": "MIT Beaver Works"
   },
   {
-    "id": "citadel",
-    "name": "Citadel"
+    "id": "HMS MEDscience",
+    "name": "medscience"
   },
   {
-    "id": "cmt",
-    "name": "CMT",
-    "challenges": "<h2>Detecting Crashes with Smartphone Data: </h2>CMT provides a vehicle crash detection service that can detect when a driver has been in a crash using sensors on their smartphone.  This service is used by family safety and insurance applications that are designed to let family members, emergency services, and insurance claims adjusters know that a crash has occurred.  The service provides a number of pieces of information about the crash, including the time and location where it occurred, the speed and severity of the crash, what part of the vehicle was hit, etc.  We have provided the data dictionary and a few sample crash reports provided by the service.  The goal of the challenge is to enrich and present the crash data in the most compelling and creative way. This could include a slick mobile interface, combining other user-supplied or publicly available data, finding a way to make it more actionable for insurance companies, emergency responders or family members: whatever makes this crash data as useful and usable as possible.  This might include capturing audio and video from the driver, photographs of the car, etc.  The interface can be used at the time of the crash to verify that the driver is safe, or some time after the crash to allow the driver to quickly file a claim with their insurance company, or both.   A good submission will combine data from our crash service with additional data in an innovative way.  Examples might include capturing photos and videos of the damaged car and crash scene easily, and matching it to data provided about the location where the crash occurred and what part of the crash was hit, or using speech detection to a driver’s narrative about the crash into structured data automatically."
+    "id": "ieee",
+    "name": "IEEE"
   },
   {
-    "id": "drw",
-    "name": "DRW",
-    "challenges": "<h2>Best Data Visualization Hack: </h2>We will be judging for the best data visualization hack. Projects will be judged on their ability to make data more accessible to more users. Can you make large data sets easily understandable at a quick glance? In a world overflowing with data, breaking it down for people is more important than ever."
+    "id": "kodewithklossy",
+    "name": "Kode with Klossy"
   },
   {
-    "id": "facebook",
-    "name": "Facebook",
-    "challenges": "<h2>Best Hack for Building Community: </h2>Facebook will be sponsoring a prize for the best hack that aligns with our mission of giving people the power to build community and bringing the world closer together. We recognize this is a broad scope, but our engineers will be judging projects based on their ability to promote community building and social good."
+    "id": "ktbyte",
+    "name": "KTBYTE"
   },
   {
-    "id": "goldman",
-    "name": "Goldman Sachs",
-    "challenges": "<h2>Best Use of Marquee API by Goldman Sachs: </h2>Join Goldman Sachs Engineers this weekend and experience a small taste of the power of our Marquee Platform. For this weekend alone, you will be the only non-clients with access to our Marquee APIs. Explore our COVID-19 or our financial datasets and see if your hack has what it takes to win each of you a prize!<br/><br/>In light of the challenges brought upon by COVID-19, our engineers—in addition to our traditional financial datasets--have compiled a series of new datasets for students to grasp the global impact of COVD-19 through technology. Understanding that not everyone has the bandwidth to study this in depth, we want to give you the opportunity to create new projects, models, and technologies surrounding a circumstance that has affected millions of lives globally. We want you to be creative and leverage new ideas to help you (and all of us) understand COVID-19 better.<br/><br/>If you are interested in competing in this challenge, please fill out <a href='https://go.hackmit.org/goldmansachs'>go.hackmit.org/goldmansachs</a> in order to have access to their Marquee API prior to and during the event. This form by no means binds you to competing in their challenge."
+    "id": "lsa",
+    "name": "Latino Stem Alliance"
   },
   {
-    "id": "ibm",
-    "name": "IBM",
-    "challenges": "<h2>Best solution addressing the community response to COVID-19 (must use at least 1 IBM Service or API): </h2>Technology can aid how the community responds to problems caused by COVID-19. This includes how our bedrooms have become our classrooms, how we can know the information we are reading and hearing is accurate, how we can communicate in this crisis and so much more. Solutions in this category must leverage at least 1 IBM service or API.<br/><h2>Green Compute Challenge: </h2>MIT and IBM are coming together to offer the \"green compute challenge\" at HackMIT!<br/><br/>From AI machine learning to large climate prediction models, high-performance computing is helping us make the world a better place. At the same time, high-performance computing is extremely energy intensive. Some predictions using current growth rates show that AI computing alone will take more than 30% of the worlds energy resources by the end of the 2030's. We can't let that happen!!!! <br/><br/>MIT currently leads the word in green supercomputing with the IBM donated <a href='https://news.mit.edu/2020/brainstorming-energy-saving-hacks-satori-mit-supercomputer-0211'>MIT Satori Supercomputer</a> which lives in the 97% renewable energy <a href='https://www.mghpcc.org'/>Mass Green High-Performance Computing Center</a>. A typical high performance benchmark on Satori, if run repeatedly for a year, would use about 5 maple trees worth of carbon vs. about 280 maple trees worth of carbon running in a \"typical\" high-end data center. That's a 60x difference!!!  <br/><br/>The HackMIT MIT-IBM Green Compute Challenge is looking for ways to help lower the carbon footprint of all high performance computation by raising people's awareness of the carbon cost of their computing. The winning solution will receive $500 for the project that helps make energy and/or carbon awareness easier...and more fun...to calculate. We have lots of ideas and input data on the energy efficiency of various computer platforms, the energy mix of data centers by geography, etc, and would love to help you formulate your solution. <br/><br/>Come help us change the world and make green high performance computing a reality."
+    "id": "leah",
+    "name": "LEAH Project"
   },
   {
-    "id": "intersystems",
-    "name": "Intersystems",
-    "challenges": "<h2>InterSystems Technology Challenge: </h2>Submit a working proof-of-concept or application using any of InterSystems tools and technology as part of the team hackathon project. To qualify for the InterSystems challenge, the final product must not only make use of InterSystems tools and technology, it must demonstrate innovation and usefulness as a technology solution as part of your hackathon project."
-  },
-  {
-    "id": "misti",
-    "name": "MISTI"
-  },
-  {
-    "id": "linode",
-    "name": "Linode"
-  },
-  {
-    "id": "nasdaq",
-    "name": "Nasdaq",
-    "challenges": "<h2>Most Creative Use of Nasdaq Quandl Datasets: </h2>Nasdaq's Quandl Data Division is the premier source for financial, economic, and alternative datasets. To access the datasets, Log on to <a href='https://quandl.com'>quandl.com</a> and create an account with your .edu email address. You will then be able to access many free datasets in our catalog by using the search / filtering functions at: <a href='https://QUANDL.COM/SEARCH'>quandl.com/search</a>.<br/><br/>Challenge Themes: <br/>(1) Best use of Nasdaq/Quandl data for Urban Innovation.<br/>(2) Best use of Nasdaq/Quandl data for Personal Financial Decisions.<br/>(3) Best use of Nasdaq/Quandl Data for Applications Beyond Capital Markets. <br/> <h2>Most creative solution (software and/or hardware) that enables two or more musicians in separate locations to virtually record a song together in one take, and have the resulting video recording have virtually no audio or video delay/lag: </h2>Hackers could consider using AI/machine learning techniques to synchronize each musician’s audio/video tracks in post-production. An associated use-case could be having a 30-60 second lag in a live virtual musical performance – to correct/align the time-sequence lags from musicians playing from separate locations."
-  },
-  {
-    "id": "oca",
-    "name": "OCA Ventures"
-  },
-  {
-    "id": "pega",
-    "name": "Pegasystems"
-  },
-  {
-    "id": "quantco",
-    "name": "QuantCo"
-  },
-  {
-    "id": "yext",
-    "name": "Yext"
+    "id": "lincoln",
+    "name": "MIT Lincoln Lab"
   }
 ]
