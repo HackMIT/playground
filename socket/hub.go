@@ -930,7 +930,7 @@ func (h *Hub) processMessage(m *SocketMessage) {
 
 		if p.Name != "" {
 			if m.sender.character.Role == int(models.Organizer) {
-				p.Name += " (HackMIT)"
+				p.Name += " (Blueprint)"
 			} else if m.sender.character.Role == int(models.SponsorRep) {
 				sponsorName, _ := db.GetInstance().HGet("sponsor:"+m.sender.character.SponsorID, "name").Result()
 				p.Name += " (" + sponsorName + ")"
