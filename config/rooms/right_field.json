@@ -58,39 +58,27 @@
     },
     {
       "x": 0.1934,
-      "y": 0.2313,
-      "width": 0.2862,
-      "path": "building_ibm.svg"
+      "y": 0.31,
+      "width": 0.22,
+      "path": "building_leah.svg"
     },
     {
-      "x": 0.3968,
-      "y": 0.4447,
-      "width": 0.2822,
-      "path": "building_nasdaq.svg"
+      "x": 0.376,
+      "y": 0.54,
+      "width": 0.22,
+      "path": "building_lsa.svg"
     },
     {
-      "x": 0.9062,
-      "y": 0.3487,
-      "width": 0.1234,
-      "path": "building_quantco.svg"
+      "x": 0.84,
+      "y": 0.275,
+      "width": 0.22,
+      "path": "building_lincoln.svg"
     },
     {
-      "x": 0.8011,
-      "y": 0.3825,
-      "width": 0.1544,
-      "path": "building_linode.svg"
-    },
-    {
-      "x": 0.7041,
-      "y": 0.4814,
-      "width": 0.1542,
-      "path": "building_goldman.svg"
-    },
-    {
-      "x": 0.6018,
-      "y": 0.5838,
-      "width": 0.1565,
-      "path": "building_citadel.svg"
+      "x": 0.63,
+      "y": 0.48,
+      "width": 0.23,
+      "path": "building_medscience.svg"
     },
     {
       "x": 0.0575,
@@ -211,60 +199,44 @@
   ],
   "hallways": [
     {
-      "x": 0.0305,
-      "y": 0.402,
+      "x": 0.0082,
+      "y": 0.3787,
       "radius": 0.0579,
-      "to": "plat_area",
+      "to": "left_field",
       "toX": 0.6113,
       "toY": 0.9628
     },
     {
-      "x": 0.2035,
-      "y": 0.4125,
-      "radius": 0.0676,
-      "to": "sponsor:ibm",
+      "x": 0.1371,
+      "y": 0.4574,
+      "radius": 0.0525,
+      "to": "sponsor:leah",
       "toX": 0.4961,
       "toY": 0.5002
     },
     {
-      "x": 0.4082,
-      "y": 0.6248,
-      "radius": 0.0678,
-      "to": "sponsor:nasdaq",
+      "x": 0.3171,
+      "y": 0.6522,
+      "radius": 0.052,
+      "to": "sponsor:lsa",
       "toX": 0.4961,
       "toY": 0.5002
     },
     {
-      "x": 0.6486,
-      "y": 0.6717,
-      "radius": 0.044,
-      "to": "sponsor:citadel",
+      "x": 0.6971,
+      "y": 0.6202,
+      "radius": 0.0509,
+      "to": "sponsor:medscience",
       "toX": 0.4961,
       "toY": 0.5002
     },
     {
-      "x": 0.7446,
-      "y": 0.58,
+      "x": 0.8933,
+      "y": 0.4077,
       "radius": 0.0479,
-      "to": "sponsor:goldman",
+      "to": "sponsor:lincoln",
       "toX": 0.4961,
       "toY": 0.5002
-    },
-    {
-      "x": 0.8401,
-      "y": 0.4958,
-      "radius": 0.0402,
-      "to": "sponsor:linode",
-      "toX": 0.4961,
-      "toY": 0.5002
-    },
-    {
-      "x": 0.9189,
-      "y": 0.404,
-      "radius": 0.0263,
-      "to": "sponsor:quantco",
-      "toX": 0.3389,
-      "toY": 0.5909
     },
     {
       "x": 0.9977,

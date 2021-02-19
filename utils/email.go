@@ -11,15 +11,15 @@ import (
 
 const (
 	// Sender
-	Sender = "HackMIT <noreply@hackmit.org>"
+	Sender = "Blueprint <noreply@hackmit.org>"
 
 	// The subject line for the email.
-	Subject = "HackMIT Playground Confirmation"
+	Subject = "Blueprint Playground Confirmation"
 
 	// The character encoding for the email.
 	CharSet = "UTF-8"
 
-	ReplyTo = "help@hackmit.org"
+	ReplyTo = "blueprint@hackmit.org"
 )
 
 func SendConfirmationEmail(recipient string, code int, name string) {
@@ -28,9 +28,9 @@ func SendConfirmationEmail(recipient string, code int, name string) {
 	h := hermes.Hermes{
 		Theme: new(hermes.Default),
 		Product: hermes.Product{
-			Name: "HackMIT",
-			Link: "https://hackmit.org",
-			Logo: "https://hackmit-playground-2020.s3.amazonaws.com/utils/logo.png",
+			Name: "Blueprint",
+			Link: "https://blueprint.hackmit.org",
+			Logo: "https://blueprint-playground-2021.s3.amazonaws.com/utils/logo.png",
 		},
 	}
 
@@ -38,7 +38,7 @@ func SendConfirmationEmail(recipient string, code int, name string) {
 		Body: hermes.Body{
 			Name: name,
 			Intros: []string{
-				"Welcome to the HackMIT playground! We're very excited to have you this weekend.",
+				"Welcome to the Blueprint playground! We're very excited to have you this weekend.",
 			},
 			Actions: []hermes.Action{
 				{
@@ -47,7 +47,7 @@ func SendConfirmationEmail(recipient string, code int, name string) {
 				},
 			},
 			Outros: []string{
-				"Any questions? Email help@hackmit.org",
+				"Any questions? Email blueprint@hackmit.org",
 			},
 		},
 	}

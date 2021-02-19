@@ -273,100 +273,60 @@ func reset() {
 		"id": "urban",
 	})
 
-	createRoomWithData("sponsor:cmt", Plat, map[string]interface{}{
-		"id":  "cmt",
-		"toX": 0.2685,
-		"toY": 0.5919,
+	createRoomWithData("sponsor:beaverworks", Gold, map[string]interface{}{
+		"id":  "beaverworks",
+		"to": "left_field",
+		"toX": 0.3042,
+		"toY": 0.6834,
 	})
 
-	createRoomWithData("sponsor:intersystems", Plat, map[string]interface{}{
-		"id":  "intersystems",
-		"toX": 0.7402,
-		"toY": 0.5717,
+	createRoomWithData("sponsor:ieee", Gold, map[string]interface{}{
+		"id":  "ieee",
+		"to": "left_field",
+		"toX": 0.1137,
+		"toY": 0.4796,
 	})
 
-	createRoomWithData("sponsor:drw", Gold, map[string]interface{}{
-		"id":  "drw",
+	createRoomWithData("sponsor:kodewithklossy", Gold, map[string]interface{}{
+		"id":  "kodewithklossy",
 		"to":  "left_field",
-		"toX": 0.8215,
-		"toY": 0.4943,
+		"toX": 0.6958,
+		"toY": 0.6834,
 	})
 
-	createRoomWithData("sponsor:yext", Gold, map[string]interface{}{
-		"id":  "yext",
+	createRoomWithData("sponsor:ktbyte", Gold, map[string]interface{}{
+		"id":  "ktbyte",
 		"to":  "left_field",
-		"toX": 0.6128,
-		"toY": 0.702,
+		"toX": 0.8969,
+		"toY": 0.4657,
 	})
 
-	createRoomWithData("sponsor:facebook", Silver, map[string]interface{}{
-		"id":  "facebook",
-		"to":  "left_field",
-		"toX": 0.3211,
-		"toY": 0.7636,
-	})
-
-	createRoomWithData("sponsor:arrowstreet", Silver, map[string]interface{}{
-		"id":  "arrowstreet",
-		"to":  "left_field",
-		"toX": 0.2018,
-		"toY": 0.6347,
-	})
-
-	createRoomWithData("sponsor:oca", Bronze, map[string]interface{}{
-		"id":  "oca",
-		"to":  "left_field",
-		"toX": 0.1148,
-		"toY": 0.5487,
-	})
-
-	createRoomWithData("sponsor:pega", Bronze, map[string]interface{}{
-		"id":  "pega",
-		"to":  "left_field",
-		"toX": 0.0487,
-		"toY": 0.4728,
-	})
-
-	createRoomWithData("sponsor:ibm", Gold, map[string]interface{}{
-		"id":  "ibm",
+	createRoomWithData("sponsor:leah", Gold, map[string]interface{}{
+		"id":  "leah",
 		"to":  "right_field",
-		"toX": 0.1792,
-		"toY": 0.5072,
+		"toX": 0.1,
+		"toY": 0.4598,
 	})
 
-	createRoomWithData("sponsor:nasdaq", Gold, map[string]interface{}{
-		"id":  "nasdaq",
+	createRoomWithData("sponsor:lsa", Gold, map[string]interface{}{
+		"id":  "lsa",
 		"to":  "right_field",
-		"toX": 0.3871,
-		"toY": 0.712,
+		"toX": 0.3108,
+		"toY": 0.6903,
 	})
 
-	createRoomWithData("sponsor:citadel", Silver, map[string]interface{}{
-		"id":  "citadel",
+	createRoomWithData("sponsor:medscience", Gold, map[string]interface{}{
+		"id":  "medscience",
 		"to":  "right_field",
-		"toX": 0.6788,
-		"toY": 0.755,
+		"toX": 0.7037,
+		"toY": 0.6647,
 	})
 
-	createRoomWithData("sponsor:goldman", Silver, map[string]interface{}{
-		"id":  "goldman",
+	createRoomWithData("sponsor:lincoln", Gold, map[string]interface{}{
+		"id":  "lincoln",
 		"to":  "right_field",
-		"toX": 0.7916,
-		"toY": 0.6347,
-	})
-
-	createRoomWithData("sponsor:linode", Silver, map[string]interface{}{
-		"id":  "linode",
-		"to":  "right_field",
-		"toX": 0.8867,
-		"toY": 0.543,
-	})
-
-	createRoomWithData("sponsor:quantco", Bronze, map[string]interface{}{
-		"id":  "quantco",
-		"to":  "right_field",
-		"toX": 0.9593,
-		"toY": 0.4656,
+		"toX": 0.9152,
+		"toY": 0.4563,
 	})
 
 	createRoomWithData("sponsor:misti", MISTI, map[string]interface{}{
