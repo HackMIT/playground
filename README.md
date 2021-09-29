@@ -86,7 +86,7 @@ This project wouldn't have been possible without our supportive and energetic te
 - [Zoë Marschner](http://zoemarschner.com) (_Three.js wizard 🧙‍♀️_)
 - [Shirlyn Prabahar](https://github.com/pshirlyn) (_[Quill](https://github.com/techx/quill) SSO_)
 - [Hillary Tamirepi](https://linkedin.com/in/hillary-tamirepi-937660175) (_Playground explorer_)
-- [Allen Wang](http://web.mit.edu/awang23/www/) (_Sponsor panel, hacker queue_)
+- [Allen Wang](https://github.com/AllenWang314) (_Sponsor panel, hacker queue_)
 - [Eva Yi Xie](https://linkedin.com/in/eva-yi-xie1128) (_Pop-up designs_)
 
 ### Design team
